@@ -1911,99 +1911,265 @@
             let a = this,
               u = t.files,
               c = t.filename_prefix || "ig_toolkit",
-              f = new i,
               l = new r,
-              h = !1,
-              d = u.length,
-              _ = 0,
-              m = 0,
-              p = 0;
-            if (!u.length) return e({
+              total = u.length;
+
+            if (!u.length) return "function" == typeof e && e({
               err: "true",
               reason: "no files to dw"
             });
 
-            function v() {
-              return new Promise((function(t, n) {
-                h || a.se && (h = !0, a.se = !1, d > 200 && l.Ze({
-                  progress: 0
-                }), w(f, (function(n) {
-                  if (n.step) d > 200 && n.percent && Math.random() > .98 && l.Ze({
-                    progress: parseInt(n.percent)
-                  });
-                  else if (n.done) {
-                    if (a.He) return t();
-                    l.We(), "function" == typeof e && (e({
-                      success: 1
-                    }), t())
-                  } else n.fail && l.Se(chrome.i18n.getMessage("error_bulk"))
-                })))
-              }))
-            }
+            a.se = !0;
+            let cancelled = !1,
+              stopped = !1,
+              completedCount = 0,
+              abortController = new AbortController(),
+              seenNames = new Set();
 
-            function w(t, e) {
-              t.generateAsync({
-                type: "blob",
-                compression: "STORE"
-              }, (function(t) {
-                e({
-                  e: "step",
-                  percent: t.percent
-                })
-              })).then((function(t) {
-                let r = (new Date).toJSON().replace(/([^\w\-].+)/, ""),
-                  i;
-                o(t, `${c}_${r}.zip`), n.be(), e({
-                  done: !0
-                })
-              }), (function() {
-                e({
-                  fail: !0
-                })
-              }))
-            }
-
-            function b(t, n, e) {
-              if (!a.se) return n({
-                cancelled: 1
-              });
-              let r = new XMLHttpRequest;
-              r.open("GET", t, !0), "responseType" in r && (r.responseType = "arraybuffer"), r.onreadystatechange = function() {
-                4 === this.readyState && (200 === this.status ? (p += parseInt(r.getResponseHeader("content-length")), n({
-                  fileData: r.response || r.responseText
-                })) : e ? n({
-                  error: 1
-                }) : setTimeout((function() {
-                  b(t, n, !0)
-                }), 2e3))
-              }, r.send()
-            }
-            a.se = !0, l.Ge({
-              total: d
-            }, {
-              enoughCallback: v,
-              cancelCallback: function() {
-                h = !0, n.be()
+            function makeCrcTable() {
+              let table = new Uint32Array(256);
+              for (let n = 0; n < 256; n++) {
+                let val = n;
+                for (let k = 0; k < 8; k++) {
+                  val = (val & 1) ? (0xedb88320 ^ (val >>> 1)) : (val >>> 1);
+                }
+                table[n] = val;
               }
-            }), a.Je({
-              data: u,
-              asyncCount: 12
-            }, (function(t, n, e) {
-              if (a.ae) return e();
-              a.se && b(t.url, (async function(r) {
-                if (_++, _ > 10 && (0 === m || m / _ < .7)) return e();
-                r.fileData && (m++, l.Ge({
-                  done: _,
-                  progress: parseFloat(_ / d * 100)
-                }), f.file(t.filename, r.fileData, {
-                  binary: !0
-                }), !a.He && p >= performance.memory.jsHeapSizeLimit - .55 * performance.memory.jsHeapSizeLimit - p && (a.He = !0, p = 0, await v(), f = new i, h = !1, a.se = !0, a.He = !1)), n(t.filename)
-              }))
-            })).thenOne(v, (function() {
-              n.ee = !1, s.Ve(), a.ae || (l.Se(chrome.i18n.getMessage("error_bulk")), "function" == typeof e && e({
-                error: 1
-              }))
-            }))
+              return table;
+            }
+            const crcTable = makeCrcTable();
+            function getCrc32(buf) {
+              let u8 = new Uint8Array(buf);
+              let crc = 0 ^ (-1);
+              for (let i = 0; i < u8.length; i++) {
+                crc = (crc >>> 8) ^ crcTable[(crc ^ u8[i]) & 0xff];
+              }
+              return (crc ^ (-1)) >>> 0;
+            }
+            function getDosDateTime(date = new Date()) {
+              const dosTime = ((date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1)) & 0xffff;
+              const dosDate = (((date.getFullYear() - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate()) & 0xffff;
+              return { dosTime, dosDate };
+            }
+
+            class StreamZipWriter {
+              constructor(controller) {
+                this.controller = controller;
+                this.entries = [];
+                this.offset = 0;
+              }
+              addFile(name, buffer, date = new Date()) {
+                const encoder = new TextEncoder();
+                const nameBytes = encoder.encode(name);
+                const { dosTime, dosDate } = getDosDateTime(date);
+                const crc = getCrc32(buffer);
+                const size = buffer.byteLength;
+
+                const header = new Uint8Array(30 + nameBytes.length);
+                const view = new DataView(header.buffer);
+                view.setUint32(0, 0x04034b50, true);
+                view.setUint16(4, 20, true);
+                view.setUint16(6, 0x0800, true);
+                view.setUint16(8, 0, true); // STORE
+                view.setUint16(10, dosTime, true);
+                view.setUint16(12, dosDate, true);
+                view.setUint32(14, crc, true);
+                view.setUint32(18, size, true);
+                view.setUint32(22, size, true);
+                view.setUint16(26, nameBytes.length, true);
+                view.setUint16(28, 0, true);
+                header.set(nameBytes, 30);
+
+                const localOffset = this.offset;
+                this.offset += header.byteLength + size;
+
+                this.entries.push({
+                  nameBytes,
+                  dosTime,
+                  dosDate,
+                  crc,
+                  size,
+                  offset: localOffset
+                });
+
+                this.controller.enqueue(header);
+                this.controller.enqueue(new Uint8Array(buffer));
+              }
+              finish() {
+                const cdOffset = this.offset;
+                let cdSize = 0;
+
+                for (const entry of this.entries) {
+                  const cdHeader = new Uint8Array(46 + entry.nameBytes.length);
+                  const view = new DataView(cdHeader.buffer);
+                  view.setUint32(0, 0x02014b50, true);
+                  view.setUint16(4, 0x0314, true);
+                  view.setUint16(6, 20, true);
+                  view.setUint16(8, 0x0800, true);
+                  view.setUint16(10, 0, true);
+                  view.setUint16(12, entry.dosTime, true);
+                  view.setUint16(14, entry.dosDate, true);
+                  view.setUint32(16, entry.crc, true);
+                  view.setUint32(20, entry.size, true);
+                  view.setUint32(24, entry.size, true);
+                  view.setUint16(28, entry.nameBytes.length, true);
+                  view.setUint16(30, 0, true);
+                  view.setUint16(32, 0, true);
+                  view.setUint16(34, 0, true);
+                  view.setUint16(36, 0, true);
+                  view.setUint32(38, 0x81a40000, true);
+                  view.setUint32(42, entry.offset, true);
+                  cdHeader.set(entry.nameBytes, 46);
+
+                  cdSize += cdHeader.byteLength;
+                  this.controller.enqueue(cdHeader);
+                }
+
+                const eocd = new Uint8Array(22);
+                const view = new DataView(eocd.buffer);
+                view.setUint32(0, 0x06054b50, true);
+                view.setUint16(4, 0, true);
+                view.setUint16(6, 0, true);
+                view.setUint16(8, this.entries.length, true);
+                view.setUint16(10, this.entries.length, true);
+                view.setUint32(12, cdSize, true);
+                view.setUint32(16, cdOffset, true);
+                view.setUint16(20, 0, true);
+
+                this.controller.enqueue(eocd);
+                this.controller.close();
+              }
+            }
+
+            function fetchBuffer(url, signal) {
+              return new Promise((resolve, reject) => {
+                let xhr = new XMLHttpRequest();
+                xhr.open("GET", url, true);
+                xhr.responseType = "arraybuffer";
+                if (signal) {
+                  signal.addEventListener("abort", () => {
+                    xhr.abort();
+                    reject(new Error("aborted"));
+                  });
+                }
+                xhr.onload = function() {
+                  if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(xhr.response);
+                  } else {
+                    reject(new Error("HTTP " + xhr.status));
+                  }
+                };
+                xhr.onerror = function() {
+                  reject(new Error("Network error"));
+                };
+                xhr.send();
+              });
+            }
+
+            async function downloadWithRetry(url, signal) {
+              try {
+                return await fetchBuffer(url, signal);
+              } catch (err) {
+                if (signal && signal.aborted) throw err;
+                await new Promise(r => setTimeout(r, 1500));
+                return await fetchBuffer(url, signal);
+              }
+            }
+
+            let zipWriter;
+            const zipStream = new ReadableStream({
+              start(controller) {
+                zipWriter = new StreamZipWriter(controller);
+              }
+            });
+
+            const blobPromise = new Response(zipStream).blob();
+
+            let cursor = 0;
+            const concurrency = 6;
+
+            async function worker() {
+              while (cursor < u.length && !stopped && !cancelled) {
+                const idx = cursor++;
+                const item = u[idx];
+                try {
+                  const buf = await downloadWithRetry(item.url, abortController.signal);
+                  if (buf && !cancelled) {
+                    let filename = item.filename || `file_${idx}`;
+                    if (seenNames.has(filename)) {
+                      let extMatch = filename.match(/\.([^.]+)$/);
+                      let ext = extMatch ? extMatch[1] : "";
+                      let base = extMatch ? filename.slice(0, -(ext.length + 1)) : filename;
+                      filename = `${base}_${idx}.${ext || "dat"}`;
+                    }
+                    seenNames.add(filename);
+
+                    zipWriter.addFile(filename, buf);
+                    completedCount++;
+                    l.Ge({
+                      total: total,
+                      done: completedCount,
+                      progress: parseFloat((completedCount / total) * 100)
+                    });
+                  }
+                } catch (err) {
+                  if (cancelled) return;
+                }
+              }
+            }
+
+            async function finalizeZip() {
+              if (zipWriter.entries.length > 0) {
+                zipWriter.finish();
+                const finalBlob = await blobPromise;
+                let dateStr = (new Date).toJSON().replace(/([^\w\-].+)/, "");
+                o(finalBlob, `${c}_${dateStr}.zip`);
+                l.We();
+                "function" == typeof e && e({ success: 1 });
+              } else {
+                l.We();
+                "function" == typeof e && e({ err: "true", reason: "no files downloaded" });
+              }
+              a.se = !1;
+              n.be();
+            }
+
+            l.Ge({
+              total: total,
+              done: 0,
+              progress: 0
+            }, {
+              enoughCallback: function() {
+                stopped = !0;
+              },
+              cancelCallback: function() {
+                cancelled = !0;
+                stopped = !0;
+                abortController.abort();
+                a.se = !1;
+                n.be();
+                l.We();
+                "function" == typeof e && e({ cancelled: 1 });
+              }
+            });
+
+            (async function() {
+              try {
+                const workers = [];
+                for (let i = 0; i < Math.min(concurrency, total); i++) {
+                  workers.push(worker());
+                }
+                await Promise.all(workers);
+                if (!cancelled) {
+                  await finalizeZip();
+                }
+              } catch (err) {
+                a.se = !1;
+                n.be();
+                l.Se(chrome.i18n.getMessage("error_bulk"));
+                "function" == typeof e && e({ error: 1 });
+              }
+            })();
           }
         }
       }()
