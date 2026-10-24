@@ -699,64 +699,116 @@
             }))
           },
           ut: function(e, t) {
-            i.tt().then((n => {
-              let r = "https://i.instagram.com/api/v1/users/web_profile_info/?username=" + e,
-                o = {
-                  method: "GET",
-                  headers: n
-                };
-              o.headers["content-type"] = "application/x-www-form-urlencoded", c.xt(r, o).then((function(e) {
-                let n = e && e.data && e.data.user && e.data.user.id || null;
-                if (!n) throw `Not found userId [${JSON.stringify(e)}]`;
-                t({
-                  userId: n
+            let r = "https://www.instagram.com/api/v1/users/web_profile_info/?username=" + encodeURIComponent(e);
+            fetch(r, {
+              headers: {
+                "x-ig-app-id": "936619743392459",
+                "x-requested-with": "XMLHttpRequest",
+                "accept": "*/*"
+              },
+              credentials: "include"
+            }).then((function(res) {
+              if (200 !== res.status && 202 !== res.status) throw `request error [${r}]`;
+              return res.json();
+            })).then((function(data) {
+              let n = data && data.data && data.data.user && data.data.user.id || null;
+              if (!n) throw "Not found userId";
+              t({
+                userId: n
+              });
+            })).catch((function() {
+              fetch("https://www.instagram.com/" + encodeURIComponent(e) + "/", { credentials: "include" })
+                .then(function(res) { return res.text(); })
+                .then(function(html) {
+                  let m = html.match(/"props":\s*\{\s*"user_id":\s*"(\d+)"/) || html.match(/"profile_id":\s*"?(\d+)"?/) || html.match(/"id":\s*"(\d+)"/);
+                  if (m && m[1]) {
+                    t({ userId: m[1] });
+                  } else {
+                    t({ error: 1, err: 1 });
+                  }
                 })
-              })).catch((function() {
-                t({
-                  error: 1
-                })
-              }))
-            }))
+                .catch(function() {
+                  t({ error: 1, err: 1 });
+                });
+            }));
           },
           ct: function(e, t) {
-            i.tt().then((n => {
-              let r = "https://i.instagram.com/api/v1/users/web_profile_info/?username=" + e,
-                o = {
-                  method: "GET",
-                  headers: n
-                };
-              o.headers["content-type"] = "application/x-www-form-urlencoded", c.xt(r, o).then((function(e) {
-                let n = e && e.data && e.data.user && e.data.user.edge_owner_to_timeline_media && e.data.user.edge_owner_to_timeline_media.count || null;
-                if (!n) throw `Not found postCount [${JSON.stringify(e)}]`;
-                t({
-                  postCount: n
-                })
-              })).catch((function() {
-                t({
-                  error: 1
-                })
-              }))
-            }))
+            let r = "https://www.instagram.com/api/v1/users/web_profile_info/?username=" + encodeURIComponent(e);
+            fetch(r, {
+              headers: {
+                "x-ig-app-id": "936619743392459",
+                "x-requested-with": "XMLHttpRequest",
+                "accept": "*/*"
+              },
+              credentials: "include"
+            }).then((function(res) {
+              if (200 !== res.status && 202 !== res.status) throw `request error [${r}]`;
+              return res.json();
+            })).then((function(data) {
+              let n = data && data.data && data.data.user && data.data.user.edge_owner_to_timeline_media && data.data.user.edge_owner_to_timeline_media.count || null;
+              if (!n) throw "Not found postCount";
+              t({
+                postCount: n
+              });
+            })).catch((function() {
+              t({
+                error: 1,
+                err: 1
+              });
+            }));
           },
           st: function(e, t) {
-            const n = "https://i.instagram.com/api/v1/feed/user/" + e + "/story/";
-            c.kt(n).then((function(e) {
-              t(e)
+            let cleanId = String(e || "").replace(/^highlight:/, "");
+            let isHighlight = String(e || "").startsWith("highlight:");
+            let variables = JSON.stringify({
+              reel_ids: isHighlight ? [] : [cleanId],
+              highlight_reel_ids: isHighlight ? [cleanId] : [],
+              precomposed_overlay: false
+            });
+            let n = "https://www.instagram.com/graphql/query/?query_hash=de8017ee0a7c9c45ec4260733d81ea31&variables=" + encodeURIComponent(variables);
+            fetch(n, {
+              headers: {
+                "x-ig-app-id": "936619743392459",
+                "accept": "*/*"
+              },
+              credentials: "include"
+            }).then((function(res) {
+              if (200 !== res.status && 202 !== res.status) throw `request error [${n}]`;
+              return res.json();
+            })).then((function(data) {
+              t(data);
             })).catch((function() {
               t({
-                error: 1
-              })
-            }))
+                error: 1,
+                err: 1
+              });
+            }));
           },
           ot: function(e, t) {
-            const n = `https://i.instagram.com/api/v1/feed/reels_media/?reel_ids=${encodeURIComponent(e)}`;
-            c.kt(n).then((function(e) {
-              t(e)
+            let cleanId = String(e || "").replace(/^highlight:/, "");
+            let variables = JSON.stringify({
+              reel_ids: [],
+              highlight_reel_ids: [cleanId],
+              precomposed_overlay: false
+            });
+            let n = "https://www.instagram.com/graphql/query/?query_hash=de8017ee0a7c9c45ec4260733d81ea31&variables=" + encodeURIComponent(variables);
+            fetch(n, {
+              headers: {
+                "x-ig-app-id": "936619743392459",
+                "accept": "*/*"
+              },
+              credentials: "include"
+            }).then((function(res) {
+              if (200 !== res.status && 202 !== res.status) throw `request error [${n}]`;
+              return res.json();
+            })).then((function(data) {
+              t(data);
             })).catch((function() {
               t({
-                error: 1
-              })
-            }))
+                error: 1,
+                err: 1
+              });
+            }));
           },
           _t: function(e, t) {
             s.h().then((function(t) {
