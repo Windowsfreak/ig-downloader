@@ -1,0 +1,113 @@
+{
+   "all": {
+      "message": "Tutti"
+   },
+   "allow_share_to_feed": {
+      "message": "Consenti condivisione nel feed"
+   },
+   "btn_cancel": {
+      "message": "Annulla"
+   },
+   "btn_enough": {
+      "message": "Ferma e salva"
+   },
+   "bulk_advanced": {
+      "message": "Impostazioni avanzate"
+   },
+   "bulk_advanced_params_not_match": {
+      "message": "Nessun risultato per i parametri impostati"
+   },
+   "bulk_download": {
+      "message": "Scarica tutto"
+   },
+   "description": {
+      "message": "Scarica foto, video, Reels e storie da Instagram. Strumento veloce per Chrome con modalità singola e download multipli"
+   },
+   "download": {
+      "message": "Scarica"
+   },
+   "download_all": {
+      "message": "Scarica tutto"
+   },
+   "downloading": {
+      "message": "Download in corso"
+   },
+   "error_bulk": {
+      "message": "Errore nel ricevere il file ZIP. Probabilmente hai provato a scaricare troppi file contemporaneamente."
+   },
+   "files": {
+      "message": "file"
+   },
+   "files_found_on_page": {
+      "message": "post trovati"
+   },
+   "for_days": {
+      "message": "Per i giorni precedenti"
+   },
+   "from": {
+      "message": "da"
+   },
+   "hide_advanced": {
+      "message": "Nascondi impostazioni avanzate"
+   },
+   "most_liked": {
+      "message": "Più apprezzati"
+   },
+   "most_viewed": {
+      "message": "Più visualizzati"
+   },
+   "name": {
+      "message": "Downloader for Instagram - Promaster"
+   },
+   "no_media_found": {
+      "message": "Nessun contenuto trovato"
+   },
+   "photo": {
+      "message": "Foto"
+   },
+   "preparing_links": {
+      "message": "Ricerca dei contenuti"
+   },
+   "rate_us_descr": {
+      "message": "Valutaci:"
+   },
+   "repost": {
+      "message": "Ripubblica"
+   },
+   "repost_error": {
+      "message": "Errore durante la ripubblicazione"
+   },
+   "repost_reels": {
+      "message": "Ripubblica Reel"
+   },
+   "repost_story": {
+      "message": "Ripubblica storia"
+   },
+   "reposted": {
+      "message": "File ripubblicato!"
+   },
+   "set_range": {
+      "message": "Intervallo"
+   },
+   "share": {
+      "message": "Condividi"
+   },
+   "sww_error": {
+      "message": "Errore lato Instagram.\nRiprova più tardi"
+   },
+   "synchronous_bulk_download_denied": {
+      "message": "Attendi il completamento del download in un'altra scheda."
+   },
+   "to": {
+      "message": "a"
+   },
+   "video": {
+      "message": "Video"
+   },
+   "write_caption": {
+      "message": "Scrivi una didascalia... (max 2000 caratteri)"
+   },
+   "zipping_files": {
+      "message": "Preparazione del file ZIP"
+   }
+}

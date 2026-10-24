@@ -1,0 +1,113 @@
+{
+   "all": {
+      "message": "すべて"
+   },
+   "allow_share_to_feed": {
+      "message": "フィードへの共有を許可"
+   },
+   "btn_cancel": {
+      "message": "キャンセル"
+   },
+   "btn_enough": {
+      "message": "停止して保存"
+   },
+   "bulk_advanced": {
+      "message": "詳細設定"
+   },
+   "bulk_advanced_params_not_match": {
+      "message": "設定された条件に一致する結果がありません"
+   },
+   "bulk_download": {
+      "message": "一括ダウンロード"
+   },
+   "description": {
+      "message": "Instagramの写真・動画・ストーリー・リールを簡単に保存。Chrome用の高速ツール、個別・一括ダウンロード対応"
+   },
+   "download": {
+      "message": "ダウンロード"
+   },
+   "download_all": {
+      "message": "すべてダウンロード"
+   },
+   "downloading": {
+      "message": "ダウンロード中"
+   },
+   "error_bulk": {
+      "message": "ZIPファイルの取得に失敗しました。ダウンロード数が多すぎた可能性があります。"
+   },
+   "files": {
+      "message": "ファイル"
+   },
+   "files_found_on_page": {
+      "message": "件の投稿が見つかりました"
+   },
+   "for_days": {
+      "message": "過去の日数分"
+   },
+   "from": {
+      "message": "開始"
+   },
+   "hide_advanced": {
+      "message": "詳細設定を非表示"
+   },
+   "most_liked": {
+      "message": "いいね順"
+   },
+   "most_viewed": {
+      "message": "再生数順"
+   },
+   "name": {
+      "message": "Downloader for Instagram - Promaster"
+   },
+   "no_media_found": {
+      "message": "メディアが見つかりません"
+   },
+   "photo": {
+      "message": "写真"
+   },
+   "preparing_links": {
+      "message": "メディアを検索中"
+   },
+   "rate_us_descr": {
+      "message": "評価する："
+   },
+   "repost": {
+      "message": "再投稿"
+   },
+   "repost_error": {
+      "message": "再投稿エラー"
+   },
+   "repost_reels": {
+      "message": "リールを再投稿"
+   },
+   "repost_story": {
+      "message": "ストーリーを再投稿"
+   },
+   "reposted": {
+      "message": "ファイルを再投稿しました！"
+   },
+   "set_range": {
+      "message": "範囲"
+   },
+   "share": {
+      "message": "シェア"
+   },
+   "sww_error": {
+      "message": "Instagram側でエラーが発生しました。\nしばらくしてから再試行してください。"
+   },
+   "synchronous_bulk_download_denied": {
+      "message": "他のタブでのダウンロードが完了するまでお待ちください。"
+   },
+   "to": {
+      "message": "終了"
+   },
+   "video": {
+      "message": "動画"
+   },
+   "write_caption": {
+      "message": "キャプションを入力...（最大2000文字）"
+   },
+   "zipping_files": {
+      "message": "ZIPファイルを準備中"
+   }
+}

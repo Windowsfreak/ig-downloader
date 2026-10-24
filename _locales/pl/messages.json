@@ -1,0 +1,113 @@
+{
+   "all": {
+      "message": "Wszystkie"
+   },
+   "allow_share_to_feed": {
+      "message": "Zezwól na udostępnienie w kanale"
+   },
+   "btn_cancel": {
+      "message": "Anuluj"
+   },
+   "btn_enough": {
+      "message": "Zatrzymaj i zapisz"
+   },
+   "bulk_advanced": {
+      "message": "Ustawienia zaawansowane"
+   },
+   "bulk_advanced_params_not_match": {
+      "message": "Brak wyników dla podanych parametrów"
+   },
+   "bulk_download": {
+      "message": "Pobierz wszystko"
+   },
+   "description": {
+      "message": "Pobieraj zdjęcia, filmy, Reels i relacje z Instagrama. Szybkie narzędzie dla Chrome z opcją pojedynczego i zbiorczego pobierania"
+   },
+   "download": {
+      "message": "Pobierz"
+   },
+   "download_all": {
+      "message": "Pobierz wszystko"
+   },
+   "downloading": {
+      "message": "Pobieranie"
+   },
+   "error_bulk": {
+      "message": "Nie udało się odebrać pliku ZIP. Prawdopodobnie próbowałeś pobrać zbyt wiele plików naraz."
+   },
+   "files": {
+      "message": "pliki"
+   },
+   "files_found_on_page": {
+      "message": "znaleziono postów"
+   },
+   "for_days": {
+      "message": "Z ostatnich dni"
+   },
+   "from": {
+      "message": "od"
+   },
+   "hide_advanced": {
+      "message": "Ukryj zaawansowane ustawienia"
+   },
+   "most_liked": {
+      "message": "Najbardziej lubiane"
+   },
+   "most_viewed": {
+      "message": "Najczęściej oglądane"
+   },
+   "name": {
+      "message": "Downloader for Instagram - Promaster"
+   },
+   "no_media_found": {
+      "message": "Nie znaleziono mediów"
+   },
+   "photo": {
+      "message": "Zdjęcie"
+   },
+   "preparing_links": {
+      "message": "Wyszukiwanie mediów"
+   },
+   "rate_us_descr": {
+      "message": "Oceń nas:"
+   },
+   "repost": {
+      "message": "Udostępnij ponownie"
+   },
+   "repost_error": {
+      "message": "Błąd podczas udostępniania"
+   },
+   "repost_reels": {
+      "message": "Udostępnij Reels"
+   },
+   "repost_story": {
+      "message": "Udostępnij relację"
+   },
+   "reposted": {
+      "message": "Plik został ponownie udostępniony!"
+   },
+   "set_range": {
+      "message": "Zakres"
+   },
+   "share": {
+      "message": "Udostępnij"
+   },
+   "sww_error": {
+      "message": "Błąd po stronie Instagrama.\nSpróbuj ponownie za chwilę."
+   },
+   "synchronous_bulk_download_denied": {
+      "message": "Poczekaj, aż pobieranie w innej karcie zostanie zakończone."
+   },
+   "to": {
+      "message": "do"
+   },
+   "video": {
+      "message": "Wideo"
+   },
+   "write_caption": {
+      "message": "Napisz podpis... (maks. 2000 znaków)"
+   },
+   "zipping_files": {
+      "message": "Przygotowywanie pliku ZIP"
+   }
+}

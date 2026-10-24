@@ -1,0 +1,113 @@
+{
+   "all": {
+      "message": "Усі"
+   },
+   "allow_share_to_feed": {
+      "message": "Дозволити публікацію у стрічці"
+   },
+   "btn_cancel": {
+      "message": "Скасувати"
+   },
+   "btn_enough": {
+      "message": "Зупинити і зберегти"
+   },
+   "bulk_advanced": {
+      "message": "Розширені налаштування"
+   },
+   "bulk_advanced_params_not_match": {
+      "message": "Немає результатів за заданими параметрами"
+   },
+   "bulk_download": {
+      "message": "Завантажити все"
+   },
+   "description": {
+      "message": "Швидко зберігайте Instagram Reels, Stories, IGTV та публікації. Завантаження без реєстрації, без водяних знаків, у високій якості"
+   },
+   "download": {
+      "message": "Завантажити"
+   },
+   "download_all": {
+      "message": "Завантажити все"
+   },
+   "downloading": {
+      "message": "Завантаження"
+   },
+   "error_bulk": {
+      "message": "Не вдалося отримати ZIP-файл. Ймовірно, ви намагалися завантажити забагато файлів одночасно."
+   },
+   "files": {
+      "message": "файли"
+   },
+   "files_found_on_page": {
+      "message": "знайдено публікацій"
+   },
+   "for_days": {
+      "message": "За останні дні"
+   },
+   "from": {
+      "message": "від"
+   },
+   "hide_advanced": {
+      "message": "Приховати розширені налаштування"
+   },
+   "most_liked": {
+      "message": "Найпопулярніші"
+   },
+   "most_viewed": {
+      "message": "Найпереглядуваніші"
+   },
+   "name": {
+      "message": "Downloader for Instagram - Promaster"
+   },
+   "no_media_found": {
+      "message": "Медіа не знайдено"
+   },
+   "photo": {
+      "message": "Фото"
+   },
+   "preparing_links": {
+      "message": "Пошук медіа"
+   },
+   "rate_us_descr": {
+      "message": "Оцініть нас:"
+   },
+   "repost": {
+      "message": "Репост"
+   },
+   "repost_error": {
+      "message": "Помилка репосту"
+   },
+   "repost_reels": {
+      "message": "Репост Reels"
+   },
+   "repost_story": {
+      "message": "Репост історії"
+   },
+   "reposted": {
+      "message": "Файл репощено!"
+   },
+   "set_range": {
+      "message": "Діапазон"
+   },
+   "share": {
+      "message": "Поділитися"
+   },
+   "sww_error": {
+      "message": "Помилка на стороні Instagram.\nСпробуйте пізніше."
+   },
+   "synchronous_bulk_download_denied": {
+      "message": "Будь ласка, зачекайте, доки завершиться завантаження в іншій вкладці."
+   },
+   "to": {
+      "message": "до"
+   },
+   "video": {
+      "message": "Відео"
+   },
+   "write_caption": {
+      "message": "Напишіть підпис... (макс. 2000 символів)"
+   },
+   "zipping_files": {
+      "message": "Підготовка ZIP-файлу"
+   }
+}

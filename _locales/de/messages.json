@@ -1,0 +1,113 @@
+{
+   "all": {
+      "message": "Alle"
+   },
+   "allow_share_to_feed": {
+      "message": "Teilen im Feed erlauben"
+   },
+   "btn_cancel": {
+      "message": "Abbrechen"
+   },
+   "btn_enough": {
+      "message": "Stoppen & Speichern"
+   },
+   "bulk_advanced": {
+      "message": "Erweiterte Einstellungen"
+   },
+   "bulk_advanced_params_not_match": {
+      "message": "Keine Ergebnisse für die gewählten Parameter"
+   },
+   "bulk_download": {
+      "message": "Alle herunterladen"
+   },
+   "description": {
+      "message": "Instagram-Fotos, -Videos, Reels und Stories mit einem Klick herunterladen. Schnelles Chrome-Tool für Einzel- und Massendownloads"
+   },
+   "download": {
+      "message": "Herunterladen"
+   },
+   "download_all": {
+      "message": "Alles herunterladen"
+   },
+   "downloading": {
+      "message": "Herunterladen"
+   },
+   "error_bulk": {
+      "message": "ZIP-Datei konnte nicht empfangen werden. Wahrscheinlich wurden zu viele Dateien gleichzeitig ausgewählt."
+   },
+   "files": {
+      "message": "Dateien"
+   },
+   "files_found_on_page": {
+      "message": "Beiträge gefunden"
+   },
+   "for_days": {
+      "message": "Für vergangene Tage"
+   },
+   "from": {
+      "message": "von"
+   },
+   "hide_advanced": {
+      "message": "Erweiterte Einstellungen ausblenden"
+   },
+   "most_liked": {
+      "message": "Meistgelikt"
+   },
+   "most_viewed": {
+      "message": "Meistgesehen"
+   },
+   "name": {
+      "message": "Downloader for Instagram - Promaster"
+   },
+   "no_media_found": {
+      "message": "Keine Medien gefunden"
+   },
+   "photo": {
+      "message": "Foto"
+   },
+   "preparing_links": {
+      "message": "Medien werden gesucht"
+   },
+   "rate_us_descr": {
+      "message": "Bewerten Sie uns:"
+   },
+   "repost": {
+      "message": "Erneut posten"
+   },
+   "repost_error": {
+      "message": "Fehler beim erneuten Posten"
+   },
+   "repost_reels": {
+      "message": "Reel erneut posten"
+   },
+   "repost_story": {
+      "message": "Story erneut posten"
+   },
+   "reposted": {
+      "message": "Datei erneut gepostet!"
+   },
+   "set_range": {
+      "message": "Zeitraum"
+   },
+   "share": {
+      "message": "Teilen"
+   },
+   "sww_error": {
+      "message": "Fehler auf Instagram-Seite. \nBitte versuchen Sie es später erneut."
+   },
+   "synchronous_bulk_download_denied": {
+      "message": "Bitte warten Sie, bis der Download in einem anderen Tab abgeschlossen ist."
+   },
+   "to": {
+      "message": "bis"
+   },
+   "video": {
+      "message": "Video"
+   },
+   "write_caption": {
+      "message": "Bildunterschrift eingeben... (max. 2000 Zeichen)"
+   },
+   "zipping_files": {
+      "message": "ZIP-Datei wird vorbereitet"
+   }
+}

@@ -1,0 +1,113 @@
+{
+   "all": {
+      "message": "Все"
+   },
+   "allow_share_to_feed": {
+      "message": "Разрешить публикацию в ленте"
+   },
+   "btn_cancel": {
+      "message": "Отмена"
+   },
+   "btn_enough": {
+      "message": "Остановить и сохранить"
+   },
+   "bulk_advanced": {
+      "message": "Расширенные настройки"
+   },
+   "bulk_advanced_params_not_match": {
+      "message": "Нет результатов по заданным параметрам"
+   },
+   "bulk_download": {
+      "message": "Скачать всё"
+   },
+   "description": {
+      "message": "Скачивайте фото, видео, Reels и сторис из Instagram. Удобный инструмент для Chrome с одиночной и массовой загрузкой"
+   },
+   "download": {
+      "message": "Скачать"
+   },
+   "download_all": {
+      "message": "Скачать всё"
+   },
+   "downloading": {
+      "message": "Скачивание"
+   },
+   "error_bulk": {
+      "message": "Не удалось получить ZIP-файл. Возможно, вы пытались скачать слишком много файлов одновременно."
+   },
+   "files": {
+      "message": "файлы"
+   },
+   "files_found_on_page": {
+      "message": "найдено публикаций"
+   },
+   "for_days": {
+      "message": "За последние дни"
+   },
+   "from": {
+      "message": "от"
+   },
+   "hide_advanced": {
+      "message": "Скрыть расширенные настройки"
+   },
+   "most_liked": {
+      "message": "Самые понравившиеся"
+   },
+   "most_viewed": {
+      "message": "Самые просматриваемые"
+   },
+   "name": {
+      "message": "Downloader for Instagram - Promaster"
+   },
+   "no_media_found": {
+      "message": "Медиа не найдено"
+   },
+   "photo": {
+      "message": "Фото"
+   },
+   "preparing_links": {
+      "message": "Поиск медиа"
+   },
+   "rate_us_descr": {
+      "message": "Оцените нас:"
+   },
+   "repost": {
+      "message": "Репост"
+   },
+   "repost_error": {
+      "message": "Ошибка при репосте"
+   },
+   "repost_reels": {
+      "message": "Репост Reels"
+   },
+   "repost_story": {
+      "message": "Репост истории"
+   },
+   "reposted": {
+      "message": "Файл репостнут!"
+   },
+   "set_range": {
+      "message": "Диапазон"
+   },
+   "share": {
+      "message": "Поделиться"
+   },
+   "sww_error": {
+      "message": "Ошибка на стороне Instagram.\nПожалуйста, попробуйте позже."
+   },
+   "synchronous_bulk_download_denied": {
+      "message": "Дождитесь завершения загрузки в другой вкладке."
+   },
+   "to": {
+      "message": "до"
+   },
+   "video": {
+      "message": "Видео"
+   },
+   "write_caption": {
+      "message": "Введите подпись... (макс. 2000 символов)"
+   },
+   "zipping_files": {
+      "message": "Подготовка ZIP-файла"
+   }
+}

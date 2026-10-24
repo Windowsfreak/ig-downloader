@@ -1,0 +1,720 @@
+nav {
+  z-index: 200;
+}
+/*SINGLE POST DOWNLOAD AND REPOST BTN*/
+.promaster_dl_btn,
+.promaster_rpst_btn {
+  position: absolute !important;
+  z-index: 100 !important;
+  line-height: 1.2 !important;
+  padding: 7px !important;
+  left: 2% !important;
+  display: none !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  transition: all 0.3s ease-in-out !important;
+  cursor: pointer !important;
+  text-transform: capitalize !important;
+  border-radius: 8px !important;
+  align-items: center !important;
+  color: #1E1E1E !important;
+  overflow: hidden !important;
+  flex-direction: row !important;
+}
+.promaster_dl_btn:hover,
+.promaster_rpst_btn:hover {
+  opacity: 1 !important;
+}
+.promaster_dl_btn:hover .promaster_text,
+.promaster_rpst_btn:hover .promaster_text {
+  display: inline !important;
+}
+.promaster_dl_btn .promaster_icon,
+.promaster_rpst_btn .promaster_icon {
+  width: 22px !important;
+  height: 22px !important;
+  display: inline-block !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+}
+.promaster_dl_btn .promaster_icon.promaster_loader,
+.promaster_rpst_btn .promaster_icon.promaster_loader {
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/loader.gif') !important;
+}
+.promaster_dl_btn .promaster_text,
+.promaster_rpst_btn .promaster_text {
+  font-family: 'SF UI Display', sans-serif !important;
+  display: none;
+  font-size: 14px !important;
+  margin-left: 4px !important;
+  margin-right: 4px !important;
+}
+.promaster_dl_btn .promaster_dl_pregress_loader,
+.promaster_rpst_btn .promaster_dl_pregress_loader {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  background-color: #008967 !important;
+  opacity: 0.8 !important;
+  width: 0 !important;
+  height: 100% !important;
+  z-index: -1 !important;
+  transition: all 0.4s ease-in-out !important;
+}
+.promaster_dl_btn.wfl,
+.promaster_rpst_btn.wfl {
+  opacity: 1 !important;
+  display: flex !important;
+}
+.promaster_dl_btn {
+  top: 10px !important;
+}
+.promaster_dl_btn .promaster_icon {
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/download.svg') !important;
+}
+.promaster_rpst_btn {
+  top: 52px !important;
+}
+.promaster_rpst_btn .promaster_icon {
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/repost.svg') !important;
+}
+*:hover > .promaster_dl_btn,
+*:hover > .promaster_rpst_btn {
+  display: flex !important;
+}
+[data-ig_toolkit_marked]:hover .promaster_dl_btn,
+[data-ig_toolkit_marked]:hover .promaster_rpst_btn {
+  display: flex !important;
+}
+/*STORIES BLOCK DOWNLOAD AND REPOST BTN*/
+.promaster_stories_actions_wrap {
+  position: fixed !important;
+  left: 0 !important;
+  top: 50px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  z-index: 999 !important;
+  margin: 16px !important;
+  font-family: 'SF UI Display', sans-serif !important;
+}
+.promaster_stories_actions_wrap .promaster_stories_actions_btn {
+  display: flex !important;
+  align-items: center !important;
+  color: white !important;
+  cursor: pointer !important;
+  margin-right: 16px !important;
+  text-decoration: none !important;
+}
+.promaster_stories_actions_wrap .promaster_stories_actions_btn .promaster_icon {
+  width: 22px !important;
+  height: 22px !important;
+  margin-right: 4px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: auto !important;
+}
+.promaster_stories_actions_wrap .promaster_stories_actions_btn .promaster_icon.promaster_loader {
+  background-size: contain !important;
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/loader.gif') !important;
+}
+.promaster_stories_actions_wrap .promaster_stories_actions_btn .promaster_stories_count {
+  margin-left: 2px !important;
+}
+.promaster_ns_rp_btn .promaster_icon {
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/repost.svg') !important;
+}
+.promaster_ns_dl_btn .promaster_icon {
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/download.svg') !important;
+}
+.promaster_ns_dl_all_btn .promaster_icon {
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/download_all_stories.svg') !important;
+}
+/*DOWNLOAD ZIP BTN & POPUP*/
+.promaster_first_bulk_btn_wrap {
+  position: relative !important;
+  margin-left: 14px !important;
+}
+.promaster_first_bulk_btn_wrap:hover .promaster_first_bulk_hint {
+  opacity: 1 !important;
+  display: block !important;
+}
+.promaster_first_bulk_btn_wrap .promaster_first_bulk_btn {
+  height: 30px !important;
+  width: 30px !important;
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/download_all.svg') !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 22px !important;
+  cursor: pointer !important;
+}
+.promaster_first_bulk_btn_wrap .promaster_first_bulk_hint {
+  top: 0 !important;
+  left: 50% !important;
+  transform: translate(-50%, -130%) !important;
+  z-index: 202 !important;
+  width: 100px !important;
+  padding: 5px 10px !important;
+  opacity: 0 !important;
+  display: none !important;
+  position: absolute !important;
+  height: 15px !important;
+  color: white !important;
+  background: #2C2C2C !important;
+  box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.13) !important;
+  transition: all 0.2s ease-in-out !important;
+  font-size: 11px !important;
+  line-height: 15px;
+  font-family: 'SF UI Display', sans-serif;
+  text-align: center;
+  border-radius: 4px;
+}
+.promaster_first_bulk_btn_wrap .promaster_first_bulk_hint::after {
+  content: "";
+  position: absolute;
+  top: calc(100% - 1px);
+  left: 50%;
+  margin-left: -7px;
+  border-width: 7px;
+  border-style: solid;
+  border-color: #2C2C2C transparent transparent transparent;
+}
+.promaster-scroll-hidden {
+  overflow: hidden !important;
+}
+.promaster_modal {
+  left: 0;
+  top: 0;
+  width: 100%;
+  position: fixed;
+  display: none;
+  height: 100%;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 99;
+}
+.promaster_modal .promaster_modal_content {
+  font-family: 'SF UI Display', sans-serif;
+  position: fixed;
+  opacity: 0;
+  color: #000000;
+  transition: all 0.5s ease-in-out;
+  padding: 20px;
+  width: 350px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  background: #FFFFFF;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.15);
+  cursor: default;
+  box-sizing: border-box;
+  /*REPOST POPUP*/
+}
+.promaster_modal .promaster_modal_content .promaster_modal_header {
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 19px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: default;
+  margin-bottom: 12px;
+}
+.promaster_modal .promaster_modal_content .promaster_count_header {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  cursor: default;
+  margin-bottom: 12px;
+}
+.promaster_modal .promaster_modal_content .promaster_count_header .promaster_big_font_part {
+  font-weight: 500;
+  font-size: 40px;
+  line-height: 48px;
+}
+.promaster_modal .promaster_modal_content .promaster_count_header .promaster_small_font_part {
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 19px;
+  letter-spacing: 0.03em;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form label {
+  color: #000000;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block.promaster_form_type_tabs .promaster_form_type_tab {
+  box-sizing: border-box;
+  border-bottom: 1px solid #000000;
+  cursor: pointer;
+  width: calc(100% / 3);
+  height: 43px;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 19px;
+  text-align: center;
+  letter-spacing: 0.03em;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block.promaster_form_type_tabs .promaster_form_type_tab.promaster_selected {
+  color: #008967;
+  border-left: 1px solid #000000;
+  border-top: 1px solid #000000;
+  border-right: 1px solid #000000;
+  border-bottom: none;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block.promaster_form_type_tabs .promaster_form_type_tab input {
+  display: none;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label {
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  font-size: 16px;
+  line-height: 140%;
+  display: flex;
+  align-items: center;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label .promaster_form_custom_checkbox {
+  height: 20px;
+  width: 20px;
+  border: 1px solid #000000;
+  box-sizing: border-box;
+  border-radius: 3px;
+  margin-right: 10px;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label .promaster_form_custom_checkbox .promaster_form_custom_checkbox_checked {
+  margin-left: 6px;
+  margin-top: 1px;
+  display: none;
+  width: 5px;
+  height: 10px;
+  border: solid #008967;
+  border-width: 0 2px 2px 0;
+  -webkit-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label .promaster_form_custom_checkbox .promaster_form_custom_checkbox_checked:hover {
+  background-color: #E9FFFA;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label input:checked ~ .promaster_form_custom_checkbox .promaster_form_custom_checkbox_checked {
+  display: block;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label .promaster_form_switch {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  padding: 0;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label .promaster_form_switch input {
+  display: none;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label .promaster_form_switch input:checked + .promaster_form_switch_slider {
+  background: rgba(0, 137, 103, 0.54);
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label .promaster_form_switch input:focus + .promaster_form_switch_slider {
+  background: #008967;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label .promaster_form_switch input:checked + .promaster_form_switch_slider:before {
+  transform: translateX(12px);
+  background: #008967;
+  box-shadow: none;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label .promaster_form_switch .promaster_form_switch_slider {
+  width: 32px;
+  height: 14px;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  background: rgba(0, 0, 0, 0.32);
+  border-radius: 7px;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_bulk_advanced_input_label .promaster_form_switch .promaster_form_switch_slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 0;
+  top: 0;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.15), 0px 3px 1px rgba(0, 0, 0, 0.06);
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap.promaster_form_number_input_wrap_column {
+  flex-direction: column;
+  align-items: start;
+  text-transform: capitalize;
+  font-size: 14px;
+  line-height: 18px;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap.promaster_form_number_input_wrap_column input[type="number"] {
+  width: 145px !important;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap input::-webkit-outer-spin-button,
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap input[type="number"] {
+  text-align: center;
+  height: 44px;
+  color: #000000;
+  width: 86px;
+  background: #FFFFFF;
+  border: 1px solid #dfdfdf;
+  box-sizing: border-box;
+  box-shadow: none;
+  border-radius: 4px;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap input[type="number"]:focus {
+  outline: none;
+  border-color: #008967;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap input[type="number"]::-webkit-outer-spin-button,
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap input[type="number"][disabled] {
+  color: transparent;
+  cursor: not-allowed;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap input[type="number"].percent_count {
+  width: 68px;
+  margin-right: 6px;
+}
+.promaster_modal .promaster_modal_content .promaster_bulk_form .promaster_form_block .promaster_form_number_input_wrap .promaster_form_number_input_note {
+  font-size: 16px;
+  line-height: 140%;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_btn_wrap {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+  align-items: center;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_btn_wrap button {
+  height: 44px;
+  width: 310px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(271.15deg, #00A27A 0%, #00D5A0 100%);
+  box-shadow: 0px 2px 5px 0px #01AE8366;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 19px;
+  letter-spacing: 0.03em;
+  color: #FFFFFF;
+  text-transform: capitalize;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_btn_wrap button:not(:first-child) {
+  margin-left: 10px;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_btn_wrap button.promaster_btn_enough {
+  width: 195px;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_btn_wrap button.promaster_btn_cancel {
+  background: #ffffff;
+  color: #008967;
+  border: 2px solid #01a37b;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_btn_wrap button.promaster_btn_cancel.small_btn_cancel {
+  width: 105px;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_btn_wrap .promaster_repost_loader_wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_btn_wrap .promaster_repost_loader_wrap .promaster_repost_loader {
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/loader.gif');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  width: 48px;
+  height: 48px;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_message_container {
+  display: flex;
+  flex-direction: row;
+  color: #000000;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 140%;
+  cursor: default;
+  text-align: center;
+  min-height: 160px;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_progress {
+  margin-top: 15px;
+  margin-bottom: 20px;
+  padding: 0;
+  height: 10px;
+  border-radius: 8px;
+  background: #f3f3f3;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_progress .promaster_modal_progressbar {
+  transition: all 1.5s ease-in-out;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(271.15deg, #00A27A 0%, #00D5A0 100%);
+  box-shadow: 0px 2px 5px 0px rgba(1, 174, 131, 0.4);
+  border: 0px;
+  border-radius: 8px;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_close {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  width: 16px;
+  height: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/close_icon.svg');
+  cursor: pointer;
+  z-index: 99;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_loader {
+  display: flex;
+  transition: all 0.3s ease-in-out;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+}
+.promaster_modal .promaster_modal_content .promaster_modal_loader .promaster_icon {
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/loader.gif');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  width: 96px;
+  height: 96px;
+}
+.promaster_modal .promaster_modal_content .promaster_form_advanced_switch {
+  margin-top: 15px;
+  text-align: center;
+}
+.promaster_modal .promaster_modal_content .promaster_form_advanced_switch span {
+  font-size: 14px;
+  line-height: 18px;
+  color: #008967;
+  white-space: normal;
+  text-decoration: none;
+  cursor: pointer;
+}
+.promaster_modal .promaster_modal_content .promaster_repost_preview input[type="checkbox"] {
+  margin: 20px 10px 20px 0;
+}
+.promaster_modal .promaster_modal_content .promaster_repost_preview textarea {
+  padding: 7px 9px;
+  margin: 10px 0;
+  height: 80px;
+  font-size: 14px;
+  line-height: 18px;
+  resize: vertical;
+  min-height: 50px;
+  max-height: 200px;
+  width: 290px;
+  color: #000000;
+}
+.promaster_modal .promaster_modal_content .promaster_repost_preview img {
+  max-height: 100% !important;
+  max-width: 100% !important;
+}
+.promaster_modal .promaster_modal_content .promaster_repost_not_comply_rules .promaster_header {
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 18px;
+  padding-right: 30px;
+  text-align: justify;
+  margin-bottom: 15px;
+}
+.promaster_modal .promaster_modal_content .promaster_repost_not_comply_rules .promaster_repost_rules_block {
+  text-align: justify;
+  margin: 5px 0;
+  display: flex;
+  flex-direction: row;
+  align-items: self-start;
+}
+.promaster_modal .promaster_modal_content .promaster_repost_not_comply_rules .promaster_repost_rules_block .promaster_comply_text {
+  font-size: 14px;
+  line-height: 18px;
+}
+.promaster_modal .promaster_modal_content .promaster_repost_not_comply_rules .promaster_repost_rules_block .promaster_comply,
+.promaster_modal .promaster_modal_content .promaster_repost_not_comply_rules .promaster_repost_rules_block .promaster_not_comply {
+  width: 16px;
+  height: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  margin-right: 10px;
+}
+.promaster_modal .promaster_modal_content .promaster_repost_not_comply_rules .promaster_repost_rules_block .promaster_not_comply {
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/x-circle.svg');
+}
+.promaster_modal .promaster_modal_content .promaster_repost_not_comply_rules .promaster_repost_rules_block .promaster_comply {
+  background-image: url('chrome-extension://__MSG_@@extension_id__/img/check-circle.svg');
+}
+.promaster_margin0 {
+  margin: 0 !important;
+}
+.promaster-rate-us {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  z-index: 5555;
+  right: -122px;
+  bottom: -30px;
+  width: 395px;
+  height: 225px;
+  background: url('chrome-extension://__MSG_@@extension_id__/img/rate-us-back.svg') no-repeat;
+}
+.promaster-rate-us .title {
+  width: 222px;
+  height: 97px;
+  margin: 21px 0 0 25px;
+}
+.promaster-rate-us .title .logo {
+  display: flex;
+  background: url('chrome-extension://__MSG_@@extension_id__/img/rate-us-title.svg') no-repeat;
+  width: 222px;
+  height: 97px;
+}
+.promaster-rate-us .main {
+  margin: 2px 0 0 25px;
+  width: 222px;
+  height: 46px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #F5F7FC;
+  border: 0;
+  border-radius: 10px;
+  flex-direction: row;
+}
+.promaster-rate-us .main .descr {
+  color: #401353;
+  width: 222px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.promaster-rate-us .main .descr span {
+  text-align: center;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.promaster-rate-us .main .stars-root {
+  display: flex;
+  flex-direction: row;
+  margin-top: 2px;
+}
+.promaster-rate-us .main [class^=star-] {
+  width: 30px;
+  height: 30px;
+  display: inline-block;
+  vertical-align: middle;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  background-size: contain;
+  transition: all 0.2s linear;
+  cursor: pointer;
+}
+.promaster-rate-us .main .star-empty {
+  background: url('chrome-extension://__MSG_@@extension_id__/img/rate-us-star_empty.svg') no-repeat;
+}
+.promaster-rate-us .main .star-full {
+  background: url('chrome-extension://__MSG_@@extension_id__/img/rate-us-star_full.svg') no-repeat;
+}
+.promaster_modal_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 2147483647;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.promaster_modal_overlay .promaster_policy_modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999999999;
+  width: 350px;
+  height: 278px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  box-shadow: 0px 2px 10px 0px #00000026;
+}
+.promaster_modal_overlay .promaster_policy_modal .logo {
+  margin-top: 46px;
+  background: url('chrome-extension://__MSG_@@extension_id__/img/policy.svg') no-repeat;
+  height: 60px;
+  width: 68px;
+}
+.promaster_modal_overlay .promaster_policy_modal .text {
+  margin-top: 33px;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 150%;
+  text-align: center;
+  color: #000000;
+}
+.promaster_modal_overlay .promaster_policy_modal .link {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 150%;
+  text-align: center;
+  color: #01B185;
+}
+.promaster_modal_overlay .promaster_policy_modal .accept {
+  margin-top: 27px;
+  border: none;
+  border-radius: 8px;
+  color: #FFFFFF;
+  cursor: pointer;
+  background: linear-gradient(271.15deg, #00A27A 0%, #00D5A0 100%);
+  box-shadow: 0px 2px 5px 0px #01AE8366;
+  width: 310px;
+  height: 44px;
+}

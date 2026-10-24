@@ -1,0 +1,113 @@
+{
+   "all": {
+      "message": "ทั้งหมด"
+   },
+   "allow_share_to_feed": {
+      "message": "อนุญาตให้แชร์ไปยังฟีด"
+   },
+   "btn_cancel": {
+      "message": "ยกเลิก"
+   },
+   "btn_enough": {
+      "message": "หยุดและบันทึก"
+   },
+   "bulk_advanced": {
+      "message": "การตั้งค่าขั้นสูง"
+   },
+   "bulk_advanced_params_not_match": {
+      "message": "ไม่พบผลลัพธ์ตามพารามิเตอร์ที่ตั้งไว้"
+   },
+   "bulk_download": {
+      "message": "ดาวน์โหลดทั้งหมด"
+   },
+   "description": {
+      "message": "ดาวน์โหลดรูปภาพ วิดีโอ Reels และ Stories จาก Instagram ได้ง่าย ๆ ด้วยเครื่องมือ Chrome ที่รองรับทั้งแบบเดี่ยวและหลายรายการ"
+   },
+   "download": {
+      "message": "ดาวน์โหลด"
+   },
+   "download_all": {
+      "message": "ดาวน์โหลดทั้งหมด"
+   },
+   "downloading": {
+      "message": "กำลังดาวน์โหลด"
+   },
+   "error_bulk": {
+      "message": "การรับไฟล์ ZIP ล้มเหลว อาจคุณพยายามดาวน์โหลดไฟล์มากเกินไปในครั้งเดียว"
+   },
+   "files": {
+      "message": "ไฟล์"
+   },
+   "files_found_on_page": {
+      "message": "โพสต์ที่พบ"
+   },
+   "for_days": {
+      "message": "ในช่วงวันที่ผ่านมา"
+   },
+   "from": {
+      "message": "จาก"
+   },
+   "hide_advanced": {
+      "message": "ซ่อนการตั้งค่าขั้นสูง"
+   },
+   "most_liked": {
+      "message": "ที่ถูกใจมากที่สุด"
+   },
+   "most_viewed": {
+      "message": "ที่มีผู้ชมมากที่สุด"
+   },
+   "name": {
+      "message": "Downloader for Instagram - Promaster"
+   },
+   "no_media_found": {
+      "message": "ไม่พบสื่อ"
+   },
+   "photo": {
+      "message": "รูปภาพ"
+   },
+   "preparing_links": {
+      "message": "กำลังค้นหาสื่อ"
+   },
+   "rate_us_descr": {
+      "message": "ให้คะแนนเรา:"
+   },
+   "repost": {
+      "message": "โพสต์ซ้ำ"
+   },
+   "repost_error": {
+      "message": "เกิดข้อผิดพลาดในการโพสต์ซ้ำ"
+   },
+   "repost_reels": {
+      "message": "โพสต์ Reels ซ้ำ"
+   },
+   "repost_story": {
+      "message": "โพสต์สตอรี่ซ้ำ"
+   },
+   "reposted": {
+      "message": "โพสต์ไฟล์ซ้ำแล้ว!"
+   },
+   "set_range": {
+      "message": "ช่วง"
+   },
+   "share": {
+      "message": "แชร์"
+   },
+   "sww_error": {
+      "message": "เกิดข้อผิดพลาดจากฝั่ง Instagram\nโปรดลองใหม่ภายหลัง"
+   },
+   "synchronous_bulk_download_denied": {
+      "message": "โปรดรอให้การดาวน์โหลดในแท็บอื่นเสร็จสิ้นก่อน"
+   },
+   "to": {
+      "message": "ถึง"
+   },
+   "video": {
+      "message": "วิดีโอ"
+   },
+   "write_caption": {
+      "message": "เขียนคำบรรยาย... (สูงสุด 2000 ตัวอักษร)"
+   },
+   "zipping_files": {
+      "message": "กำลังเตรียมไฟล์ ZIP"
+   }
+}

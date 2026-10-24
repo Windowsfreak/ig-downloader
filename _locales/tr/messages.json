@@ -1,0 +1,113 @@
+{
+   "all": {
+      "message": "Hepsi"
+   },
+   "allow_share_to_feed": {
+      "message": "Akışta paylaşmaya izin ver"
+   },
+   "btn_cancel": {
+      "message": "İptal"
+   },
+   "btn_enough": {
+      "message": "Durdur ve Kaydet"
+   },
+   "bulk_advanced": {
+      "message": "Gelişmiş ayarlar"
+   },
+   "bulk_advanced_params_not_match": {
+      "message": "Belirtilen parametrelere uygun sonuç yok"
+   },
+   "bulk_download": {
+      "message": "Tümünü indir"
+   },
+   "description": {
+      "message": "Instagram fotoğraflarını, videoları, Reels ve hikayeleri kolayca indirin. Tekli ve toplu indirme için hızlı bir Chrome aracı"
+   },
+   "download": {
+      "message": "İndir"
+   },
+   "download_all": {
+      "message": "Tümünü indir"
+   },
+   "downloading": {
+      "message": "İndiriliyor"
+   },
+   "error_bulk": {
+      "message": "ZIP dosyası alınamadı. Muhtemelen aynı anda çok fazla dosya indirmeye çalıştınız."
+   },
+   "files": {
+      "message": "dosya"
+   },
+   "files_found_on_page": {
+      "message": "gönderi bulundu"
+   },
+   "for_days": {
+      "message": "Son günler için"
+   },
+   "from": {
+      "message": "başlangıç"
+   },
+   "hide_advanced": {
+      "message": "Gelişmiş ayarları gizle"
+   },
+   "most_liked": {
+      "message": "En çok beğenilen"
+   },
+   "most_viewed": {
+      "message": "En çok görüntülenen"
+   },
+   "name": {
+      "message": "Downloader for Instagram - Promaster"
+   },
+   "no_media_found": {
+      "message": "Medya bulunamadı"
+   },
+   "photo": {
+      "message": "Fotoğraf"
+   },
+   "preparing_links": {
+      "message": "Medya aranıyor"
+   },
+   "rate_us_descr": {
+      "message": "Bizi değerlendirin:"
+   },
+   "repost": {
+      "message": "Yeniden paylaş"
+   },
+   "repost_error": {
+      "message": "Yeniden paylaşım hatası"
+   },
+   "repost_reels": {
+      "message": "Reels'i yeniden paylaş"
+   },
+   "repost_story": {
+      "message": "Hikayeyi yeniden paylaş"
+   },
+   "reposted": {
+      "message": "Dosya yeniden paylaşıldı!"
+   },
+   "set_range": {
+      "message": "Aralık"
+   },
+   "share": {
+      "message": "Paylaş"
+   },
+   "sww_error": {
+      "message": "Instagram tarafında bir hata oluştu.\nLütfen daha sonra tekrar deneyin."
+   },
+   "synchronous_bulk_download_denied": {
+      "message": "Lütfen başka bir sekmedeki indirme tamamlanana kadar bekleyin."
+   },
+   "to": {
+      "message": "bitiş"
+   },
+   "video": {
+      "message": "Video"
+   },
+   "write_caption": {
+      "message": "Açıklama yazın... (maks. 2000 karakter)"
+   },
+   "zipping_files": {
+      "message": "ZIP dosyası hazırlanıyor"
+   }
+}

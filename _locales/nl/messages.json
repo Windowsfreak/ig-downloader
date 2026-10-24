@@ -1,0 +1,113 @@
+{
+   "all": {
+      "message": "All"
+   },
+   "allow_share_to_feed": {
+      "message": "Allow share to feed"
+   },
+   "btn_cancel": {
+      "message": "Cancel"
+   },
+   "btn_enough": {
+      "message": "Stop & Save"
+   },
+   "bulk_advanced": {
+      "message": "Advanced settings"
+   },
+   "bulk_advanced_params_not_match": {
+      "message": "No results for set parameters"
+   },
+   "bulk_download": {
+      "message": "Download All"
+   },
+   "description": {
+      "message": "Sla Instagram-foto's, video's, Reels en verhalen eenvoudig op. Chrome-tool met ondersteuning voor enkelvoudige en bulkdownloads"
+   },
+   "download": {
+      "message": "Download"
+   },
+   "download_all": {
+      "message": "Download all"
+   },
+   "downloading": {
+      "message": "Downloading"
+   },
+   "error_bulk": {
+      "message": "Receiving Zip file failed. Probably you tried to download too many files at once."
+   },
+   "files": {
+      "message": "files"
+   },
+   "files_found_on_page": {
+      "message": "posts found"
+   },
+   "for_days": {
+      "message": "For previous days"
+   },
+   "from": {
+      "message": "from"
+   },
+   "hide_advanced": {
+      "message": "Hide advanced settings"
+   },
+   "most_liked": {
+      "message": "Most liked"
+   },
+   "most_viewed": {
+      "message": "Most viewed"
+   },
+   "name": {
+      "message": "Downloader for Instagram - Promaster"
+   },
+   "no_media_found": {
+      "message": "No media found"
+   },
+   "photo": {
+      "message": "Photo"
+   },
+   "preparing_links": {
+      "message": "Searching media"
+   },
+   "rate_us_descr": {
+      "message": "Rate us:"
+   },
+   "repost": {
+      "message": "Repost"
+   },
+   "repost_error": {
+      "message": "Repost Error"
+   },
+   "repost_reels": {
+      "message": "Repost reels"
+   },
+   "repost_story": {
+      "message": "Repost story"
+   },
+   "reposted": {
+      "message": "File reposted!"
+   },
+   "set_range": {
+      "message": "Range"
+   },
+   "share": {
+      "message": "Share"
+   },
+   "sww_error": {
+      "message": "Error on Instagram's side. \nPlease try again a bit later"
+   },
+   "synchronous_bulk_download_denied": {
+      "message": "Please wait till downloading in another tab is finished."
+   },
+   "to": {
+      "message": "to"
+   },
+   "video": {
+      "message": "Video"
+   },
+   "write_caption": {
+      "message": "Write a caption... (max 2000 characters)"
+   },
+   "zipping_files": {
+      "message": "Preparing zip file"
+   }
+}

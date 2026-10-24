@@ -1,0 +1,113 @@
+{
+   "all": {
+      "message": "Todos"
+   },
+   "allow_share_to_feed": {
+      "message": "Permitir compartir en el feed"
+   },
+   "btn_cancel": {
+      "message": "Cancelar"
+   },
+   "btn_enough": {
+      "message": "Detener y guardar"
+   },
+   "bulk_advanced": {
+      "message": "Opciones avanzadas"
+   },
+   "bulk_advanced_params_not_match": {
+      "message": "Sin resultados para los parámetros establecidos"
+   },
+   "bulk_download": {
+      "message": "Descargar todo"
+   },
+   "description": {
+      "message": "Guarda fotos, videos, historias y Reels de Instagram fácilmente. Herramienta rápida para Chrome con descargas individuales o por lote"
+   },
+   "download": {
+      "message": "Descargar"
+   },
+   "download_all": {
+      "message": "Descargar todo"
+   },
+   "downloading": {
+      "message": "Descargando"
+   },
+   "error_bulk": {
+      "message": "Error al recibir el archivo ZIP. Probablemente intentaste descargar demasiados archivos a la vez."
+   },
+   "files": {
+      "message": "archivos"
+   },
+   "files_found_on_page": {
+      "message": "publicaciones encontradas"
+   },
+   "for_days": {
+      "message": "Durante los días anteriores"
+   },
+   "from": {
+      "message": "de"
+   },
+   "hide_advanced": {
+      "message": "Ocultar opciones avanzadas"
+   },
+   "most_liked": {
+      "message": "Más gustadas"
+   },
+   "most_viewed": {
+      "message": "Más vistas"
+   },
+   "name": {
+      "message": "Downloader for Instagram - Promaster"
+   },
+   "no_media_found": {
+      "message": "No se encontraron medios"
+   },
+   "photo": {
+      "message": "Foto"
+   },
+   "preparing_links": {
+      "message": "Buscando medios"
+   },
+   "rate_us_descr": {
+      "message": "Valóranos:"
+   },
+   "repost": {
+      "message": "Repostear"
+   },
+   "repost_error": {
+      "message": "Error al repostear"
+   },
+   "repost_reels": {
+      "message": "Repostear Reel"
+   },
+   "repost_story": {
+      "message": "Repostear historia"
+   },
+   "reposted": {
+      "message": "¡Archivo reposteado!"
+   },
+   "set_range": {
+      "message": "Rango"
+   },
+   "share": {
+      "message": "Compartir"
+   },
+   "sww_error": {
+      "message": "Error del lado de Instagram.\nPor favor, inténtalo más tarde."
+   },
+   "synchronous_bulk_download_denied": {
+      "message": "Por favor, espera a que termine la descarga en otra pestaña."
+   },
+   "to": {
+      "message": "a"
+   },
+   "video": {
+      "message": "Video"
+   },
+   "write_caption": {
+      "message": "Escribe un pie de foto... (máx. 2000 caracteres)"
+   },
+   "zipping_files": {
+      "message": "Preparando archivo ZIP"
+   }
+}

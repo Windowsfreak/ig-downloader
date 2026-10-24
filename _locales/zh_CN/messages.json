@@ -1,0 +1,113 @@
+{
+   "all": {
+      "message": "全部"
+   },
+   "allow_share_to_feed": {
+      "message": "允许分享到动态"
+   },
+   "btn_cancel": {
+      "message": "取消"
+   },
+   "btn_enough": {
+      "message": "停止并保存"
+   },
+   "bulk_advanced": {
+      "message": "高级设置"
+   },
+   "bulk_advanced_params_not_match": {
+      "message": "设置的参数无匹配结果"
+   },
+   "bulk_download": {
+      "message": "全部下载"
+   },
+   "description": {
+      "message": "一键下载 Instagram 的照片、视频、Reels 和故事。Chrome 专用工具，支持单个和批量下载模式"
+   },
+   "download": {
+      "message": "下载"
+   },
+   "download_all": {
+      "message": "下载全部"
+   },
+   "downloading": {
+      "message": "正在下载"
+   },
+   "error_bulk": {
+      "message": "接收 ZIP 文件失败。可能一次下载的文件太多。"
+   },
+   "files": {
+      "message": "文件"
+   },
+   "files_found_on_page": {
+      "message": "找到的帖子"
+   },
+   "for_days": {
+      "message": "过去几天内"
+   },
+   "from": {
+      "message": "从"
+   },
+   "hide_advanced": {
+      "message": "隐藏高级设置"
+   },
+   "most_liked": {
+      "message": "最多点赞"
+   },
+   "most_viewed": {
+      "message": "最多观看"
+   },
+   "name": {
+      "message": "Downloader for Instagram - Promaster"
+   },
+   "no_media_found": {
+      "message": "未找到媒体内容"
+   },
+   "photo": {
+      "message": "照片"
+   },
+   "preparing_links": {
+      "message": "正在搜索媒体"
+   },
+   "rate_us_descr": {
+      "message": "为我们评分："
+   },
+   "repost": {
+      "message": "重新发布"
+   },
+   "repost_error": {
+      "message": "重新发布出错"
+   },
+   "repost_reels": {
+      "message": "重新发布 Reels"
+   },
+   "repost_story": {
+      "message": "重新发布快拍"
+   },
+   "reposted": {
+      "message": "文件已重新发布！"
+   },
+   "set_range": {
+      "message": "范围"
+   },
+   "share": {
+      "message": "分享"
+   },
+   "sww_error": {
+      "message": "Instagram 服务器错误。\n请稍后重试"
+   },
+   "synchronous_bulk_download_denied": {
+      "message": "请等待另一个标签页中的下载完成。"
+   },
+   "to": {
+      "message": "到"
+   },
+   "video": {
+      "message": "视频"
+   },
+   "write_caption": {
+      "message": "输入标题...（最多2000个字符）"
+   },
+   "zipping_files": {
+      "message": "正在准备 ZIP 文件"
+   }
+}
