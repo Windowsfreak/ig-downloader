@@ -532,7 +532,7 @@
                   case "requestHtmlByShortcode":
                     return a.it(e.shortcode, n), !0;
                   case "requestStories":
-                    return a.st(e.userId, n), !0;
+                    return a.st(e.userId || e.reel_ids, n), !0;
                   case "requestUserId":
                     return a.ut(e.userName, n), !0;
                   case "requestUserPostCount":
@@ -758,57 +758,166 @@
             }));
           },
           st: function(e, t) {
-            let cleanId = String(e || "").replace(/^highlight:/, "");
-            let isHighlight = String(e || "").startsWith("highlight:");
-            let variables = JSON.stringify({
-              reel_ids: isHighlight ? [] : [cleanId],
-              highlight_reel_ids: isHighlight ? [cleanId] : [],
-              precomposed_overlay: false
-            });
-            let n = "https://www.instagram.com/graphql/query/?query_hash=de8017ee0a7c9c45ec4260733d81ea31&variables=" + encodeURIComponent(variables);
-            fetch(n, {
-              headers: {
-                "x-ig-app-id": "936619743392459",
-                "accept": "*/*"
-              },
-              credentials: "include"
-            }).then((function(res) {
-              if (200 !== res.status && 202 !== res.status) throw `request error [${n}]`;
-              return res.json();
-            })).then((function(data) {
-              t(data);
-            })).catch((function() {
-              t({
-                error: 1,
-                err: 1
-              });
-            }));
+            let isHighlight = typeof e === "string" && e.startsWith("highlight:");
+            this.fetchStories(e, isHighlight, t);
           },
           ot: function(e, t) {
-            let cleanId = String(e || "").replace(/^highlight:/, "");
-            let variables = JSON.stringify({
-              reel_ids: [],
-              highlight_reel_ids: [cleanId],
-              precomposed_overlay: false
+            this.fetchStories(e, true, t);
+          },
+          fetchStories: function(e, isHighlight, cb) {
+            let ids = Array.isArray(e) ? e.slice() : [e];
+            ids = ids.map(function(id) { return String(id || "").trim(); }).filter(Boolean);
+            if (!ids.length) {
+              return cb({ error: 1, err: "no_ids" });
+            }
+            if (ids.some(function(id) { return id.startsWith("highlight:"); })) {
+              isHighlight = true;
+            }
+            let formattedIds = ids.map(function(id) {
+              let clean = id.replace(/^highlight:/, "");
+              return isHighlight ? `highlight:${clean}` : clean;
             });
-            let n = "https://www.instagram.com/graphql/query/?query_hash=de8017ee0a7c9c45ec4260733d81ea31&variables=" + encodeURIComponent(variables);
-            fetch(n, {
-              headers: {
-                "x-ig-app-id": "936619743392459",
-                "accept": "*/*"
-              },
-              credentials: "include"
-            }).then((function(res) {
-              if (200 !== res.status && 202 !== res.status) throw `request error [${n}]`;
+            let initialReelId = formattedIds[0];
+            let variables = {
+              after: null,
+              before: null,
+              first: Math.max(1, formattedIds.length),
+              initial_reel_id: initialReelId,
+              is_highlight: !!isHighlight,
+              last: null,
+              reel_ids: formattedIds,
+              __relay_internal__pv__PolarisCommunityNoteStoriesLabelEnabledrelayprovider: true
+            };
+
+            let docId = "29362383363379781";
+            let friendlyName = "PolarisStoriesV3HighlightsPagePaginationQuery";
+
+            let getDtsg = function() {
+              return new Promise(function(resolve) {
+                chrome.storage.local.get("fb_dtsg", function(r) {
+                  let token = (r && r.fb_dtsg) || null;
+                  if (token) return resolve(token);
+                  fetch("https://www.instagram.com/", { credentials: "include" })
+                    .then(function(res) { return res.text(); })
+                    .then(function(html) {
+                      let m = html.match(/"DTSGInitialData",\s*\[\],\s*\{\s*"token":\s*"([^"]+)"/) ||
+                              html.match(/"token":\s*"([^"]+)"(?:,\s*"async_get_token")?/) ||
+                              html.match(/name="fb_dtsg"\s+value="([^"]+)"/);
+                      let t = m && m[1];
+                      if (t) {
+                        chrome.storage.local.set({ fb_dtsg: t });
+                        resolve(t);
+                      } else {
+                        resolve(null);
+                      }
+                    })
+                    .catch(function() { resolve(null); });
+                });
+              });
+            };
+
+            Promise.all([
+              getDtsg(),
+              o.nt().catch(function() { return null; }),
+              i.tt().catch(function() { return i.wt; })
+            ]).then(function(resArr) {
+              let dtsg = resArr[0];
+              let csrf = resArr[1];
+              let storedHeaders = resArr[2] || i.wt || {};
+
+              let headers = {
+                ...storedHeaders,
+                "content-type": "application/x-www-form-urlencoded",
+                "accept": "*/*",
+                "x-fb-friendly-name": friendlyName,
+                "x-ig-app-id": storedHeaders["x-ig-app-id"] || (i.wt && i.wt["x-ig-app-id"]) || "936619743392459"
+              };
+              if (csrf) {
+                headers["x-csrftoken"] = csrf;
+              }
+
+              let bodyParams = new URLSearchParams();
+              bodyParams.set("doc_id", docId);
+              bodyParams.set("variables", JSON.stringify(variables));
+              bodyParams.set("fb_api_req_friendly_name", friendlyName);
+              bodyParams.set("fb_api_caller_class", "RelayModern");
+              bodyParams.set("server_timestamps", "true");
+              if (dtsg) {
+                bodyParams.set("fb_dtsg", dtsg);
+              }
+
+              return fetch("https://www.instagram.com/graphql/query", {
+                method: "POST",
+                headers: headers,
+                credentials: "include",
+                body: bodyParams.toString()
+              });
+            }).then(function(res) {
+              if (200 !== res.status && 202 !== res.status) {
+                throw new Error("request error [" + res.status + "]");
+              }
               return res.json();
-            })).then((function(data) {
-              t(data);
-            })).catch((function() {
-              t({
+            }).then(function(data) {
+              let connection = data && data.data && (data.data.xdt_api__v1__feed__reels_media__connection || data.data.reels_media_connection);
+              let nodes = [];
+              if (connection && Array.isArray(connection.edges)) {
+                nodes = connection.edges.map(function(e) { return e && e.node; }).filter(Boolean);
+              } else if (data && data.data && Array.isArray(data.data.reels_media)) {
+                nodes = data.data.reels_media;
+              } else if (data && Array.isArray(data.reels_media)) {
+                nodes = data.reels_media;
+              }
+
+              nodes.forEach(function(node) {
+                if (node) {
+                  if (!node.owner && node.user) {
+                    node.owner = node.user;
+                  }
+                  if (Array.isArray(node.items)) {
+                    node.items.forEach(function(it) {
+                      if (it) {
+                        if (!it.user && node.user) it.user = node.user;
+                        if (!it.owner && (node.owner || node.user)) it.owner = node.owner || node.user;
+                      }
+                    });
+                  }
+                }
+              });
+
+              let reelsObj = {};
+              nodes.forEach(function(node) {
+                if (node && node.id) {
+                  let raw = String(node.id).replace(/^highlight:/, "");
+                  reelsObj[node.id] = node;
+                  reelsObj[raw] = node;
+                }
+              });
+              if (nodes.length > 0) {
+                formattedIds.forEach(function(fid) {
+                  let raw = fid.replace(/^highlight:/, "");
+                  if (!reelsObj[fid]) reelsObj[fid] = nodes[0];
+                  if (!reelsObj[raw]) reelsObj[raw] = nodes[0];
+                });
+              }
+
+              let normalized = {
+                ...(data || {}),
+                data: {
+                  ...((data && data.data) || {}),
+                  reels_media: nodes
+                },
+                reels_media: nodes,
+                reel: nodes[0] || null,
+                reels: reelsObj
+              };
+              cb(normalized);
+            }).catch(function(err) {
+              console.error("fetchStories error:", err);
+              cb({
                 error: 1,
                 err: 1
               });
-            }));
+            });
           },
           _t: function(e, t) {
             s.h().then((function(t) {
@@ -1088,7 +1197,7 @@
                 headers: {
                   ...r,
                   "x-csrftoken": c,
-                  "x-fb-friendly-name": "PolarisProfilePostsQuery",
+                  "x-fb-friendly-name": (t && t.fb_api_req_friendly_name) || "PolarisProfilePostsQuery",
                   accept: "*/*",
                   "content-type": "application/x-www-form-urlencoded"
                 },

@@ -1251,8 +1251,9 @@
                 action: "requestStories",
                 reel_ids: r
               }, (function(i) {
-                if (!(i && i.reels && i.reels[r] && i.reels[r].items)) return n();
-                n(e.Qn(i.reels[r].items), t)
+                let reel = (i && i.reels && (i.reels[r] || i.reels[String(r).replace(/^highlight:/, "")] || i.reels[`highlight:${String(r).replace(/^highlight:/, "")}`])) || (i && (i.reel || (i.reels_media && i.reels_media[0])));
+                if (!(reel && reel.items && reel.items.length)) return n();
+                n(e.Qn(reel.items, reel.owner || reel.user), t)
               }))
             }))
           },
@@ -1333,7 +1334,8 @@
                 action: "requestHighlights",
                 reel_ids: t
               }, (function(res) {
-                let reels = (res && res.data && res.data.reels_media) || (res && res.reels_media) || [];
+                let connectionEdges = res && res.data && res.data.xdt_api__v1__feed__reels_media__connection && res.data.xdt_api__v1__feed__reels_media__connection.edges;
+                let reels = (res && res.data && res.data.reels_media) || (connectionEdges && connectionEdges.map(e => e && e.node).filter(Boolean)) || (res && res.reels_media) || [];
                 if (!reels.length || !reels[0].items || !reels[0].items.length) return n(null);
                 let firstReel = reels[0];
                 let e = [],
@@ -1377,7 +1379,8 @@
                 action: "requestStories",
                 userId: uId
               }, (function(res) {
-                let reel = (res && res.data && res.data.reels_media && res.data.reels_media[0]) || (res && res.reel) || null;
+                let connectionEdges = res && res.data && res.data.xdt_api__v1__feed__reels_media__connection && res.data.xdt_api__v1__feed__reels_media__connection.edges;
+                let reel = (res && res.data && res.data.reels_media && res.data.reels_media[0]) || (connectionEdges && connectionEdges[0] && connectionEdges[0].node) || (res && res.reel) || (res && res.reels_media && res.reels_media[0]) || null;
                 if (!reel || !reel.items || !reel.items.length) return n(null);
                 let o = [];
                 let owner = reel.owner || reel.user || { username: t };
@@ -5819,7 +5822,8 @@
               action: "requestHighlights",
               reel_ids: nReel
             }, (function(res) {
-              let reels = (res && res.data && res.data.reels_media) || (res && res.reels_media) || [];
+              let connectionEdges = res && res.data && res.data.xdt_api__v1__feed__reels_media__connection && res.data.xdt_api__v1__feed__reels_media__connection.edges;
+              let reels = (res && res.data && res.data.reels_media) || (connectionEdges && connectionEdges.map(e => e && e.node).filter(Boolean)) || (res && res.reels_media) || [];
               if (!reels.length || !reels[0].items) {
                 v.mr.pr(t.target);
                 return void(a.ee = !1);
