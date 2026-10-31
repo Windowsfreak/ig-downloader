@@ -653,7 +653,7 @@
         return {
           et: function() {
             return chrome.cookies ? chrome.cookies.getAll({
-              url: "https://*.instagram.com"
+              url: "https://www.instagram.com"
             }).then((function(e) {
               let t = {};
               if (e.forEach((function(e) {
@@ -765,7 +765,8 @@
             this.fetchStories(e, true, t);
           },
           fetchStories: function(e, isHighlight, cb) {
-            let ids = Array.isArray(e) ? e.slice() : [e];
+            let passedIds = (typeof e === "object" && e && (e.reel_ids || e.userId)) ? (e.reel_ids || e.userId) : e;
+            let ids = Array.isArray(passedIds) ? passedIds.slice() : [passedIds];
             ids = ids.map(function(id) { return String(id || "").trim(); }).filter(Boolean);
             if (!ids.length) {
               return cb({ error: 1, err: "no_ids" });
@@ -792,7 +793,11 @@
             let docId = "29362383363379781";
             let friendlyName = "PolarisStoriesV3HighlightsPagePaginationQuery";
 
+            let passedDtsg = (typeof e === "object" && e && e.fb_dtsg) || null;
+            let passedCsrf = (typeof e === "object" && e && e.csrftoken) || null;
+
             let getDtsg = function() {
+              if (passedDtsg) return Promise.resolve(passedDtsg);
               return new Promise(function(resolve) {
                 chrome.storage.local.get("fb_dtsg", function(r) {
                   let token = (r && r.fb_dtsg) || null;
@@ -800,8 +805,10 @@
                   fetch("https://www.instagram.com/", { credentials: "include" })
                     .then(function(res) { return res.text(); })
                     .then(function(html) {
-                      let m = html.match(/"DTSGInitialData",\s*\[\],\s*\{\s*"token":\s*"([^"]+)"/) ||
-                              html.match(/"token":\s*"([^"]+)"(?:,\s*"async_get_token")?/) ||
+                      let m = html.match(/"dtsg":\s*\{\s*"token":\s*"([^"]+)"/) ||
+                              html.match(/"DTSGInitialData",\s*\[\],\s*\{\s*"token":\s*"([^"]+)"/) ||
+                              html.match(/"DTSGInitData",\s*\[\],\s*\{\s*"token":\s*"([^"]+)"/) ||
+                              html.match(/"token":\s*"(NAf[^"]+)"/) ||
                               html.match(/name="fb_dtsg"\s+value="([^"]+)"/);
                       let t = m && m[1];
                       if (t) {
@@ -818,7 +825,7 @@
 
             Promise.all([
               getDtsg(),
-              o.nt().catch(function() { return null; }),
+              passedCsrf ? Promise.resolve(passedCsrf) : o.nt().catch(function() { return null; }),
               i.tt().catch(function() { return i.wt; })
             ]).then(function(resArr) {
               let dtsg = resArr[0];

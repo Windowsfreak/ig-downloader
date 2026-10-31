@@ -562,7 +562,7 @@
         return {
           fn: function() {
             return chrome.cookies ? chrome.cookies.getAll({
-              url: "https://*.instagram.com"
+              url: "https://www.instagram.com"
             }).then((function(t) {
               let n = {};
               if (t.forEach((function(t) {
@@ -1243,18 +1243,203 @@
         a = e(3);
       t.exports = function() {
         return {
+          getFbDtsg: function() {
+            try {
+              let scripts = document.querySelectorAll("script");
+              for (let i = 0; i < scripts.length; i++) {
+                let txt = scripts[i].textContent || "";
+                if (txt.indexOf("dtsg") !== -1 || txt.indexOf("DTSG") !== -1 || txt.indexOf("token") !== -1) {
+                  let m = txt.match(/"dtsg":\s*\{\s*"token":\s*"([^"]+)"/) ||
+                          txt.match(/"DTSGInitialData",\s*\[\],\s*\{\s*"token":\s*"([^"]+)"/) ||
+                          txt.match(/"DTSGInitData",\s*\[\],\s*\{\s*"token":\s*"([^"]+)"/) ||
+                          txt.match(/"token":\s*"(NAf[^"]+)"/) ||
+                          txt.match(/name="fb_dtsg"\s+value="([^"]+)"/);
+                  if (m && m[1]) return m[1];
+                }
+              }
+              let html = document.documentElement ? document.documentElement.innerHTML : "";
+              let m = html.match(/"dtsg":\s*\{\s*"token":\s*"([^"]+)"/) ||
+                      html.match(/"DTSGInitialData",\s*\[\],\s*\{\s*"token":\s*"([^"]+)"/) ||
+                      html.match(/"DTSGInitData",\s*\[\],\s*\{\s*"token":\s*"([^"]+)"/) ||
+                      html.match(/"token":\s*"(NAf[^"]+)"/) ||
+                      html.match(/name="fb_dtsg"\s+value="([^"]+)"/);
+              return m ? m[1] : null;
+            } catch (e) {
+              return null;
+            }
+          },
+          getCsrf: function() {
+            try {
+              let m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+              return m ? m[1] : "";
+            } catch (e) {
+              return "";
+            }
+          },
+          fetchStories: async function(e, isHighlight) {
+            let ids = Array.isArray(e) ? e.slice() : [e];
+            ids = ids.map(function(id) { return String(id || "").trim(); }).filter(Boolean);
+            if (!ids.length) return null;
+            if (ids.some(function(id) { return id.startsWith("highlight:"); })) {
+              isHighlight = true;
+            }
+            let formattedIds = ids.map(function(id) {
+              let clean = id.replace(/^highlight:/, "");
+              return isHighlight ? `highlight:${clean}` : clean;
+            });
+            let initialReelId = formattedIds[0];
+            let variables = {
+              after: null,
+              before: null,
+              first: Math.max(1, formattedIds.length),
+              initial_reel_id: initialReelId,
+              is_highlight: !!isHighlight,
+              last: null,
+              reel_ids: formattedIds,
+              __relay_internal__pv__PolarisCommunityNoteStoriesLabelEnabledrelayprovider: true
+            };
+
+            let docId = "29362383363379781";
+            let friendlyName = "PolarisStoriesV3HighlightsPagePaginationQuery";
+
+            let dtsg = this.getFbDtsg();
+            if (!dtsg) {
+              dtsg = await new Promise(res => {
+                chrome.storage.local.get("fb_dtsg", r => res((r && r.fb_dtsg) || null));
+              });
+            }
+            if (!dtsg) {
+              try {
+                let rootRes = await fetch("https://www.instagram.com/");
+                let rootHtml = await rootRes.text();
+                let m = rootHtml.match(/"dtsg":\s*\{\s*"token":\s*"([^"]+)"/) ||
+                        rootHtml.match(/"DTSGInitialData",\s*\[\],\s*\{\s*"token":\s*"([^"]+)"/) ||
+                        rootHtml.match(/"token":\s*"(NAf[^"]+)"/);
+                if (m && m[1]) dtsg = m[1];
+              } catch (err) {}
+            }
+            if (dtsg) {
+              chrome.storage.local.set({ fb_dtsg: dtsg });
+            }
+
+            let csrf = this.getCsrf();
+
+            let headers = {
+              "content-type": "application/x-www-form-urlencoded",
+              "accept": "*/*",
+              "x-fb-friendly-name": friendlyName,
+              "x-ig-app-id": "936619743392459",
+              "x-asbd-id": "359341"
+            };
+            if (csrf) {
+              headers["x-csrftoken"] = csrf;
+            }
+
+            let bodyParams = new URLSearchParams();
+            bodyParams.set("doc_id", docId);
+            bodyParams.set("variables", JSON.stringify(variables));
+            bodyParams.set("fb_api_req_friendly_name", friendlyName);
+            bodyParams.set("fb_api_caller_class", "RelayModern");
+            bodyParams.set("server_timestamps", "true");
+            if (dtsg) {
+              bodyParams.set("fb_dtsg", dtsg);
+            }
+
+            console.log("[Downloader] Requesting stories for:", formattedIds, "isHighlight:", isHighlight);
+
+            let res = await fetch("https://www.instagram.com/graphql/query", {
+              method: "POST",
+              headers: headers,
+              credentials: "include",
+              body: bodyParams.toString()
+            }).catch(err => {
+              console.error("[Downloader] GraphQL fetch error:", err);
+              return null;
+            });
+
+            if (!res || (res.status !== 200 && res.status !== 202)) {
+              console.warn("[Downloader] Direct fetch status:", res ? res.status : "null", "Trying background worker fallback...");
+              return new Promise(resolve => {
+                chrome.runtime.sendMessage({
+                  action: isHighlight ? "requestHighlights" : "requestStories",
+                  reel_ids: ids,
+                  userId: ids[0],
+                  fb_dtsg: dtsg,
+                  csrftoken: csrf
+                }, resolve);
+              });
+            }
+
+            let data = await res.json().catch(err => {
+              console.error("[Downloader] JSON parse error:", err);
+              return null;
+            });
+
+            if (!data) return null;
+
+            let connection = data && data.data && (data.data.xdt_api__v1__feed__reels_media__connection || data.data.reels_media_connection);
+            let nodes = [];
+            if (connection && Array.isArray(connection.edges)) {
+              nodes = connection.edges.map(function(e) { return e && e.node; }).filter(Boolean);
+            } else if (data && data.data && Array.isArray(data.data.reels_media)) {
+              nodes = data.data.reels_media;
+            } else if (data && Array.isArray(data.reels_media)) {
+              nodes = data.reels_media;
+            }
+
+            console.log("[Downloader] Reel nodes count:", nodes.length);
+
+            nodes.forEach(function(node) {
+              if (node) {
+                if (!node.owner && node.user) {
+                  node.owner = node.user;
+                }
+                if (Array.isArray(node.items)) {
+                  node.items.forEach(function(it) {
+                    if (it) {
+                      if (!it.user && node.user) it.user = node.user;
+                      if (!it.owner && (node.owner || node.user)) it.owner = node.owner || node.user;
+                    }
+                  });
+                }
+              }
+            });
+
+            let reelsObj = {};
+            nodes.forEach(function(node) {
+              if (node && node.id) {
+                let raw = String(node.id).replace(/^highlight:/, "");
+                reelsObj[node.id] = node;
+                reelsObj[raw] = node;
+              }
+            });
+            if (nodes.length > 0) {
+              formattedIds.forEach(function(fid) {
+                let raw = fid.replace(/^highlight:/, "");
+                if (!reelsObj[fid]) reelsObj[fid] = nodes[0];
+                if (!reelsObj[raw]) reelsObj[raw] = nodes[0];
+              });
+            }
+
+            return {
+              ...(data || {}),
+              data: {
+                ...((data && data.data) || {}),
+                reels_media: nodes
+              },
+              reels_media: nodes,
+              reel: nodes[0] || null,
+              reels: reelsObj
+            };
+          },
           Vn: function(t, n) {
             let e = this;
-            i.En(t, (function(r) {
+            i.En(t, (async function(r) {
               if (!r) return n();
-              chrome.runtime.sendMessage({
-                action: "requestStories",
-                reel_ids: r
-              }, (function(i) {
-                let reel = (i && i.reels && (i.reels[r] || i.reels[String(r).replace(/^highlight:/, "")] || i.reels[`highlight:${String(r).replace(/^highlight:/, "")}`])) || (i && (i.reel || (i.reels_media && i.reels_media[0])));
-                if (!(reel && reel.items && reel.items.length)) return n();
-                n(e.Qn(reel.items, reel.owner || reel.user), t)
-              }))
+              let res = await e.fetchStories(r, false);
+              let reel = (res && res.reels && (res.reels[r] || res.reels[String(r).replace(/^highlight:/, "")] || res.reels[`highlight:${String(r).replace(/^highlight:/, "")}`])) || (res && (res.reel || (res.reels_media && res.reels_media[0])));
+              if (!(reel && reel.items && reel.items.length)) return n();
+              n(e.Qn(reel.items, reel.owner || reel.user), t);
             }))
           },
           Qn: function(t, n) {
@@ -1329,68 +1514,66 @@
           },
           te: function(t) {
             let eThis = this;
-            return new Promise((n => {
-              chrome.runtime.sendMessage({
-                action: "requestHighlights",
-                reel_ids: t
-              }, (function(res) {
-                let connectionEdges = res && res.data && res.data.xdt_api__v1__feed__reels_media__connection && res.data.xdt_api__v1__feed__reels_media__connection.edges;
-                let reels = (res && res.data && res.data.reels_media) || (connectionEdges && connectionEdges.map(e => e && e.node).filter(Boolean)) || (res && res.reels_media) || [];
-                if (!reels.length || !reels[0].items || !reels[0].items.length) return n(null);
-                let firstReel = reels[0];
-                let e = [],
-                  r = (firstReel.owner && firstReel.owner.username) || (firstReel.user && firstReel.user.username) || a.I();
-                r += "_" + (firstReel.title || 0);
-                let i = (firstReel.owner && firstReel.owner.id) || (firstReel.user && (firstReel.user.pk || firstReel.user.id)) || null;
-                for (let it of firstReel.items) {
-                  let isVideo = it.is_video || it.media_type === s.Tt || (it.video_resources && it.video_resources.length > 0);
-                  let fileUrl, ext;
-                  if (isVideo) {
-                    let vList = it.video_resources || it.video_versions || [];
-                    let sortedV = vList.slice().sort((a, b) => (b.config_width || b.width || 0) - (a.config_width || a.width || 0));
-                    fileUrl = sortedV[0] && (sortedV[0].src || sortedV[0].url);
-                    ext = s.Dt || "mp4";
-                  } else {
-                    let iList = it.display_resources || (it.image_versions2 && it.image_versions2.candidates) || [];
-                    let sortedI = iList.slice().sort((a, b) => (b.config_width || b.width || 0) - (a.config_width || a.width || 0));
-                    fileUrl = sortedI[0] && (sortedI[0].src || sortedI[0].url) || it.display_url;
-                    ext = s.qt || "jpg";
-                  }
-                  if (fileUrl) {
-                    e.push({
-                      userName: r,
-                      fileExt: ext,
-                      url: fileUrl,
-                      id: it.id || a.I(),
-                      userPk: i
-                    });
-                  }
+            return new Promise((async n => {
+              let res = await eThis.fetchStories(t, true);
+              let connectionEdges = res && res.data && res.data.xdt_api__v1__feed__reels_media__connection && res.data.xdt_api__v1__feed__reels_media__connection.edges;
+              let reels = (res && res.data && res.data.reels_media) || (connectionEdges && connectionEdges.map(e => e && e.node).filter(Boolean)) || (res && res.reels_media) || [];
+              if (!reels.length || !reels[0].items || !reels[0].items.length) {
+                console.warn("[Downloader] No items found for highlight:", t, res);
+                return n(null);
+              }
+              let firstReel = reels[0];
+              let e = [],
+                r = (firstReel.owner && firstReel.owner.username) || (firstReel.user && firstReel.user.username) || a.I();
+              r += "_" + (firstReel.title || 0);
+              let i = (firstReel.owner && firstReel.owner.id) || (firstReel.user && (firstReel.user.pk || firstReel.user.id)) || null;
+              for (let it of firstReel.items) {
+                let isVideo = it.is_video || it.media_type === s.Tt || (it.video_resources && it.video_resources.length > 0);
+                let fileUrl, ext;
+                if (isVideo) {
+                  let vList = it.video_resources || it.video_versions || [];
+                  let sortedV = vList.slice().sort((a, b) => (b.config_width || b.width || 0) - (a.config_width || a.width || 0));
+                  fileUrl = sortedV[0] && (sortedV[0].src || sortedV[0].url);
+                  ext = s.Dt || "mp4";
+                } else {
+                  let iList = it.display_resources || (it.image_versions2 && it.image_versions2.candidates) || [];
+                  let sortedI = iList.slice().sort((a, b) => (b.config_width || b.width || 0) - (a.config_width || a.width || 0));
+                  fileUrl = sortedI[0] && (sortedI[0].src || sortedI[0].url) || it.display_url;
+                  ext = s.qt || "jpg";
                 }
-                n(e.length ? e : null);
-              }))
+                if (fileUrl) {
+                  e.push({
+                    userName: r,
+                    fileExt: ext,
+                    url: fileUrl,
+                    id: it.id || a.I(),
+                    userPk: i
+                  });
+                }
+              }
+              n(e.length ? e : null);
             }))
           },
           ne: function(t, n) {
             let e = this,
               i = r.k[t];
 
-            function s(uId) {
-              chrome.runtime.sendMessage({
-                action: "requestStories",
-                userId: uId
-              }, (function(res) {
-                let connectionEdges = res && res.data && res.data.xdt_api__v1__feed__reels_media__connection && res.data.xdt_api__v1__feed__reels_media__connection.edges;
-                let reel = (res && res.data && res.data.reels_media && res.data.reels_media[0]) || (connectionEdges && connectionEdges[0] && connectionEdges[0].node) || (res && res.reel) || (res && res.reels_media && res.reels_media[0]) || null;
-                if (!reel || !reel.items || !reel.items.length) return n(null);
-                let o = [];
-                let owner = reel.owner || reel.user || { username: t };
-                for (let it of reel.items) {
-                  let parsed = e.Yn(it, owner);
-                  parsed && o.push(parsed);
-                }
-                let username = (reel.owner && reel.owner.username) || (reel.user && reel.user.username) || t;
-                n(o.length ? o : null, username);
-              }))
+            async function s(uId) {
+              let res = await e.fetchStories(uId, false);
+              let connectionEdges = res && res.data && res.data.xdt_api__v1__feed__reels_media__connection && res.data.xdt_api__v1__feed__reels_media__connection.edges;
+              let reel = (res && res.data && res.data.reels_media && res.data.reels_media[0]) || (connectionEdges && connectionEdges[0] && connectionEdges[0].node) || (res && res.reel) || (res && res.reels_media && res.reels_media[0]) || null;
+              if (!reel || !reel.items || !reel.items.length) {
+                console.warn("[Downloader] No story items for user:", t, uId, res);
+                return n(null);
+              }
+              let o = [];
+              let owner = reel.owner || reel.user || { username: t };
+              for (let it of reel.items) {
+                let parsed = e.Yn(it, owner);
+                parsed && o.push(parsed);
+              }
+              let username = (reel.owner && reel.owner.username) || (reel.user && reel.user.username) || t;
+              n(o.length ? o : null, username);
             }
             i ? s(i) : r.wt(t, (function(resolvedId) {
               if (resolvedId) {
@@ -5778,10 +5961,11 @@
             if (!n) return;
             o.Xn();
             let e = d.St();
-            if (!n[e]) return;
+            let item = n[e] || n[0];
+            if (!item) return;
             let r = {
-              url: n[e].url,
-              filename: `${n[e].userName}_${n[e].id}.${n[e].fileExt}`
+              url: item.url,
+              filename: `${item.userName}_${item.id}.${item.fileExt}`
             };
             v.br(r, t.target)
           }))
@@ -5792,7 +5976,7 @@
         v.mr.pr(t.target);
         if (!n || !n.length) return;
         o.Xn();
-        let e, r = n[d.St()];
+        let e, r = n[d.St()] || n[0];
         if (r) v.br(r, t.target)
       })) : v.mr.pr(t.target)
     },
@@ -5818,10 +6002,7 @@
           let tLoc = location.pathname.match(new RegExp("stories\\/highlights\\/([^/]+)"));
           if (tLoc = tLoc && tLoc[1], tLoc) {
             let nReel = "highlight:" + tLoc;
-            return void chrome.runtime.sendMessage({
-              action: "requestHighlights",
-              reel_ids: nReel
-            }, (function(res) {
+            return void o.fetchStories(nReel, true).then((function(res) {
               let connectionEdges = res && res.data && res.data.xdt_api__v1__feed__reels_media__connection && res.data.xdt_api__v1__feed__reels_media__connection.edges;
               let reels = (res && res.data && res.data.reels_media) || (connectionEdges && connectionEdges.map(e => e && e.node).filter(Boolean)) || (res && res.reels_media) || [];
               if (!reels.length || !reels[0].items) {
@@ -5833,7 +6014,7 @@
               let uname = userObj.username || "highlight";
               let title = reel.title ? `${uname}_${reel.title}` : uname;
               e(o.Qn(reel.items, userObj), title);
-            }))
+            }));
           }
         }
         let i = location.pathname.match(/stories\/([^\/]+)/);
