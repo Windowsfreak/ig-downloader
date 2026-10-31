@@ -789,7 +789,7 @@
           },
           Un() {
             let t;
-            return this.Rn([r.Jt])
+            return this.Rn([r.Jt]).catch((function() {}))
           },
           Rn(t) {
             let n = this;
@@ -6131,7 +6131,7 @@
       }))
     },
     Fr: function() {
-      r.$(), this.qr(), this.Dr(), this.Nr(), this.Tr(), _.Un()
+      r.$(), this.qr(), this.Dr(), this.Nr(), this.Tr(), _.Un().catch((function() {}))
     }
   };
   v.Fr()
