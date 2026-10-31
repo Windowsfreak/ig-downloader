@@ -1276,6 +1276,92 @@
               return "";
             }
           },
+          getStoryUsername: function(reel, fallbackId) {
+            let u = (reel && reel.owner && reel.owner.username) || (reel && reel.user && reel.user.username);
+            if (u) return u;
+            if (reel && Array.isArray(reel.items)) {
+              for (let it of reel.items) {
+                if (it && it.user && it.user.username) return it.user.username;
+                if (it && it.owner && it.owner.username) return it.owner.username;
+              }
+            }
+            try {
+              let headerLink = document.querySelector('header a[href^="/"]:not([href="/"]):not([href^="/explore"]):not([href^="/reels"]):not([href^="/direct"]):not([href*="stories"])') ||
+                               document.querySelector('section header a[role="link"][href^="/"]') ||
+                               document.querySelector('header a[role="link"][href^="/"]');
+              if (headerLink) {
+                let href = headerLink.getAttribute("href") || "";
+                let m = href.match(/^\/([A-Za-z0-9_.-]+)\/?$/);
+                if (m && m[1] && m[1] !== "stories") return m[1];
+                let txt = (headerLink.textContent || "").trim();
+                if (txt && /^[A-Za-z0-9_.-]+$/.test(txt)) return txt;
+              }
+            } catch (e) {}
+            try {
+              let pathParts = location.pathname.split("/").filter(Boolean);
+              if (pathParts[0] === "stories" && pathParts[1] && pathParts[1] !== "highlights") {
+                return pathParts[1];
+              }
+              if (pathParts[0] && !["stories", "explore", "reels", "direct", "p"].includes(pathParts[0])) {
+                return pathParts[0];
+              }
+              let m = (document.title || "").match(/\(@([A-Za-z0-9_.-]+)\)/);
+              if (m && m[1]) return m[1];
+            } catch (e) {}
+            let pk = (reel && reel.items && reel.items[0] && reel.items[0].user && (reel.items[0].user.pk || reel.items[0].user.id)) || fallbackId;
+            if (pk) return `user_${pk}`;
+            return "story_user";
+          },
+          getHighlightTitle: function(reel) {
+            if (reel && typeof reel.title === "string" && reel.title.trim()) {
+              return reel.title.trim().replace(/[^\w\s.-]/g, "").trim();
+            }
+            try {
+              let docTitle = (document.title || "").split(/[•·|]/)[0].trim();
+              if (docTitle && !docTitle.toLowerCase().includes("instagram") && docTitle.length < 50) {
+                let clean = docTitle.replace(/[^\w\s.-]/g, "").trim();
+                if (clean) return clean;
+              }
+              let titleEl = document.querySelector('header div > span[dir="auto"], header h2, header h1');
+              if (titleEl && titleEl.textContent) {
+                let txt = titleEl.textContent.trim().replace(/[^\w\s.-]/g, "").trim();
+                if (txt && txt.length < 50) return txt;
+              }
+            } catch (e) {}
+            return "";
+          },
+          resolveUserId: async function(userName) {
+            if (!userName) return null;
+            let str = String(userName).trim();
+            if (/^\d+$/.test(str)) return str;
+            if (r.k && r.k[str]) return r.k[str];
+            try {
+              let res = await fetch("https://www.instagram.com/api/v1/users/web_profile_info/?username=" + encodeURIComponent(str), {
+                headers: {
+                  "x-ig-app-id": "936619743392459",
+                  "x-requested-with": "XMLHttpRequest",
+                  "accept": "*/*"
+                },
+                credentials: "include"
+              });
+              if (res.ok) {
+                let data = await res.json();
+                let uid = data && data.data && data.data.user && data.data.user.id;
+                if (uid) {
+                  r.k[str] = uid;
+                  return uid;
+                }
+              }
+            } catch (err) {}
+            let uid = await new Promise(resolve => {
+              r.wt(str, resolve);
+            });
+            if (uid) {
+              r.k[str] = uid;
+              return uid;
+            }
+            return null;
+          },
           fetchStories: async function(e, isHighlight) {
             let ids = Array.isArray(e) ? e.slice() : [e];
             ids = ids.map(function(id) { return String(id || "").trim(); }).filter(Boolean);
@@ -1389,16 +1475,32 @@
 
             console.log("[Downloader] Reel nodes count:", nodes.length);
 
+            let fallbackUser = this.getStoryUsername ? this.getStoryUsername(nodes[0], initialReelId) : "story_user";
+            let fallbackTitle = this.getHighlightTitle ? this.getHighlightTitle(nodes[0]) : "";
+
             nodes.forEach(function(node) {
               if (node) {
+                if (!node.title && fallbackTitle) node.title = fallbackTitle;
                 if (!node.owner && node.user) {
                   node.owner = node.user;
+                }
+                if (!node.owner && !node.user) {
+                  node.owner = { username: fallbackUser };
+                  node.user = { username: fallbackUser };
+                }
+                if (node.owner && !node.owner.username) {
+                  node.owner.username = fallbackUser;
+                }
+                if (node.user && !node.user.username) {
+                  node.user.username = fallbackUser;
                 }
                 if (Array.isArray(node.items)) {
                   node.items.forEach(function(it) {
                     if (it) {
                       if (!it.user && node.user) it.user = node.user;
                       if (!it.owner && (node.owner || node.user)) it.owner = node.owner || node.user;
+                      if (it.user && !it.user.username) it.user.username = fallbackUser;
+                      if (it.owner && !it.owner.username) it.owner.username = fallbackUser;
                     }
                   });
                 }
@@ -1434,39 +1536,58 @@
           },
           Vn: function(t, n) {
             let e = this;
-            i.En(t, (async function(r) {
+            e.resolveUserId(t).then(async function(r) {
               if (!r) return n();
               let res = await e.fetchStories(r, false);
               let reel = (res && res.reels && (res.reels[r] || res.reels[String(r).replace(/^highlight:/, "")] || res.reels[`highlight:${String(r).replace(/^highlight:/, "")}`])) || (res && (res.reel || (res.reels_media && res.reels_media[0])));
               if (!(reel && reel.items && reel.items.length)) return n();
               n(e.Qn(reel.items, reel.owner || reel.user), t);
-            }))
+            }).catch(function() {
+              n();
+            });
           },
           Qn: function(t, n) {
             let e = [];
-            return t.forEach((function(t) {
-              let r = null,
-                i = 0;
-              let isVideo = t.is_video || void 0 !== t.video_versions || (t.video_resources && t.video_resources.length > 0);
+            let defaultUName = (n && n.username) || "";
+            return (t || []).forEach((function(t) {
+              let r = null;
+              let isVideo = Boolean(
+                t.is_video ||
+                t.media_type === 2 ||
+                String(t.media_type) === "2" ||
+                (Array.isArray(t.video_versions) && t.video_versions.length > 0) ||
+                (Array.isArray(t.video_resources) && t.video_resources.length > 0)
+              );
+              let ext = isVideo ? "mp4" : "jpg";
               if (isVideo) {
-                let vList = t.video_resources || t.video_versions || [];
-                let sortedV = vList.slice().sort((a, b) => (b.config_width || b.width || 0) - (a.config_width || a.width || 0));
-                r = sortedV[0] && (sortedV[0].src || sortedV[0].url);
+                let vList = (Array.isArray(t.video_resources) && t.video_resources.length && t.video_resources) || (Array.isArray(t.video_versions) && t.video_versions.length && t.video_versions) || [];
+                let sortedV = vList.slice().sort((a, b) => ((b.config_width || b.width || 0) - (a.config_width || a.width || 0)));
+                let bestV = sortedV[0] || vList[0];
+                r = bestV && (bestV.src || bestV.url);
               } else {
-                let iList = t.display_resources || (t.image_versions2 && t.image_versions2.candidates) || [];
-                let sortedI = iList.slice().sort((a, b) => (b.config_width || b.width || 0) - (a.config_width || a.width || 0));
-                r = sortedI[0] && (sortedI[0].src || sortedI[0].url) || t.display_url || null;
+                let iList = (t.image_versions2 && Array.isArray(t.image_versions2.candidates) && t.image_versions2.candidates) || (Array.isArray(t.display_resources) && t.display_resources) || [];
+                let sortedI = iList.slice().sort((a, b) => ((b.config_width || b.width || 0) - (a.config_width || a.width || 0)));
+                let bestI = sortedI[0] || iList[0];
+                r = (bestI && (bestI.src || bestI.url)) || t.display_url || null;
               }
               if (!r) return;
               let s = r.match(new RegExp("\\/([^/?]+)(?:$|\\?)"));
-              if (s = s && s[1], s) {
-                let uName = (t.user && t.user.username) || (t.owner && t.owner.username) || (n && n.username) || "";
-                uName.length && (s = `${uName}_${s}`)
+              s = s && s[1];
+              let uName = (t.user && t.user.username) || (t.owner && t.owner.username) || defaultUName;
+              if (s) {
+                let baseClean = s.replace(/\.[a-zA-Z0-9]+$/, "");
+                s = `${baseClean}.${ext}`;
+                if (uName && uName.length) {
+                  s = `${uName}_${s}`;
+                }
+              } else {
+                let itemId = t.id || t.pk || Math.floor(Math.random() * 1e9);
+                s = `${uName ? uName + "_" : ""}${itemId}.${ext}`;
               }
               e.push({
                 url: r,
-                filename: s || null
-              })
+                filename: s
+              });
             })), e
           },
           Xn: function() {
@@ -1485,19 +1606,29 @@
             let itemId = t && (t.id || t.pk);
             if (!itemId) return;
             let n = { id: itemId };
-            let isVideo = t.is_video || void 0 !== t.video_versions || (t.video_resources && t.video_resources.length > 0);
+            let isVideo = Boolean(
+              t.is_video ||
+              t.media_type === 2 ||
+              String(t.media_type) === "2" ||
+              (Array.isArray(t.video_versions) && t.video_versions.length > 0) ||
+              (Array.isArray(t.video_resources) && t.video_resources.length > 0)
+            );
+            let ext = isVideo ? "mp4" : "jpg";
             if (isVideo) {
-              let vList = t.video_resources || t.video_versions || [];
-              let sortedV = vList.slice().sort((a, b) => (b.config_width || b.width || 0) - (a.config_width || a.width || 0));
-              n.url = sortedV[0] && (sortedV[0].src || sortedV[0].url);
-              let iList = t.display_resources || (t.image_versions2 && t.image_versions2.candidates) || [];
-              let sortedI = iList.slice().sort((a, b) => (b.config_width || b.width || 0) - (a.config_width || a.width || 0));
-              n.prev = sortedI[0] && (sortedI[0].src || sortedI[0].url) || t.display_url || n.url;
+              let vList = (Array.isArray(t.video_resources) && t.video_resources.length && t.video_resources) || (Array.isArray(t.video_versions) && t.video_versions.length && t.video_versions) || [];
+              let sortedV = vList.slice().sort((a, b) => ((b.config_width || b.width || 0) - (a.config_width || a.width || 0)));
+              let bestV = sortedV[0] || vList[0];
+              n.url = bestV && (bestV.src || bestV.url);
+              let iList = (t.image_versions2 && Array.isArray(t.image_versions2.candidates) && t.image_versions2.candidates) || (Array.isArray(t.display_resources) && t.display_resources) || [];
+              let sortedI = iList.slice().sort((a, b) => ((b.config_width || b.width || 0) - (a.config_width || a.width || 0)));
+              let bestI = sortedI[0] || iList[0];
+              n.prev = (bestI && (bestI.src || bestI.url)) || t.display_url || n.url;
               n.type = "video";
             } else {
-              let iList = t.display_resources || (t.image_versions2 && t.image_versions2.candidates) || [];
-              let sortedI = iList.slice().sort((a, b) => (b.config_width || b.width || 0) - (a.config_width || a.width || 0));
-              n.url = sortedI[0] && (sortedI[0].src || sortedI[0].url) || t.display_url;
+              let iList = (t.image_versions2 && Array.isArray(t.image_versions2.candidates) && t.image_versions2.candidates) || (Array.isArray(t.display_resources) && t.display_resources) || [];
+              let sortedI = iList.slice().sort((a, b) => ((b.config_width || b.width || 0) - (a.config_width || a.width || 0)));
+              let bestI = sortedI[0] || iList[0];
+              n.url = (bestI && (bestI.src || bestI.url)) || t.display_url;
               n.prev = n.url;
               n.type = "image";
             }
@@ -1505,10 +1636,12 @@
             let e = n.url.match(new RegExp("\\/([^/?]+)(?:$|\\?)"));
             e = e && e[1];
             let username = (owner && owner.username) || (t.owner && t.owner.username) || (t.user && t.user.username) || "";
-            if (e && username.length) {
-              n.filename = `${username}_${e}`;
-            } else if (e) {
-              n.filename = e;
+            if (e) {
+              let baseClean = e.replace(/\.[a-zA-Z0-9]+$/, "");
+              e = `${baseClean}.${ext}`;
+              n.filename = username ? `${username}_${e}` : e;
+            } else {
+              n.filename = `${username ? username + "_" : ""}${itemId}.${ext}`;
             }
             return n;
           },
@@ -1523,23 +1656,32 @@
                 return n(null);
               }
               let firstReel = reels[0];
-              let e = [],
-                r = (firstReel.owner && firstReel.owner.username) || (firstReel.user && firstReel.user.username) || a.I();
-              r += "_" + (firstReel.title || 0);
+              let e = [];
+              let uName = (firstReel.owner && firstReel.owner.username) || (firstReel.user && firstReel.user.username) || (eThis.getStoryUsername ? eThis.getStoryUsername(firstReel, t) : a.I());
+              let hTitle = (firstReel.title) || (eThis.getHighlightTitle ? eThis.getHighlightTitle(firstReel) : "");
+              let r = hTitle ? `${uName}_${hTitle}` : uName;
               let i = (firstReel.owner && firstReel.owner.id) || (firstReel.user && (firstReel.user.pk || firstReel.user.id)) || null;
               for (let it of firstReel.items) {
-                let isVideo = it.is_video || it.media_type === s.Tt || (it.video_resources && it.video_resources.length > 0);
+                let isVideo = Boolean(
+                  it.is_video ||
+                  it.media_type === 2 ||
+                  String(it.media_type) === "2" ||
+                  (Array.isArray(it.video_versions) && it.video_versions.length > 0) ||
+                  (Array.isArray(it.video_resources) && it.video_resources.length > 0)
+                );
                 let fileUrl, ext;
                 if (isVideo) {
-                  let vList = it.video_resources || it.video_versions || [];
-                  let sortedV = vList.slice().sort((a, b) => (b.config_width || b.width || 0) - (a.config_width || a.width || 0));
-                  fileUrl = sortedV[0] && (sortedV[0].src || sortedV[0].url);
-                  ext = s.Dt || "mp4";
+                  let vList = (Array.isArray(it.video_resources) && it.video_resources.length && it.video_resources) || (Array.isArray(it.video_versions) && it.video_versions.length && it.video_versions) || [];
+                  let sortedV = vList.slice().sort((a, b) => ((b.config_width || b.width || 0) - (a.config_width || a.width || 0)));
+                  let bestV = sortedV[0] || vList[0];
+                  fileUrl = bestV && (bestV.src || bestV.url);
+                  ext = "mp4";
                 } else {
-                  let iList = it.display_resources || (it.image_versions2 && it.image_versions2.candidates) || [];
-                  let sortedI = iList.slice().sort((a, b) => (b.config_width || b.width || 0) - (a.config_width || a.width || 0));
-                  fileUrl = sortedI[0] && (sortedI[0].src || sortedI[0].url) || it.display_url;
-                  ext = s.qt || "jpg";
+                  let iList = (it.image_versions2 && Array.isArray(it.image_versions2.candidates) && it.image_versions2.candidates) || (Array.isArray(it.display_resources) && it.display_resources) || [];
+                  let sortedI = iList.slice().sort((a, b) => ((b.config_width || b.width || 0) - (a.config_width || a.width || 0)));
+                  let bestI = sortedI[0] || iList[0];
+                  fileUrl = (bestI && (bestI.src || bestI.url)) || it.display_url || null;
+                  ext = "jpg";
                 }
                 if (fileUrl) {
                   e.push({
@@ -1554,36 +1696,29 @@
               n(e.length ? e : null);
             }))
           },
-          ne: function(t, n) {
-            let e = this,
-              i = r.k[t];
-
-            async function s(uId) {
-              let res = await e.fetchStories(uId, false);
-              let connectionEdges = res && res.data && res.data.xdt_api__v1__feed__reels_media__connection && res.data.xdt_api__v1__feed__reels_media__connection.edges;
-              let reel = (res && res.data && res.data.reels_media && res.data.reels_media[0]) || (connectionEdges && connectionEdges[0] && connectionEdges[0].node) || (res && res.reel) || (res && res.reels_media && res.reels_media[0]) || null;
-              if (!reel || !reel.items || !reel.items.length) {
-                console.warn("[Downloader] No story items for user:", t, uId, res);
-                return n(null);
-              }
-              let o = [];
-              let owner = reel.owner || reel.user || { username: t };
-              for (let it of reel.items) {
-                let parsed = e.Yn(it, owner);
-                parsed && o.push(parsed);
-              }
-              let username = (reel.owner && reel.owner.username) || (reel.user && reel.user.username) || t;
-              n(o.length ? o : null, username);
+          ne: async function(t, n) {
+            let e = this;
+            let uId = await e.resolveUserId(t);
+            if (!uId) {
+              console.warn("[Downloader] Could not resolve userId for:", t);
+              o.ee = !1;
+              return n(null);
             }
-            i ? s(i) : r.wt(t, (function(resolvedId) {
-              if (resolvedId) {
-                r.k[t] = resolvedId;
-                s(resolvedId);
-              } else {
-                o.ee = !1;
-                n(null);
-              }
-            }))
+            let res = await e.fetchStories(uId, false);
+            let connectionEdges = res && res.data && res.data.xdt_api__v1__feed__reels_media__connection && res.data.xdt_api__v1__feed__reels_media__connection.edges;
+            let reel = (res && res.data && res.data.reels_media && res.data.reels_media[0]) || (connectionEdges && connectionEdges[0] && connectionEdges[0].node) || (res && res.reel) || (res && res.reels_media && res.reels_media[0]) || null;
+            if (!reel || !reel.items || !reel.items.length) {
+              console.warn("[Downloader] No story items for user:", t, uId, res);
+              return n(null);
+            }
+            let oItems = [];
+            let uname = (reel.owner && reel.owner.username) || (reel.user && reel.user.username) || (typeof t === "string" && !/^\d+$/.test(t) ? t : "") || (e.getStoryUsername ? e.getStoryUsername(reel, uId) : "story_user");
+            let owner = { username: uname };
+            for (let it of reel.items) {
+              let parsed = e.Yn(it, owner);
+              parsed && oItems.push(parsed);
+            }
+            n(oItems.length ? oItems : null, uname);
           },
           re(t) {
             let n = Array.from(t.querySelectorAll("div")).find((t => {
@@ -5961,6 +6096,15 @@
             if (!n) return;
             o.Xn();
             let e = d.St();
+            let activeMedia = document.querySelector("section video, section img[srcset], article video, article img[srcset]");
+            if (activeMedia && n.length > 1) {
+              let curSrc = activeMedia.currentSrc || activeMedia.src || "";
+              if (curSrc) {
+                let cleanSrc = curSrc.split("?")[0];
+                let foundIdx = n.findIndex(item => item.url && item.url.split("?")[0] === cleanSrc);
+                if (foundIdx !== -1) e = foundIdx;
+              }
+            }
             let item = n[e] || n[0];
             if (!item) return;
             let r = {
@@ -5976,7 +6120,17 @@
         v.mr.pr(t.target);
         if (!n || !n.length) return;
         o.Xn();
-        let e, r = n[d.St()] || n[0];
+        let e = d.St();
+        let activeMedia = document.querySelector("section video, section img[srcset], article video, article img[srcset]");
+        if (activeMedia && n.length > 1) {
+          let curSrc = activeMedia.currentSrc || activeMedia.src || "";
+          if (curSrc) {
+            let cleanSrc = curSrc.split("?")[0];
+            let foundIdx = n.findIndex(item => item.url && item.url.split("?")[0] === cleanSrc);
+            if (foundIdx !== -1) e = foundIdx;
+          }
+        }
+        let r = n[e] || n[0];
         if (r) v.br(r, t.target)
       })) : v.mr.pr(t.target)
     },
@@ -6010,10 +6164,11 @@
                 return void(a.ee = !1);
               }
               let reel = reels[0];
-              let userObj = reel.owner || reel.user || {};
-              let uname = userObj.username || "highlight";
-              let title = reel.title ? `${uname}_${reel.title}` : uname;
-              e(o.Qn(reel.items, userObj), title);
+              let uname = (reel.owner && reel.owner.username) || (reel.user && reel.user.username) || (o.getStoryUsername ? o.getStoryUsername(reel, tLoc) : "highlight");
+              let hTitle = reel.title || (o.getHighlightTitle ? o.getHighlightTitle(reel) : "");
+              let title = hTitle ? `${uname}_${hTitle}` : uname;
+              let parsedItems = o.Qn(reel.items, { username: uname });
+              e(parsedItems, title);
             }));
           }
         }
