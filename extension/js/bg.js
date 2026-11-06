@@ -479,19 +479,10 @@
         instaUtils = require(3);
       module.exports = function () {
         return {
-          openPrivacyPolicyTab() {
-            chrome.tabs.create({
-              url: chrome.runtime.getURL("html/pp.html"),
-              active: !0
-            });
-          },
           initBackgroundScript: function () {
-            const e = this;
-            chrome.runtime.onInstalled.addListener(async t => {
-              instaUtils.checkPolicyAccepted().then(n => {
-                n || "install" === t.reason && e.openPrivacyPolicyTab();
-              });
-            }), chrome.runtime.onConnect.addListener(function (e) {}), chrome.action.onClicked.addListener(function () {
+            chrome.runtime.onInstalled.addListener(async () => {}),
+            chrome.runtime.onConnect.addListener(function () {}),
+            chrome.action.onClicked.addListener(function () {
               chrome.tabs.create({
                 url: "https://www.instagram.com/"
               });
@@ -506,7 +497,7 @@
                 case "checkBulkDownloadNow":
                   return tabManager.isBulkDownloadActiveInAnyTab(sendResponse), !0;
                 case "check_policy_accept":
-                  return instaUtils.checkPolicyAccepted().then(sendResponse), !0;
+                  return sendResponse(!0), !0;
                 case "getCsrftoken":
                   return cookieManager.getCsrfToken().then(sendResponse).catch(() => sendResponse), !0;
                 case "is_bulk_advanced":
@@ -550,7 +541,7 @@
                 case "updateStorage":
                   return instaUtils.isAspectRatioReel(message.data).then(sendResponse), !0;
                 case "upd_promotional_status":
-                  return instaUtils.checkPolicyAccepted(message.status).then(sendResponse), !0;
+                  return sendResponse(!0), !0;
                 default:
                   return;
               }

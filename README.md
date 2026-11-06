@@ -13,10 +13,11 @@ Unfortunately, in a recent update pushed by the previous commercial maintainer, 
 Recognizing the utility of the original tool, **Windowsfreak** retrieved the extension files to perform a complete security audit, clean-up, and architectural overhaul:
 
 1. **Malicious Backdoor Removed**: Completely purged all unauthorized tracking payloads, remote script loaders, and backdoor mechanisms.
-2. **Nagware & Promotional Redirects Stripped**:
-   - Disabled the rating nag banner (`promaster-rate-us`) that repeatedly prompted users for 5-star store reviews.
-   - Removed all external promotional links and policy redirects to third-party domains (`https://sites.google.com/view/downloader-promaster`).
-   - Automatically bypasses policy gates on clean install without opening unwanted new tabs.
+2. **Nagware & Promotional Bloat Purged**:
+   - Completely deleted the rating nag banner (`promaster-rate-us`) and the code behind it (`ratingManager`), preventing repeated 5-star review prompts.
+   - Removed all policy modal gates (`policyStorage`) and external redirects to third-party domains (`https://sites.google.com/view/downloader-promaster`).
+   - Removed the `onInstalled` popup tab in `bg.js`; download buttons now activate immediately without async policy checks.
+   - Deleted 7 obsolete SVG assets (including `rate-us-title.svg` at 8.26 MB), shrinking `extension/img/` from >8.3 MB to ~150 KB (a 98% reduction).
 3. **Dead Code Elimination**: Removed over 3,140 lines of unused, bundled third-party libraries (such as a legacy Browserified `JSZip 3.0` bundle) that were needlessly bloating the extension.
 4. **Instagram API Modernization**: Replaced deprecated, broken Instagram GraphQL queries and endpoints with modern, working API calls for Reels, Stories, and Highlights.
 5. **Comprehensive Deobfuscation**: Systematically refactored minified, single-character variable names and Webpack module exports into clean, readable, self-documenting JavaScript.

@@ -1840,8 +1840,7 @@
         domHelpers = require(25),
         postDetailsResolver = require(21),
         taskQueue = require(26),
-        mediaItemFormatter = require(22),
-        policyStorage = require(30);
+        mediaItemFormatter = require(22);
       module.exports = function () {
         return {
           isAdvancedMode: !1,
@@ -1895,11 +1894,7 @@
             e.innerHTML = `\n\t\t\t\t<div class="promaster_first_bulk_btn_wrap">\n\t\t\t\t\t<div class="promaster_first_bulk_btn"></div>\n\t\t\t\t\t<div class="promaster_first_bulk_hint">${chrome.i18n.getMessage("bulk_download")}</div>\n\t\t\t\t</div>`, n.append(e.firstElementChild);
             const i = this;
             n.querySelector(".promaster_first_bulk_btn").addEventListener("click", () => {
-              instaUtils.sendMessage("check_policy_accept", t => {
-                t ? i.openBulkDownloadModal.call(i) : policyStorage.showPolicyModal(() => {
-                  i.openBulkDownloadModal.bind(i);
-                });
-              });
+              i.openBulkDownloadModal();
             });
           },
           hideBulkDownloadButton: function () {
@@ -2403,8 +2398,7 @@
       }();
     }, (module, exports, require) => {
       const domHelpers = require(25),
-        fileSaver = require(28),
-        ratingManager = require(29);
+        fileSaver = require(28);
       module.exports = function () {
         return {
           isBusy: !1,
@@ -2924,28 +2918,14 @@
         }
       }("undefined" != typeof self && self || "undefined" != typeof window && window || this.content);
       t.exports = n;
-    }, module => {
-      module.exports = function () {
-        return {
-          promptRateUs() {},
-          markSuccessAction() {}
-        };
-      }();
-    }, (module, exports, require) => {
-      const constants = require(4),
-        instaUtils = require(3);
-      module.exports = function () {
-        return {
-          showPolicyModal(t) {
-            if (typeof callback === 'function') callback();
-          }
-        };
-      }();
+    }, (module, exports) => {
+      module.exports = {};
+    }, (module, exports) => {
+      module.exports = {};
     }, (module, exports, require) => {
       const constants = require(4),
         domHelpers = require(25),
-        uploadSessionManager = require(32),
-        ratingManager = require(29);
+        uploadSessionManager = require(32);
       let a = function () {
         let t = document.querySelector(".promaster_modal_btn_wrap");
         t && (t.innerHTML = '<div class="promaster_repost_loader_wrap"><span class="promaster_repost_loader"></span></div>');
@@ -2993,7 +2973,7 @@
                 destination: t.destination
               };
               "reels" === t.destination && (r.shareReelsToFeed = l), uploadSessionManager.startUpload(r, function (t) {
-                return t ? (ratingManager.markSuccessAction(), new domHelpers().showMessageModal(chrome.i18n.getMessage("reposted"))) : new domHelpers().showMessageModal(chrome.i18n.getMessage("repost_error"));
+                return t ? new domHelpers().showMessageModal(chrome.i18n.getMessage("reposted")) : new domHelpers().showMessageModal(chrome.i18n.getMessage("repost_error"));
               });
             });
           }
@@ -3167,11 +3147,9 @@
     domHelpers = e(25),
     bulkDownloadController_2 = e(24),
     taskQueue = e(26),
-    ratingManager = e(29),
     octetStreamDownloader = e(34),
     instaUtils_2 = e(3),
-    graphqlDefinitions = e(9),
-    policyStorage = e(30);
+    graphqlDefinitions = e(9);
   let p = "";
   var uiController = {
     DOWNLOAD_BTN_CLASS: "promaster_dl_btn",
@@ -3320,7 +3298,9 @@
     executeDownload: function (t, n) {
       let e = this;
       t && t.error && !t.hasAlt && (t = e.Sr(n)), octetStreamDownloader.downloadDirect(t, function (r) {
-        return r.err && t.hasAlt ? e.Er(t, n) : (e.mr.pr(n), r.err ? e.Ar(n) : void ratingManager.markSuccessAction());
+        if (r.err && t.hasAlt) return e.Er(t, n);
+        e.mr.pr(n);
+        if (r.err) e.Ar(n);
       });
     },
     Ir: function (t, n) {
@@ -3512,57 +3492,29 @@
       });
     },
     initClickEventInterceptors: function () {
-      let t = Date.now(),
-        n = function (n) {
-          n.preventDefault(), n.stopPropagation();
-          let e = Date.now();
-          return t + 500 > e || (t = e, !1);
-        };
-      document.body.addEventListener("click", function (t) {
-        const e = this;
-        if (t.target.classList.contains(`${uiController.DOWNLOAD_BTN_CLASS}`) || t.target.parentElement && t.target.parentElement.classList.contains(uiController.DOWNLOAD_BTN_CLASS)) {
+      const e = this;
+      function n(t) {
+        return t.target.classList.contains("promaster_btn_cancel") || t.target.classList.contains("promaster_btn_enough") || t.target.closest(".promaster_modal");
+      }
+      document.addEventListener("click", function (t) {
+        if (t.target.classList.contains(uiController.DOWNLOAD_BTN_CLASS) || t.target.parentElement && t.target.parentElement.classList.contains(uiController.DOWNLOAD_BTN_CLASS)) {
           if (n(t)) return;
-          instaUtils.sendMessage("check_policy_accept", n => {
-            n ? uiController.handleReelsDownloadClick.call(e, t) : policyStorage.showPolicyModal(() => {
-              uiController.handleReelsDownloadClick.call(e, t);
-            });
-          });
-        } else if (t.target.classList.contains(uiController.REPOST_BTN_CLASS) || t.target.parentElement.classList.contains(uiController.REPOST_BTN_CLASS)) {
+          uiController.handleReelsDownloadClick.call(e, t);
+        } else if (t.target.classList.contains(uiController.REPOST_BTN_CLASS) || t.target.parentElement && t.target.parentElement.classList.contains(uiController.REPOST_BTN_CLASS)) {
           if (n(t)) return;
-          instaUtils.sendMessage("check_policy_accept", n => {
-            n ? uiController.handleAudioDownloadClick.call(e, t) : policyStorage.showPolicyModal(() => {
-              uiController.handleAudioDownloadClick.call(e, t);
-            });
-          });
+          uiController.handleAudioDownloadClick.call(e, t);
         }
-        if (!instaUtils.isIframe()) if (t.target.classList.contains("promaster_ns_dl_btn") || t.target.parentElement.classList.contains("promaster_ns_dl_btn")) {
-          if (n(t)) return;
-          instaUtils.sendMessage("check_policy_accept", n => {
-            n ? uiController.handleMediaDownloadClick.call(e, t) : policyStorage.showPolicyModal(() => {
-              uiController.handleMediaDownloadClick.call(e, t);
-            });
-          });
-        } else if (t.target.classList.contains("promaster_ns_rp_btn") || t.target.parentElement.classList.contains("promaster_ns_rp_btn")) {
-          if (n(t)) return;
-          instaUtils.sendMessage("check_policy_accept", n => {
-            n ? uiController.handleStoryDownloadClick.call(e, t) : policyStorage.showPolicyModal(() => {
-              uiController.handleStoryDownloadClick.call(e, t);
-            });
-          });
-        } else if (t.target.classList.contains("promaster_ns_dl_all_btn") || t.target.parentElement.classList.contains("promaster_ns_dl_all_btn")) {
-          if (n(t)) return;
-          instaUtils.sendMessage("check_policy_accept", n => {
-            n ? uiController.handleBulkDownloadClick.call(e, t) : policyStorage.showPolicyModal(() => {
-              uiController.handleBulkDownloadClick.call(e, t);
-            });
-          });
-        } else if (t.target.classList.contains("promaster_video_range") || t.target.parentElement.classList.contains("promaster_video_range")) {
-          let t = e.closest("[data-ig_toolkit_marked]").querySelector("video");
-          t.pause(), t.currentTime = e.value / 10, t.play();
-        } else if (t.target.classList.contains("promaster_video_play_pause") || t.target.parentElement.classList.contains("promaster_video_play_pause")) {
-          if (n(t)) return;
-          let r = e.closest("[data-ig_toolkit_marked]").querySelector("video");
-          e.classList.contains("promaster_paused") ? (e.dataset.playing = "1", r.play()) : e.parentElement.classList.contains("promaster_paused") ? (e.parentElement.dataset.playing = "1", r.play()) : (e.dataset.playing = "0", r.pause());
+        if (!instaUtils.isIframe()) {
+          if (t.target.classList.contains("promaster_ns_dl_btn") || t.target.parentElement && t.target.parentElement.classList.contains("promaster_ns_dl_btn")) {
+            if (n(t)) return;
+            uiController.handleMediaDownloadClick.call(e, t);
+          } else if (t.target.classList.contains("promaster_ns_rp_btn") || t.target.parentElement && t.target.parentElement.classList.contains("promaster_ns_rp_btn")) {
+            if (n(t)) return;
+            uiController.handleStoryDownloadClick.call(e, t);
+          } else if (t.target.classList.contains("promaster_ns_dl_all_btn") || t.target.parentElement && t.target.parentElement.classList.contains("promaster_ns_dl_all_btn")) {
+            if (n(t)) return;
+            uiController.handleBulkDownloadClick.call(e, t);
+          }
         }
       });
     },
