@@ -1646,7 +1646,7 @@
               reels: reelsObj
             };
           },
-          Vn: function (t, n) {
+          fetchStoriesForUser: function (t, n) {
             let e = this;
             e.resolveUserId(t).then(async function (r) {
               if (!r) return n();
@@ -1658,7 +1658,7 @@
               n();
             });
           },
-          Qn: function (t, n) {
+          normalizeStoryItems: function (t, n) {
             let e = [];
             let defaultUName = n && n.username || "";
             return (t || []).forEach(function (t) {
@@ -1696,19 +1696,19 @@
               });
             }), e;
           },
-          Xn: function () {
+          pauseStoryVideo: function () {
             const t = "M15 1c-3.3 0-6 1.3-6 3v40c0 1.7 2.7 3 6 3s6-1.3 6-3V4c0-1.7-2.7-3-6-3zm18 0c-3.3 0-6 1.3-6 3v40c0 1.7 2.7 3 6 3s6-1.3 6-3V4c0-1.7-2.7-3-6-3z",
               n = document.querySelector(`svg path[d*="${t}"]`) || null;
             let e = n && n.closest("button") || null;
             e || (e = n && n.closest('div[role*="button"]') || null), e && e.click();
           },
-          Kn: function (t) {
+          injectStoryActionButtons: function (t) {
             if (!location.pathname.match(/stories\/(locations|tags)\//) && !t.querySelector(".promaster_stories_actions_wrap")) {
               let n = document.createElement("div");
               n.innerHTML = `\n\t\t\t\t<div class="promaster_stories_actions_wrap">\n\t\t\t\t\t<a class="promaster_stories_actions_btn promaster_ns_rp_btn">\n\t\t\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t\t\t\t<span class="promaster_text">${chrome.i18n.getMessage("repost")}</span>\n\t\t\t\t\t</a>\n\t\t\t\t\t<a class="promaster_stories_actions_btn promaster_ns_dl_btn">\n\t\t\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t\t\t\t<span class="promaster_text">${chrome.i18n.getMessage("download")}</span>\n\t\t\t\t\t</a>\n\t\t\t\t\t<a class="promaster_stories_actions_btn promaster_ns_dl_all_btn">\n\t\t\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t\t\t\t<span class="promaster_text">${chrome.i18n.getMessage("download_all")}</span>\n\t\t\t\t\t\t<span class="promaster_stories_count"></span>\n\t\t\t\t\t</a>\n\t\t\t\t</div>\n\t\t\t\t`, t.append(n);
             }
           },
-          Yn: function (t, owner) {
+          formatStoryItem: function (t, owner) {
             let itemId = t && (t.id || t.pk);
             if (!itemId) return;
             let n = {
@@ -1747,7 +1747,7 @@
             }
             return n;
           },
-          te: function (t) {
+          fetchHighlightStories: function (t) {
             let eThis = this;
             return new Promise(async n => {
               let res = await eThis.fetchStories(t, true);
@@ -1792,7 +1792,7 @@
               n(e.length ? e : null);
             });
           },
-          ne: async function (t, n) {
+          fetchUserStories: async function (t, n) {
             let e = this;
             let uId = await e.resolveUserId(t);
             if (!uId) {
@@ -1825,7 +1825,7 @@
             });
             return n && n.children && n.children.length || 1;
           },
-          ie: function () {
+          updateStoryDownloadAllCount: function () {
             let t = instaUtils_2.kt();
             if (!t) return;
             let n = document.querySelector(".promaster_ns_dl_all_btn");
@@ -2129,7 +2129,7 @@
                 if (e.error) return t.be(), new domHelpers().Se(chrome.i18n.getMessage("sww_error"));
                 let r = t.Ce(n);
                 if (r && "not_match" === r.error && t.oe) return t.be(), new domHelpers().Se(chrome.i18n.getMessage("bulk_advanced_params_not_match"));
-                taskQueue.De({
+                taskQueue.startBulkDownloadZipStream({
                   files: r,
                   filename_prefix: t.ue
                 }, t, n => {
@@ -2340,7 +2340,7 @@
           constructor() {
             return this.ze = document.querySelector(".promaster_modal"), this.ze || (this.ze = document.createElement("div"), this.ze.className = "promaster_modal", this.ze.innerHTML = '<div class="promaster_modal_content"></div>', document.querySelector("body").appendChild(this.ze)), this;
           }
-          Me(t) {
+          hideAndCleanup(t) {
             this.ze.remove(), document.body.classList.remove("promaster-scroll-hidden"), "function" == typeof t && t();
           }
           je(t) {
@@ -2348,15 +2348,15 @@
             let n = this;
             t.target === this.ze && n.Me();
           }
-          Le() {
+          showModal() {
             this.ze.style.display = "block", document.body.classList.add("promaster-scroll-hidden"), setTimeout(function () {
               document.querySelector(".promaster_modal_content").style.opacity = "1";
             }, 100);
           }
-          We() {
-            this.Me();
+          closeModal() {
+            this.hideAndCleanup();
           }
-          qe(t, n) {
+          showPreparingLinksModal(t, n) {
             let e = this,
               r;
             this.ze.querySelector("#bulk_preparing") || (document.removeEventListener("click", e.je), this.ze.innerHTML = `\n\t\t\t\t<div id="bulk_preparing" class="promaster_modal_content">\n\t\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("preparing_links")}...</div>\n\t\t\t\t\t<div class="promaster_modal_progress"><div class="promaster_modal_progressbar"></div>\n\t\t\t\t</div>\n\t\t\t\t<div class="promaster_modal_btn_wrap promaster_one_btn_inside">\n\t\t\t\t\t<button class="promaster_btn_cancel">${chrome.i18n.getMessage("btn_cancel")}</button>\n\t\t\t\t</div>`, this.Fe = this.ze.querySelector(".promaster_modal_progressbar"), this.ze.querySelector(".promaster_btn_cancel").addEventListener("click", function () {
@@ -2368,7 +2368,7 @@
               i > t && (i = t), i > parseInt(this.Fe.style.width || 0) && (this.Fe.style.width = i + "%");
             }
           }
-          Ge(t, n) {
+          showDownloadingModal(t, n) {
             let e = this,
               r;
             this.ze.querySelector("#bulk_downloading") || (document.removeEventListener("click", e.je), this.ze.innerHTML = `\n\t\t\t\t<div id="bulk_downloading" class="promaster_modal_content">\n\t\t\t\t\t<div class="promaster_modal_header">\n\t\t\t\t\t\t${chrome.i18n.getMessage("downloading")}...\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_count_header promaster_margin0">\n\t\t\t\t\t\t<span class="promaster_big_font_part"></span>\n\t\t\t\t\t\t<span class="promaster_small_font_part">&nbsp;/&nbsp;${t.total}</span>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_progress">\n\t\t\t\t\t\t<div class="promaster_modal_progressbar"></div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_btn_wrap promaster_align_right">\n\t\t\t\t\t\t<button class="promaster_btn_enough">${chrome.i18n.getMessage("btn_enough")}</button>\n\t\t\t\t\t\t<button class="promaster_btn_cancel cancel_download small_btn_cancel">${chrome.i18n.getMessage("btn_cancel")}</button>\n\t\t\t\t\t</div>\n\t\t\t\t</div>`, this.Oe = this.ze.querySelector(".promaster_big_font_part"), this.Fe = this.ze.querySelector(".promaster_modal_progressbar"), this.ze.querySelector(".promaster_btn_cancel").addEventListener("click", function () {
@@ -2380,24 +2380,24 @@
             const o = 100;
             this.Oe.innerText = t.done || 0, i > o && (i = o), this.Fe.style.width = i + "%";
           }
-          Ze(t) {
+          showZippingModal(t) {
             let n = this,
               e;
             if (n.ze.querySelector("#bulk_zipping") || (document.removeEventListener("click", n.je), n.ze.innerHTML = `\n\t\t\t<div id="bulk_zipping" class="promaster_modal_content">\n\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("zipping_files")}...</div>\n\t\t\t\t<div class="promaster_count_header"></div>\n\t\t\t\t<div class="promaster_modal_progress">\n\t\t\t\t\t<div class="promaster_modal_progressbar"></div>\n\t\t\t\t</div>\n\t\t\t</div>`, n.Fe = n.ze.querySelector(".promaster_modal_progressbar"), n.Oe = n.ze.querySelector(".promaster_big_font_part"), n.Le()), !n.Oe || !n.Fe) return;
             let r = t.progress || 0;
             n.Oe.innerText = r + "%", n.Fe.style.width = r + "%";
           }
-          Pe(t, n) {
+          showMessageModal(t, n) {
             let e = this;
             this.ze.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<span class="promaster_modal_close"></span>\n\t\t\t<div>${t}</div>\n\t\t</div>`, document.addEventListener("click", e.je), this.ze.querySelector(".promaster_modal_close").addEventListener("click", function () {
               e.Me(n && n.cancelCallback);
             }), e.Le();
           }
-          Se(t) {
-            this.Pe(`<div class="promaster_modal_message_container">${t}</div>`);
+          showErrorModal(t) {
+            this.showMessageModal(`<div class="promaster_modal_message_container">${t}</div>`);
           }
-          $e(t) {
-            this.ze.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<div class="promaster_modal_loader" style="width:${t && t.width || 300}px;height:${t && t.height || 300}px;">\n\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t</div>\n\t\t</div>`, this.Le();
+          showLoaderModal(t) {
+            this.ze.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<div class="promaster_modal_loader" style="width:${t && t.width || 300}px;height:${t && t.height || 300}px;">\n\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t</div>\n\t\t</div>`, this.showModal();
           }
         };
       }();
@@ -2476,17 +2476,17 @@
               }
             };
           },
-          De: function (t, n, e) {
-            let a = this,
-              u = t.files,
-              c = t.filename_prefix || "ig_toolkit",
-              l = new domHelpers(),
-              total = u.length;
-            if (!u.length) return "function" == typeof e && e({
+          startBulkDownloadZipStream: function (options, stateController, callback) {
+            let downloadController = this,
+              files = options.files,
+              filenamePrefix = options.filename_prefix || "ig_toolkit",
+              progressModal = new domHelpers(),
+              total = files.length;
+            if (!files.length) return "function" == typeof callback && callback({
               err: "true",
               reason: "no files to dw"
             });
-            a.se = !0;
+            downloadController.se = !0;
             let cancelled = !1,
               stopped = !1,
               completedCount = 0,
@@ -2670,9 +2670,9 @@
               return null;
             }
             async function worker() {
-              while (cursor < u.length && !stopped && !cancelled) {
+              while (cursor < files.length && !stopped && !cancelled) {
                 const idx = cursor++;
-                const item = u[idx];
+                const item = files[idx];
                 try {
                   let downloadUrl = item.url;
                   if ((item.type === "video" || item.isReels) && (!downloadUrl || !downloadUrl.includes(".mp4"))) {
@@ -2697,7 +2697,7 @@
                     seenNames.add(filename);
                     zipWriter.addFile(filename, buf);
                     completedCount++;
-                    l.Ge({
+                    progressModal.showDownloadingModal({
                       total: total,
                       done: completedCount,
                       progress: parseFloat(completedCount / total * 100)
@@ -2713,22 +2713,22 @@
                 zipWriter.finish();
                 const finalBlob = await blobPromise;
                 let dateStr = new Date().toJSON().replace(/([^\w\-].+)/, "");
-                fileSaver(finalBlob, `${c}_${dateStr}.zip`);
-                l.We();
-                "function" == typeof e && e({
+                fileSaver(finalBlob, `${filenamePrefix}_${dateStr}.zip`);
+                progressModal.closeModal();
+                "function" == typeof callback && callback({
                   success: 1
                 });
               } else {
-                l.We();
-                "function" == typeof e && e({
+                progressModal.closeModal();
+                "function" == typeof callback && callback({
                   err: "true",
                   reason: "no files downloaded"
                 });
               }
-              a.se = !1;
-              n.be();
+              downloadController.se = !1;
+              stateController.be();
             }
-            l.Ge({
+            progressModal.showDownloadingModal({
               total: total,
               done: 0,
               progress: 0
@@ -2740,10 +2740,10 @@
                 cancelled = !0;
                 stopped = !0;
                 abortController.abort();
-                a.se = !1;
-                n.be();
-                l.We();
-                "function" == typeof e && e({
+                downloadController.se = !1;
+                stateController.be();
+                progressModal.closeModal();
+                "function" == typeof callback && callback({
                   cancelled: 1
                 });
               }
@@ -2759,10 +2759,10 @@
                   await finalizeZip();
                 }
               } catch (err) {
-                a.se = !1;
-                n.be();
-                l.Se(chrome.i18n.getMessage("error_bulk"));
-                "function" == typeof e && e({
+                downloadController.se = !1;
+                stateController.be();
+                progressModal.showErrorModal(chrome.i18n.getMessage("error_bulk"));
+                "function" == typeof callback && callback({
                   error: 1
                 });
               }
@@ -6341,17 +6341,17 @@
     graphqlDefinitions = e(9),
     policyStorage = e(30);
   let p = "";
-  var v = {
-    lr: "promaster_dl_btn",
-    hr: "promaster_rpst_btn",
-    dr: function (t) {
-      domExtractor.Xn(), v.mr._r(t.target);
+  var uiController = {
+    DOWNLOAD_BTN_CLASS: "promaster_dl_btn",
+    REPOST_BTN_CLASS: "promaster_rpst_btn",
+    handleStoryDownloadClick: function (t) {
+      domExtractor.pauseStoryVideo(), uiController.buttonStateManager.showButtonLoader(t.target);
       let n = location.pathname.match(/stories\/([^\/]+)/);
-      n = n && n[1], n ? domExtractor.ne(n, function (n) {
-        if (!n || !n.length) return void v.mr.pr(t.target);
+      n = n && n[1], n ? domExtractor.fetchUserStories(n, function (n) {
+        if (!n || !n.length) return void uiController.buttonStateManager.hideButtonLoader(t.target);
         let e = instaUtils_2.St(),
           i = n && n[e] || null;
-        if (!i) return void v.mr.pr(t.target);
+        if (!i) return void uiController.buttonStateManager.hideButtonLoader(t.target);
         instaUtils.P(i.url, function (n) {
           "video" === i.type && i.prev ? instaUtils.P(i.prev, function (t) {
             mediaUploadUI.tr({
@@ -6362,19 +6362,19 @@
           }) : mediaUploadUI.tr({
             file: n,
             destination: "story"
-          }), v.mr.pr(t.target);
+          }), uiController.buttonStateManager.hideButtonLoader(t.target);
         });
-      }) : v.mr.pr(t.target);
+      }) : uiController.buttonStateManager.hideButtonLoader(t.target);
     },
-    vr: function (t) {
-      if (bulkDownloadController.wr = !1, v.mr._r(t.target), domExtractor.Xn(), instaUtils.V()) {
+    handleMediaDownloadClick: function (t) {
+      if (bulkDownloadController.wr = !1, uiController.buttonStateManager.showButtonLoader(t.target), domExtractor.pauseStoryVideo(), instaUtils.V()) {
         let n = location.pathname.match(new RegExp("stories\\/highlights\\/([^/]+)"));
         if (n = n && n[1], n) {
           let e = "highlight:" + n;
-          return domExtractor.te(e).then(function (n) {
-            v.mr.pr(t.target);
+          return domExtractor.fetchHighlightStories(e).then(function (n) {
+            uiController.buttonStateManager.hideButtonLoader(t.target);
             if (!n) return;
-            domExtractor.Xn();
+            domExtractor.pauseStoryVideo();
             let e = instaUtils_2.St();
             let activeMedia = document.querySelector("section video, section img[srcset], article video, article img[srcset]");
             if (activeMedia && n.length > 1) {
@@ -6391,15 +6391,15 @@
               url: item.url,
               filename: `${item.userName}_${item.id}.${item.fileExt}`
             };
-            v.br(r, t.target);
+            uiController.executeDownload(r, t.target);
           });
         }
       }
       let n = location.pathname.match(/stories\/([^\/]+)/);
-      n = n && n[1], n ? domExtractor.ne(n, function (n) {
-        v.mr.pr(t.target);
+      n = n && n[1], n ? domExtractor.fetchUserStories(n, function (n) {
+        uiController.buttonStateManager.hideButtonLoader(t.target);
         if (!n || !n.length) return;
-        domExtractor.Xn();
+        domExtractor.pauseStoryVideo();
         let e = instaUtils_2.St();
         let activeMedia = document.querySelector("section video, section img[srcset], article video, article img[srcset]");
         if (activeMedia && n.length > 1) {
@@ -6411,17 +6411,17 @@
           }
         }
         let r = n[e] || n[0];
-        if (r) v.br(r, t.target);
-      }) : v.mr.pr(t.target);
+        if (r) uiController.executeDownload(r, t.target);
+      }) : uiController.buttonStateManager.hideButtonLoader(t.target);
     },
-    yr: function (t) {
+    handleBulkDownloadClick: function (t) {
       instaUtils.Y("checkBulkDownloadNow", function (n) {
         if (n) return new domHelpers().Se(chrome.i18n.getMessage("synchronous_bulk_download_denied"));
         function e(n, prefix) {
-          v.mr.pr(t.target);
+          uiController.buttonStateManager.hideButtonLoader(t.target);
           if (n && n.length) {
-            domExtractor.Xn();
-            taskQueue.De({
+            domExtractor.pauseStoryVideo();
+            taskQueue.startBulkDownloadZipStream({
               files: n,
               filename_prefix: prefix || "stories"
             }, bulkDownloadController, function () {
@@ -6431,7 +6431,7 @@
             bulkDownloadController.ee = !1;
           }
         }
-        if (bulkDownloadController.ee = !0, bulkDownloadController.wr = !1, v.mr._r(t.target), domExtractor.Xn(), instaUtils.V()) {
+        if (bulkDownloadController.ee = !0, bulkDownloadController.wr = !1, uiController.buttonStateManager.showButtonLoader(t.target), domExtractor.pauseStoryVideo(), instaUtils.V()) {
           let tLoc = location.pathname.match(new RegExp("stories\\/highlights\\/([^/]+)"));
           if (tLoc = tLoc && tLoc[1], tLoc) {
             let nReel = "highlight:" + tLoc;
@@ -6439,14 +6439,14 @@
               let connectionEdges = res && res.data && res.data.xdt_api__v1__feed__reels_media__connection && res.data.xdt_api__v1__feed__reels_media__connection.edges;
               let reels = res && res.data && res.data.reels_media || connectionEdges && connectionEdges.map(e => e && e.node).filter(Boolean) || res && res.reels_media || [];
               if (!reels.length || !reels[0].items) {
-                v.mr.pr(t.target);
+                uiController.buttonStateManager.hideButtonLoader(t.target);
                 return void (bulkDownloadController.ee = !1);
               }
               let reel = reels[0];
               let uname = reel.owner && reel.owner.username || reel.user && reel.user.username || (domExtractor.getStoryUsername ? domExtractor.getStoryUsername(reel, tLoc) : "highlight");
               let hTitle = reel.title || (domExtractor.getHighlightTitle ? domExtractor.getHighlightTitle(reel) : "");
               let title = hTitle ? `${uname}_${hTitle}` : uname;
-              let parsedItems = domExtractor.Qn(reel.items, {
+              let parsedItems = domExtractor.normalizeStoryItems(reel.items, {
                 username: uname
               });
               e(parsedItems, title);
@@ -6454,30 +6454,30 @@
           }
         }
         let i = location.pathname.match(/stories\/([^\/]+)/);
-        i = i && i[1], i ? domExtractor.ne(i, e) : (v.mr.pr(t.target), bulkDownloadController.ee = !1);
+        i = i && i[1], i ? domExtractor.fetchUserStories(i, e) : (uiController.buttonStateManager.hideButtonLoader(t.target), bulkDownloadController.ee = !1);
       });
     },
-    gr: function (t) {
+    handleReelsDownloadClick: function (t) {
       let n = t.target;
-      n = "div" === n.nodeName.toLowerCase() ? n : n.parentElement, "div" === n.nodeName.toLowerCase() && (v.mr._r(n), v.kr(n, function (t) {
-        t.hasAlt = !0, v.br.call(v, t, n);
+      n = "div" === n.nodeName.toLowerCase() ? n : n.parentElement, "div" === n.nodeName.toLowerCase() && (uiController.buttonStateManager.showButtonLoader(n), uiController.extractMediaInfoFromElement(n, function (t) {
+        t.hasAlt = !0, uiController.executeDownload.call(uiController, t, n);
       }));
     },
-    $r: function (t) {
+    handleAudioDownloadClick: function (t) {
       let n = t.target.parentElement;
-      v.mr._r(n), v.kr(n, function (t) {
+      uiController.buttonStateManager.showButtonLoader(n), uiController.extractMediaInfoFromElement(n, function (t) {
         instaUtils.P(t.url, function (e) {
           if ("video" === t.type && t.prev) {
             let i = t.isReels ? "reels" : "feed";
             instaUtils.P(t.prev, function (r) {
-              v.mr.pr(n), mediaUploadUI.tr({
+              uiController.buttonStateManager.hideButtonLoader(n), mediaUploadUI.tr({
                 file: e,
                 prev: r,
                 destination: i,
                 dimensions: t.dimensions
               });
             });
-          } else v.mr.pr(n), mediaUploadUI.tr({
+          } else uiController.buttonStateManager.hideButtonLoader(n), mediaUploadUI.tr({
             file: e,
             destination: "feed",
             dimensions: t.dimensions
@@ -6485,7 +6485,7 @@
         });
       });
     },
-    br: function (t, n) {
+    executeDownload: function (t, n) {
       let e = this;
       t && t.error && !t.hasAlt && (t = e.Sr(n)), octetStreamDownloader.cr(t, function (r) {
         return r.err && t.hasAlt ? e.Er(t, n) : (e.mr.pr(n), r.err ? e.Ar(n) : void ratingManager.Ve());
@@ -6504,7 +6504,7 @@
       }
       return null;
     },
-    Er: function (t, n) {
+    fallbackDownloadViaShortcode: function (t, n) {
       let e = this;
       chrome.runtime.sendMessage({
         action: "requestHtmlByShortcode",
@@ -6519,7 +6519,7 @@
         }
       });
     },
-    Ar: function (t) {
+    showDownloadError: function (t) {
       if (!t) return;
       let n = t.parentNode,
         e = document.createElement("div");
@@ -6528,17 +6528,17 @@
         t && t.remove();
       }, 2e3);
     },
-    mr: {
-      _r: function (t) {
+    buttonStateManager: {
+      showButtonLoader: function (t) {
         let n = t.querySelector(".promaster_icon") || t.parentNode.querySelector(".promaster_icon");
         n && n.classList.add("promaster_loader");
       },
-      pr: function (t) {
+      hideButtonLoader: function (t) {
         let n = t.querySelector(".promaster_loader") || t.parentNode.querySelector(".promaster_loader");
         n && n.classList.contains("promaster_loader") && n.classList.remove("promaster_loader");
       }
     },
-    Pr: function (t, n) {
+    findMediaContainer: function (t, n) {
       let e;
       if (n || instaUtils.D()) {
         let n = t.closest("article") || t.closest('div[role*="button"]');
@@ -6555,7 +6555,7 @@
       }
       return e;
     },
-    kr: function (t, n) {
+    extractMediaInfoFromElement: function (t, n) {
       let e = t.closest("article") || t.closest('div[role*="button"]'),
         o = {
           shortcode: t.dataset.shortcode,
@@ -6566,8 +6566,8 @@
         return t.shortcode = o.shortcode, t.isCarousel = o.is_carousel, n(t);
       });
     },
-    Sr: function (t) {
-      let n = v.Pr(t, !0),
+    resolveAlternativeMedia: function (t) {
+      let n = uiController.findMediaContainer(t, !0),
         e = instaUtils.ft(t.parentNode),
         i,
         o,
@@ -6581,18 +6581,18 @@
         }
       } : null;
     },
-    Ur: function (t, n) {
+    injectDownloadButton: function (t, n) {
       let e = document.createElement("div");
-      e.innerHTML = `\n\t\t\t<div class="${this.lr}" data-shortcode="${t.shortcode}">\n\t\t\t\t<span class="promaster_dl_pregress_loader"></span>\n\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t\t<span class="promaster_text">${chrome.i18n.getMessage("download")}</span>\n\t\t\t</div>`, t.isCarousel && e.firstElementChild.setAttribute("data-carousel", "1"), n.append(e.firstElementChild);
+      e.innerHTML = `\n\t\t\t<div class="${this.DOWNLOAD_BTN_CLASS}" data-shortcode="${t.shortcode}">\n\t\t\t\t<span class="promaster_dl_pregress_loader"></span>\n\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t\t<span class="promaster_text">${chrome.i18n.getMessage("download")}</span>\n\t\t\t</div>`, t.isCarousel && e.firstElementChild.setAttribute("data-carousel", "1"), n.append(e.firstElementChild);
     },
-    Rr: function (t, n, e) {
+    injectPostOverlayButtons: function (t, n, e) {
       if (n.closest("article") && n.closest("article").querySelector('header [href*=""]')) return;
       let r = 5 === e || 7 === e ? "reels" : "feed",
         i = document.createElement("div");
-      i.innerHTML = `\n\t\t\t\t<div class="${this.hr}" data-shortcode="${t.shortcode}" data-dest="${r}" >\n\t\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t\t\t<span class="promaster_text">${chrome.i18n.getMessage("repost")}</span>\n\t\t\t\t</div>`, t.isCarousel && i.firstElementChild.setAttribute("data-carousel", "1"), n.append(i.firstElementChild);
+      i.innerHTML = `\n\t\t\t\t<div class="${this.REPOST_BTN_CLASS}" data-shortcode="${t.shortcode}" data-dest="${r}" >\n\t\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t\t\t<span class="promaster_text">${chrome.i18n.getMessage("repost")}</span>\n\t\t\t\t</div>`, t.isCarousel && i.firstElementChild.setAttribute("data-carousel", "1"), n.append(i.firstElementChild);
     },
-    Br: function (t, n, e = null) {
-      if (t.getElementsByClassName(v.lr).length) return;
+    injectButtonsIfNotPresent: function (t, n, e = null) {
+      if (t.getElementsByClassName(uiController.DOWNLOAD_BTN_CLASS).length) return;
       let i,
         o,
         s = e,
@@ -6602,8 +6602,8 @@
           return "img" !== t.nodeName.toLowerCase() || t.width > 200 && t.height > 200;
         });
         const n = i.querySelector("video");
-        n ? ((t = this.Cr(n, "a")) || (t = this.Cr(n, "div", '[role*="button"]')), t = t.parentNode) : t = t[0].parentElement.parentElement.parentElement.parentElement;
-      } else 2 === n || 5 === n || 6 === n ? i = t : 3 === n ? i = t.querySelector(".EmbeddedMedia") : 4 === n ? (i = t, t = t.querySelector('div[role*="presentation"]').parentElement || t, a = !0) : 7 === n && (s = "reels", t = this.Cr(t, "img").parentNode);
+        n ? ((t = this.formatFilename(n, "a")) || (t = this.formatFilename(n, "div", '[role*="button"]')), t = t.parentNode) : t = t[0].parentElement.parentElement.parentElement.parentElement;
+      } else 2 === n || 5 === n || 6 === n ? i = t : 3 === n ? i = t.querySelector(".EmbeddedMedia") : 4 === n ? (i = t, t = t.querySelector('div[role*="presentation"]').parentElement || t, a = !0) : 7 === n && (s = "reels", t = this.formatFilename(t, "img").parentNode);
       if (!i && 7 !== n) return;
       if (!s) try {
         s = instaUtils.R(i);
@@ -6614,7 +6614,7 @@
         page_type: n,
         isCarousel: a
       };
-      6 === n && (t.style.position = "relative"), this.Ur(u, t), this.Rr(u, t, n), t.dataset.ig_toolkit_marked = "1";
+      6 === n && (t.style.position = "relative"), this.injectDownloadButton(u, t), this.injectPostOverlayButtons(u, t, n), t.dataset.ig_toolkit_marked = "1";
     },
     Cr(t, n, e = "") {
       if (!t || !n) return null;
@@ -6627,10 +6627,10 @@
       }
       return null;
     },
-    Dr: function () {
+    startDOMObserverAndInjectors: function () {
       function t() {
         let t = instaUtils_2.kt();
-        t && (!t.dataset.ig_toolkit_marked && instaUtils_2.$t() && (t.dataset.ig_toolkit_marked = "1", domExtractor.Kn(t)), domExtractor.ie());
+        t && (!t.dataset.ig_toolkit_marked && instaUtils_2.$t() && (t.dataset.ig_toolkit_marked = "1", domExtractor.injectStoryActionButtons(t)), domExtractor.updateStoryDownloadAllCount());
       }
       function n(t) {
         return document.querySelectorAll(t.join(","));
@@ -6642,7 +6642,7 @@
           let n = t.closest("article");
           n || (n = t.closest('div[role*="presentation"]'), n = n && n.closest("div[role=button]") || t.closest('div[role*="button"]') || null);
           let e = instaUtils.U();
-          t.innerWidth < 400 && t.innerHeight < 400 && t.closest("a[href]") ? v.Br(t.closest("a[href]").parentNode, 2, e) : n && instaUtils.ot(n) ? v.Br(n, 4, e) : n && v.Br(n, 1, e);
+          t.innerWidth < 400 && t.innerHeight < 400 && t.closest("a[href]") ? uiController.injectButtonsIfNotPresent(t.closest("a[href]").parentNode, 2, e) : n && instaUtils.ot(n) ? uiController.injectButtonsIfNotPresent(n, 4, e) : n && uiController.injectButtonsIfNotPresent(n, 1, e);
         });
       }
       function i() {
@@ -6651,19 +6651,19 @@
           let n = t.querySelector("img");
           if (!n || !(n.width > 250 && n.height > 250)) return;
           let e = instaUtils.ht(t.parentNode) ? 5 : 2;
-          v.Br(t.parentNode, e);
+          uiController.injectButtonsIfNotPresent(t.parentNode, e);
         }), document.querySelectorAll('a[href*="/reel/"]:not([ig_toolkit_marked])').forEach(function (t) {
-          t.parentElement.ig_toolkit_marked || v.Br(t.parentNode, 5);
+          t.parentElement.ig_toolkit_marked || uiController.injectButtonsIfNotPresent(t.parentNode, 5);
         }), document.querySelectorAll("video").forEach(function (t) {
           if (t.parentElement.dataset.ig_toolkit_marked) return;
           let n;
-          n = instaUtils.F() ? 7 : instaUtils.ht(t.parentNode) ? 5 : 2, t.parentElement.dataset.ig_toolkit_marked = "1", v.Br(t.parentNode, n);
+          n = instaUtils.F() ? 7 : instaUtils.ht(t.parentNode) ? 5 : 2, t.parentElement.dataset.ig_toolkit_marked = "1", uiController.injectButtonsIfNotPresent(t.parentNode, n);
         });
       }
       function s() {
         document.querySelectorAll(".Embed > .Header + div").forEach(function (t) {
           if (t.dataset.ig_toolkit_marked) return !1;
-          v.Br(t, 3);
+          uiController.injectButtonsIfNotPresent(t, 3);
         });
       }
       function u() {
@@ -6673,13 +6673,13 @@
         u();
       }, 1e3));
     },
-    Nr: function () {
+    initRuntimeMessageListener: function () {
       chrome.runtime.onMessage.addListener(function (t, n, e) {
         if (!t) return !1;
         "string" == typeof t && "handshake" === t ? e(!0) : "string" == typeof t && "isBulkDownloadNowInTab" === t ? e(bulkDownloadController.ee) : "setDownloadingStatus" === t.action ? bulkDownloadController_2.ee = t.options.status : t.action;
       });
     },
-    Tr: function () {
+    initClickEventInterceptors: function () {
       let t = Date.now(),
         n = function (n) {
           n.preventDefault(), n.stopPropagation();
@@ -6688,40 +6688,40 @@
         };
       document.body.addEventListener("click", function (t) {
         const e = this;
-        if (t.target.classList.contains(`${v.lr}`) || t.target.parentElement && t.target.parentElement.classList.contains(v.lr)) {
+        if (t.target.classList.contains(`${uiController.DOWNLOAD_BTN_CLASS}`) || t.target.parentElement && t.target.parentElement.classList.contains(uiController.DOWNLOAD_BTN_CLASS)) {
           if (n(t)) return;
           instaUtils.Y("check_policy_accept", n => {
-            n ? v.gr.call(e, t) : policyStorage.ve(() => {
-              v.gr.call(e, t);
+            n ? uiController.handleReelsDownloadClick.call(e, t) : policyStorage.ve(() => {
+              uiController.handleReelsDownloadClick.call(e, t);
             });
           });
-        } else if (t.target.classList.contains(v.hr) || t.target.parentElement.classList.contains(v.hr)) {
+        } else if (t.target.classList.contains(uiController.REPOST_BTN_CLASS) || t.target.parentElement.classList.contains(uiController.REPOST_BTN_CLASS)) {
           if (n(t)) return;
           instaUtils.Y("check_policy_accept", n => {
-            n ? v.$r.call(e, t) : policyStorage.ve(() => {
-              v.$r.call(e, t);
+            n ? uiController.handleAudioDownloadClick.call(e, t) : policyStorage.ve(() => {
+              uiController.handleAudioDownloadClick.call(e, t);
             });
           });
         }
         if (!instaUtils.J()) if (t.target.classList.contains("promaster_ns_dl_btn") || t.target.parentElement.classList.contains("promaster_ns_dl_btn")) {
           if (n(t)) return;
           instaUtils.Y("check_policy_accept", n => {
-            n ? v.vr.call(e, t) : policyStorage.ve(() => {
-              v.vr.call(e, t);
+            n ? uiController.handleMediaDownloadClick.call(e, t) : policyStorage.ve(() => {
+              uiController.handleMediaDownloadClick.call(e, t);
             });
           });
         } else if (t.target.classList.contains("promaster_ns_rp_btn") || t.target.parentElement.classList.contains("promaster_ns_rp_btn")) {
           if (n(t)) return;
           instaUtils.Y("check_policy_accept", n => {
-            n ? v.dr.call(e, t) : policyStorage.ve(() => {
-              v.dr.call(e, t);
+            n ? uiController.handleStoryDownloadClick.call(e, t) : policyStorage.ve(() => {
+              uiController.handleStoryDownloadClick.call(e, t);
             });
           });
         } else if (t.target.classList.contains("promaster_ns_dl_all_btn") || t.target.parentElement.classList.contains("promaster_ns_dl_all_btn")) {
           if (n(t)) return;
           instaUtils.Y("check_policy_accept", n => {
-            n ? v.yr.call(e, t) : policyStorage.ve(() => {
-              v.yr.call(e, t);
+            n ? uiController.handleBulkDownloadClick.call(e, t) : policyStorage.ve(() => {
+              uiController.handleBulkDownloadClick.call(e, t);
             });
           });
         } else if (t.target.classList.contains("promaster_video_range") || t.target.parentElement.classList.contains("promaster_video_range")) {
@@ -6734,7 +6734,7 @@
         }
       });
     },
-    qr: function () {
+    initPortConnection: function () {
       let t = this,
         n = chrome.runtime.connect(),
         e = !1,
@@ -6745,9 +6745,9 @@
         e || (clearTimeout(r), t.qr());
       });
     },
-    Fr: function () {
-      instaUtils.$(), this.qr(), this.Dr(), this.Nr(), this.Tr(), graphqlDefinitions.Un().catch(function () {});
+    initContentScript: function () {
+      instaUtils.$(), this.initPortConnection(), this.startDOMObserverAndInjectors(), this.initRuntimeMessageListener(), this.initClickEventInterceptors(), graphqlDefinitions.Un().catch(function () {});
     }
   };
-  v.Fr();
+  uiController.initContentScript();
 })();
