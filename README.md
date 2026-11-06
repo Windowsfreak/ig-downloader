@@ -18,7 +18,10 @@ Recognizing the utility of the original tool, **Windowsfreak** retrieved the ext
    - Removed all policy modal gates (`policyStorage`) and external redirects to third-party domains (`https://sites.google.com/view/downloader-promaster`).
    - Removed the `onInstalled` popup tab in `bg.js`; download buttons now activate immediately without async policy checks.
    - Deleted 7 obsolete SVG assets (including `rate-us-title.svg` at 8.26 MB), shrinking `extension/img/` from >8.3 MB to ~150 KB (a 98% reduction).
-3. **Dead Code Elimination**: Removed over 3,140 lines of unused, bundled third-party libraries (such as a legacy Browserified `JSZip 3.0` bundle) that were needlessly bloating the extension.
+3. **Dead Code Elimination & De-duplication**: 
+   - Removed over 3,140 lines of unused, bundled third-party libraries (such as a legacy Browserified `JSZip 3.0` bundle) that were needlessly bloating the extension.
+   - Retired redundant, duplicate bundle copies (`options.js`, `pp.js`, `pp.html`, `pp.css`, `pp_title.svg`), eliminating over 1,100 lines of duplicated Webpack module boilerplate and assets.
+   - Cleaned up internal duplicate module requires and aliases within `app.js`.
 4. **Instagram API Modernization**: Replaced deprecated, broken Instagram GraphQL queries and endpoints with modern, working API calls for Reels, Stories, and Highlights.
 5. **Comprehensive Deobfuscation**: Systematically refactored minified, single-character variable names and Webpack module exports into clean, readable, self-documenting JavaScript.
 
@@ -71,17 +74,13 @@ ig-downloader/
     ├── manifest.json          # Chrome Manifest V3 configuration
     ├── css/
     │   ├── fonts.css          # Local typography definitions
-    │   ├── pp.css             # Local privacy policy page styles
     │   └── styles.css         # Injected buttons, modal overlays, progress bars
     ├── html/
-    │   ├── options.html       # Extension options UI
-    │   └── pp.html            # Local terms & permissions documentation
+    │   └── options.html       # Extension options UI
     ├── img/                   # Icons and SVG UI assets
     ├── js/
     │   ├── bg.js              # Background service worker (headers, download dispatcher)
-    │   ├── app.js             # Content script (DOM observer, bulk downloader, UI injectors)
-    │   ├── options.js         # Settings controller
-    │   └── pp.js              # Local policy page script
+    │   └── app.js             # Content script (DOM observer, bulk downloader, UI injectors)
     └── _locales/              # Multi-language localization dictionaries (50+ locales)
 ```
 

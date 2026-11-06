@@ -1367,8 +1367,7 @@
       const instaUtils = require(3),
         postDetailsResolver = require(21),
         bulkDownloadController = require(24),
-        constants = require(4),
-        instaUtils_2 = require(3);
+        constants = require(4);
       module.exports = function () {
         return {
           getFbDtsg: function () {
@@ -1759,7 +1758,7 @@
               }
               let firstReel = reels[0];
               let e = [];
-              let uName = firstReel.owner && firstReel.owner.username || firstReel.user && firstReel.user.username || (eThis.getStoryUsername ? eThis.getStoryUsername(firstReel, t) : instaUtils_2.generateRandomId());
+              let uName = firstReel.owner && firstReel.owner.username || firstReel.user && firstReel.user.username || (eThis.getStoryUsername ? eThis.getStoryUsername(firstReel, t) : instaUtils.generateRandomId());
               let hTitle = firstReel.title || (eThis.getHighlightTitle ? eThis.getHighlightTitle(firstReel) : "");
               let r = hTitle ? `${uName}_${hTitle}` : uName;
               let i = firstReel.owner && firstReel.owner.id || firstReel.user && (firstReel.user.pk || firstReel.user.id) || null;
@@ -1784,7 +1783,7 @@
                     userName: r,
                     fileExt: ext,
                     url: fileUrl,
-                    id: it.id || instaUtils_2.generateRandomId(),
+                    id: it.id || instaUtils.generateRandomId(),
                     userPk: i
                   });
                 }
@@ -1826,7 +1825,7 @@
             return n && n.children && n.children.length || 1;
           },
           updateStoryDownloadAllCount: function () {
-            let t = instaUtils_2.getActiveSection();
+            let t = instaUtils.getActiveSection();
             if (!t) return;
             let n = document.querySelector(".promaster_ns_dl_all_btn");
             if (!n) return;
@@ -3145,10 +3144,8 @@
     mediaUploadUI = e(31),
     bulkDownloadController = e(24),
     domHelpers = e(25),
-    bulkDownloadController_2 = e(24),
     taskQueue = e(26),
     octetStreamDownloader = e(34),
-    instaUtils_2 = e(3),
     graphqlDefinitions = e(9);
   let p = "";
   var uiController = {
@@ -3159,7 +3156,7 @@
       let n = location.pathname.match(/stories\/([^\/]+)/);
       n = n && n[1], n ? domExtractor.fetchUserStories(n, function (n) {
         if (!n || !n.length) return void uiController.buttonStateManager.hideButtonLoader(t.target);
-        let e = instaUtils_2.getStoriesCurrentIndex(),
+        let e = instaUtils.getStoriesCurrentIndex(),
           i = n && n[e] || null;
         if (!i) return void uiController.buttonStateManager.hideButtonLoader(t.target);
         instaUtils.fetchBlob(i.url, function (n) {
@@ -3185,7 +3182,7 @@
             uiController.buttonStateManager.hideButtonLoader(t.target);
             if (!n) return;
             domExtractor.pauseStoryVideo();
-            let e = instaUtils_2.getStoriesCurrentIndex();
+            let e = instaUtils.getStoriesCurrentIndex();
             let activeMedia = document.querySelector("section video, section img[srcset], article video, article img[srcset]");
             if (activeMedia && n.length > 1) {
               let curSrc = activeMedia.currentSrc || activeMedia.src || "";
@@ -3210,7 +3207,7 @@
         uiController.buttonStateManager.hideButtonLoader(t.target);
         if (!n || !n.length) return;
         domExtractor.pauseStoryVideo();
-        let e = instaUtils_2.getStoriesCurrentIndex();
+        let e = instaUtils.getStoriesCurrentIndex();
         let activeMedia = document.querySelector("section video, section img[srcset], article video, article img[srcset]");
         if (activeMedia && n.length > 1) {
           let curSrc = activeMedia.currentSrc || activeMedia.src || "";
@@ -3441,8 +3438,8 @@
     },
     startDOMObserverAndInjectors: function () {
       function t() {
-        let t = instaUtils_2.getActiveSection();
-        t && (!t.dataset.ig_toolkit_marked && instaUtils_2.findStoriesContainer() && (t.dataset.ig_toolkit_marked = "1", domExtractor.injectStoryActionButtons(t)), domExtractor.updateStoryDownloadAllCount());
+        let t = instaUtils.getActiveSection();
+        t && (!t.dataset.ig_toolkit_marked && instaUtils.findStoriesContainer() && (t.dataset.ig_toolkit_marked = "1", domExtractor.injectStoryActionButtons(t)), domExtractor.updateStoryDownloadAllCount());
       }
       function n(t) {
         return document.querySelectorAll(t.join(","));
@@ -3488,7 +3485,7 @@
     initRuntimeMessageListener: function () {
       chrome.runtime.onMessage.addListener(function (t, n, e) {
         if (!t) return !1;
-        "string" == typeof t && "handshake" === t ? e(!0) : "string" == typeof t && "isBulkDownloadNowInTab" === t ? e(bulkDownloadController.isDownloading) : "setDownloadingStatus" === t.action ? bulkDownloadController_2.ee = t.options.status : t.action;
+        "string" == typeof t && "handshake" === t ? e(!0) : "string" == typeof t && "isBulkDownloadNowInTab" === t ? e(bulkDownloadController.isDownloading) : "setDownloadingStatus" === t.action ? bulkDownloadController.isDownloading = t.options.status : t.action;
       });
     },
     initClickEventInterceptors: function () {
