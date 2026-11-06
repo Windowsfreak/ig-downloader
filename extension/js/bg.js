@@ -745,16 +745,38 @@
               if (200 !== res.status && 202 !== res.status) throw `request error [${r}]`;
               return res.json();
             })).then((function(data) {
-              let n = data && data.data && data.data.user && data.data.user.edge_owner_to_timeline_media && data.data.user.edge_owner_to_timeline_media.count || null;
-              if (!n) throw "Not found postCount";
+              let u = data && data.data && data.data.user;
+              let n = u && ((u.edge_owner_to_timeline_media && u.edge_owner_to_timeline_media.count) || u.media_count) || null;
+              if (n === null || n === undefined) throw "Not found postCount";
               t({
                 postCount: n
               });
             })).catch((function() {
-              t({
-                error: 1,
-                err: 1
-              });
+              fetch("https://www.instagram.com/" + encodeURIComponent(e) + "/", { credentials: "include" })
+                .then(function(res) { return res.text(); })
+                .then(function(html) {
+                  let m = html.match(/content="[^"]*?([\d.,]+[kmKM]?)\s*(?:posts?|beitr[aä]ge?|publications?|publicaciones)/i) ||
+                          html.match(/"edge_owner_to_timeline_media":\s*\{\s*"count":\s*(\d+)/) ||
+                          html.match(/"media_count":\s*(\d+)/);
+                  if (m && m[1]) {
+                    let raw = m[1].trim();
+                    let kMatch = raw.match(/([\d.,]+)\s*k/i);
+                    let mMatch = raw.match(/([\d.,]+)\s*m/i);
+                    let count = kMatch ? Math.round(parseFloat(kMatch[1].replace(/,/g, ".")) * 1000) :
+                                mMatch ? Math.round(parseFloat(mMatch[1].replace(/,/g, ".")) * 1000000) :
+                                parseInt(raw.replace(/[^\d]/g, ""), 10);
+                    if (!isNaN(count) && count > 0) {
+                      t({ postCount: count });
+                    } else {
+                      t({ error: 1, err: 1 });
+                    }
+                  } else {
+                    t({ error: 1, err: 1 });
+                  }
+                })
+                .catch(function() {
+                  t({ error: 1, err: 1 });
+                });
             }));
           },
           st: function(e, t) {
@@ -1000,7 +1022,7 @@
             c.Ct(n).then((function(e) {
               return e.text()
             })).then((function(e) {
-              let r = e.match(/\"profile_id\":\s?\"(\d+)/);
+              let r = e.match(/\"profile_id\":\s?\"(\d+)/) || e.match(/"props":\s*\{\s*"id":\s*"(\d+)"/) || e.match(/"user_id":\s*"(\d+)"/);
               if (r = r && r[1], !r) throw `not received userId [${n}]`;
               t(r)
             })).catch((function() {

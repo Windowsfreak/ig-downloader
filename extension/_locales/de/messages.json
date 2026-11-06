@@ -41,6 +41,9 @@
    "files_found_on_page": {
       "message": "Beiträge gefunden"
    },
+   "reels_found_on_page": {
+      "message": "Reels gefunden"
+   },
    "for_days": {
       "message": "Für vergangene Tage"
    },

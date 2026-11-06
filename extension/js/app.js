@@ -156,7 +156,77 @@
             return /\/*.+\/saved\/all-posts\/$|\/saved\/*.+\/[0-9]+\/$/.test(location.pathname)
           },
           q: function() {
-            return !document.querySelector('[role="dialog"]') && (null !== document.querySelector('a[href*="/tagged/"]') || null !== document.querySelector('a[href*="/followers/"]') || null !== document.querySelector('a[href*="/following/"]'))
+            return !document.querySelector('[role="dialog"]') && (null !== document.querySelector('a[href*="/tagged/"]') || null !== document.querySelector('a[href*="/followers/"]') || null !== document.querySelector('a[href*="/following/"]') || null !== document.querySelector('a[href*="/reels/"]'))
+          },
+          isReelsTab: function() {
+            return this.q() && /\/reels\/?(\?.*)?$/.test(location.pathname + location.search);
+          },
+          parseCountText: function(txt) {
+            if (!txt || typeof txt !== "string") return null;
+            let m = txt.match(/([\d.,]+[kmKM]?)\s*(?:posts?|beitr[aä]ge?|publications?|publicaciones)/i);
+            if (!m) {
+              let numMatch = txt.trim().match(/^([\d.,]+[kmKM]?)$/);
+              if (numMatch) m = numMatch;
+            }
+            if (!m) return null;
+            let raw = m[1].trim();
+            let kMatch = raw.match(/([\d.,]+)\s*k/i);
+            if (kMatch) {
+              return Math.round(parseFloat(kMatch[1].replace(/,/g, ".")) * 1000);
+            }
+            let mMatch = raw.match(/([\d.,]+)\s*m/i);
+            if (mMatch) {
+              return Math.round(parseFloat(mMatch[1].replace(/,/g, ".")) * 1000000);
+            }
+            let cleaned = raw.replace(/[^\d]/g, "");
+            if (cleaned) {
+              let parsed = parseInt(cleaned, 10);
+              if (!isNaN(parsed) && parsed >= 0) return parsed;
+            }
+            return null;
+          },
+          getPostCountFromDOM: function() {
+            try {
+              let meta = document.querySelector('meta[name="description"], meta[property="og:description"]');
+              if (meta && meta.content) {
+                let count = this.parseCountText(meta.content);
+                if (count !== null && count > 0) return count;
+              }
+
+              let followersLink = document.querySelector('a[href*="/followers/"]');
+              if (followersLink) {
+                let list = followersLink.closest("ul");
+                if (list) {
+                  let lis = list.querySelectorAll("li");
+                  if (lis && lis.length > 0) {
+                    let count = this.parseCountText(lis[0].innerText);
+                    if (count !== null && count > 0) return count;
+                  }
+                }
+                let statContainer = followersLink.parentElement ? (followersLink.parentElement.parentElement || followersLink.parentElement) : null;
+                if (statContainer && statContainer.children && statContainer.children.length > 0) {
+                  let count = this.parseCountText(statContainer.children[0].innerText);
+                  if (count !== null && count > 0) return count;
+                }
+              }
+
+              let candidateEls = document.querySelectorAll("header span, header div, header li, main header span, main header div, main header li, section span, section div, section li");
+              for (let i = 0; i < candidateEls.length; i++) {
+                let el = candidateEls[i];
+                let txt = el.innerText;
+                if (txt && /(?:posts?|beitr[aä]ge?|publications?|publicaciones)/i.test(txt)) {
+                  let count = this.parseCountText(txt);
+                  if (count !== null && count > 0) return count;
+                }
+              }
+
+              let lis = document.querySelectorAll("header ul li, main header ul li, section ul li");
+              if (lis && lis.length >= 1) {
+                let count = this.parseCountText(lis[0].innerText);
+                if (count !== null && count > 0) return count;
+              }
+            } catch (e) {}
+            return null;
           },
           F: function() {
             let t = location.pathname.match("^/reels/.*/$");
@@ -361,13 +431,21 @@
             }))
           },
           bt: function(t, n) {
+            let domCount = this.getPostCountFromDOM();
+            if (domCount !== null && domCount > 0) {
+              return n(domCount);
+            }
+            let self = this;
             chrome.runtime.sendMessage({
               action: "requestUserPostCount",
               userName: t
-            }, (function(t) {
-              if (!t || t.err || t.error || !t.postCount) return n(null);
-              n(t.postCount)
-            }))
+            }, (function(res) {
+              if (!res || res.err || res.error || res.postCount == null) {
+                let retry = self.getPostCountFromDOM ? self.getPostCountFromDOM() : null;
+                return n(retry != null ? retry : null);
+              }
+              n(res.postCount);
+            }));
           },
           yt: function(t, n) {
             let e = t.width || t.config_width || null,
@@ -726,6 +804,30 @@
               }))
             }))
           },
+          fetchUserClips: function(t, n) {
+            let i = t.after || null;
+            let docId = "27234427476213202";
+            let s = {
+              data: {
+                include_feed_video: !0,
+                page_size: 12,
+                target_user_id: String(t.user_id)
+              }
+            };
+            i && (s.after = i);
+            let a = {
+              variables: JSON.stringify(s),
+              doc_id: docId
+            };
+            const u = "https://www.instagram.com/graphql/query";
+            c.$n(u, a, null).then((function(t) {
+              n(t);
+            })).catch((function(t) {
+              n({
+                error: 1
+              });
+            }));
+          },
           Sn: function(t, n) {
             const e = `https://www.instagram.com/api/v1/media/${t.data.pk}/info/`;
             return c.wn(e).then((function(t) {
@@ -741,7 +843,7 @@
             c.An(e).then((function(t) {
               return t.text()
             })).then((function(t) {
-              let r = t.match(/\"profile_id\":\s?\"(\d+)/);
+              let r = t.match(/\"profile_id\":\s?\"(\d+)/) || t.match(/"props":\s*\{\s*"id":\s*"(\d+)"/) || t.match(/"user_id":\s*"(\d+)"/);
               if (r = r && r[1], !r) throw `not received userId [${e}]`;
               n(r)
             })).catch((function() {
@@ -934,21 +1036,24 @@
               })
             }))
           },
-          $n(t, n) {
+          $n(t, n, friendlyName) {
             const e = this,
               u = [o.Wt, o.Zt];
             let c;
             return s.Y(), i.ln().then((async function(t) {
               return t || (t = await a.Dn()), c = t, r.sn(u)
             })).then((function(r) {
+              let headers = {
+                ...r,
+                "x-csrftoken": c,
+                accept: "*/*",
+                "content-type": "application/x-www-form-urlencoded"
+              };
+              if (friendlyName !== null && friendlyName !== false) {
+                headers["x-fb-friendly-name"] = friendlyName || "PolarisProfilePostsQuery";
+              }
               return e.mn(t, {
-                headers: {
-                  ...r,
-                  "x-csrftoken": c,
-                  "x-fb-friendly-name": "PolarisProfilePostsQuery",
-                  accept: "*/*",
-                  "content-type": "application/x-www-form-urlencoded"
-                },
+                headers: headers,
                 credentials: "include",
                 method: "POST",
                 body: new URLSearchParams(n).toString()
@@ -1142,6 +1247,9 @@
             };
             t.after && (e.after = t.after), o.gn(e, n)
           },
+          fetchUserClips: function(t, n) {
+            o.fetchUserClips(t, n)
+          },
           Gn: function(t, n) {
             const e = void 0;
             this.jn(t.shortcode, (function(e) {
@@ -1191,27 +1299,38 @@
             }
           },
           Jn: function(t, n, e) {
-            let i, o, s, a, u = null,
-              c = 0,
-              f = 0;
-            if (t.video_versions) {
+            let i = null, o, s, a, u = null;
+            if (t.video_versions && t.video_versions.length) {
               u = t.product_type || null;
-              let n = t.video_versions.sort(r.yt);
-              i = n[0].src || n[0].url;
-              let e = t.image_versions2.candidates.sort(r.yt);
-              a = e[0].src || e[0].url, s = "video"
+              let sortedV = t.video_versions.slice().sort(r.yt);
+              i = sortedV[0].src || sortedV[0].url;
+              let sortedI = t.image_versions2 && t.image_versions2.candidates && t.image_versions2.candidates.slice().sort(r.yt);
+              a = sortedI && sortedI[0] ? (sortedI[0].src || sortedI[0].url) : i;
+              s = "video";
+            } else if (t.media_type === 2 || t.product_type === "clips") {
+              u = "clips";
+              s = "video";
+              let sortedI = t.image_versions2 && t.image_versions2.candidates && t.image_versions2.candidates.slice().sort(r.yt);
+              a = sortedI && sortedI[0] ? (sortedI[0].src || sortedI[0].url) : null;
+              i = null;
             } else {
-              let n = t.image_versions2.candidates.sort(r.yt);
-              i = n[0].src || n[0].url || null, s = "photo", a = i
+              let sortedI = t.image_versions2 && t.image_versions2.candidates && t.image_versions2.candidates.slice().sort(r.yt) || [];
+              i = sortedI[0] && (sortedI[0].src || sortedI[0].url) || null;
+              s = "photo";
+              a = i;
             }
-            return o = r.X(i, n, e), {
+            let shortcode = t.code || t.shortcode;
+            o = (n ? n + "_" : "") + (shortcode || t.pk || (i ? r.X(i, n, e) : "media")) + (s === "video" ? ".mp4" : ".jpg");
+            return {
               url: i,
+              pk: t.pk,
+              shortcode: shortcode,
               isReels: u,
               filename: o,
               type: s,
               prev: a,
-              dimensions: t.dimensions
-            }
+              dimensions: t.dimensions || { width: t.original_width, height: t.original_height }
+            };
           },
           Zn: function(t, n) {
             let e, o, s, a, u = null,
@@ -1811,20 +1930,74 @@
           ge: function() {
             let t = this,
               n = new i;
+            if (t.lastPath !== location.pathname) {
+              t.ce = null;
+              t.fe = null;
+              t.he = null;
+              t.Te = null;
+              t.de = [];
+              t.me = 0;
+              t.ue = r.it();
+              t.lastPath = location.pathname;
+            }
+            let isReels = r.isReelsTab();
+            t.isReels = isReels;
             n.$e({
               width: 300,
               height: 300
             }), r.Y("checkBulkDownloadNow", (function(e) {
               if (e) return n.Se(chrome.i18n.getMessage("synchronous_bulk_download_denied"));
-              null === t.ce || isNaN(t.ce) ? r.bt(t.ue, (function(e) {
-                t.Ee(t.ue, (function(r) {
-                  r && !r.error && r.success ? (t.ce = e, t.he = r.after, t.fe = r.user_id, t.Ae({
-                    count: e
-                  })) : (t.be(), n.Se(chrome.i18n.getMessage("sww_error")))
-                }))
-              })) : t.Ae({
-                count: t.ce
-              })
+              if (isReels) {
+                if (null === t.fe || !t.de || !t.de.length) {
+                  t.Ee(t.ue, (function(res) {
+                    if (res && !res.error && res.success) {
+                      t.he = res.after;
+                      t.fe = res.user_id;
+                      t.Te = res.has_next_page;
+                      let count = t.de ? t.de.length : 12;
+                      t.ce = count;
+                      t.Ae({
+                        count: count,
+                        hasNextPage: res.has_next_page,
+                        isReels: true
+                      });
+                    } else {
+                      t.be();
+                      n.Se(chrome.i18n.getMessage("sww_error"));
+                    }
+                  }));
+                } else {
+                  t.Ae({
+                    count: t.ce,
+                    hasNextPage: t.Te,
+                    isReels: true
+                  });
+                }
+              } else {
+                null === t.ce || isNaN(t.ce) ? r.bt(t.ue, (function(postCount) {
+                  t.Ee(t.ue, (function(res) {
+                    if (res && !res.error && res.success) {
+                      let finalCount = (postCount !== null && !isNaN(postCount)) ? postCount : (res.totalCount || null);
+                      t.ce = finalCount;
+                      t.he = res.after;
+                      t.fe = res.user_id;
+                      t.Te = res.has_next_page;
+                      t.Ae({
+                        count: finalCount,
+                        hasNextPage: res.has_next_page,
+                        isReels: false
+                      });
+                    } else {
+                      t.be();
+                      n.Se(chrome.i18n.getMessage("sww_error"));
+                    }
+                  }));
+                })) : t.Ae({
+                  count: t.ce,
+                  hasNextPage: t.Te,
+                  isReels: false
+                });
+              }
             }))
           },
           Ae: function(t) {
@@ -1835,9 +2008,15 @@
             }))
           },
           Ie: function(t) {
-            let n = this;
+            let n = this,
+              isReels = n.isReels || (t && t.isReels),
+              hasNext = t && t.hasNextPage,
+              hasKnownCount = t.count !== null && t.count !== undefined && !isNaN(parseInt(t.count)),
+              parsedCount = hasKnownCount ? parseInt(t.count) : null,
+              displayCount = hasKnownCount ? parsedCount : (((n.de && n.de.length) || 12) + (hasNext ? "+" : "")),
+              foundLabel = isReels ? (chrome.i18n.getMessage("reels_found_on_page") || "reels found") : chrome.i18n.getMessage("files_found_on_page");
             n.pe.we((function(e) {
-              var o = `\n\t\t\t\t<div class="promaster_count_header">\n\t\t\t\t\t<span class="promaster_big_font_part">${t.count}</span>\n\t\t\t\t\t<span class="promaster_small_font_part">&nbsp;${chrome.i18n.getMessage("files_found_on_page")}</span>\n\t\t\t\t</div>\n\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("bulk_advanced")}</div>\n\t\t\t\t<form class="promaster_bulk_form">\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<input type="checkbox" name="for_days">\n\t\t\t\t\t\t\t<span class="promaster_form_custom_checkbox"><span class="promaster_form_custom_checkbox_checked"></span></span>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("for_days")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t\t<input type="number" name="for_days_count" max="999" min="1" value="30" disabled>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block promaster_form_type_tabs">\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("all")}<input name="promaster_form_type_tab" type="radio" value="all"></label>\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("photo")}<input name="promaster_form_type_tab" type="radio" value="photo"></label>\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("video")}<input name="promaster_form_type_tab" type="radio" value="video"></label>\n\t\t\t\t\t</div>\n\t\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<div class="promaster_form_switch">\n\t\t\t\t\t\t\t\t<input type="checkbox" name="most_liked">\n\t\t\t\t\t\t\t\t<div class="promaster_form_switch_slider"></div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("most_liked")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t<input class="percent_count" name="most_liked_percent" type="number" max="100" min="1" value="50" disabled>\n\t\t\t\t\t\t<span class="promaster_form_number_input_note">%</span>\n\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<div class="promaster_form_switch">\n\t\t\t\t\t\t\t\t<input type="checkbox" name="most_viewed">\n\t\t\t\t\t\t\t\t<div class="promaster_form_switch_slider"></div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("most_viewed")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t\t<input class="percent_count" name="most_viewed_percent" type="number" max="100" min="1" value="50" disabled>\n\t\t\t\t\t\t\t<span class="promaster_form_number_input_note">%</span>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_btn_wrap">\n\t\t\t\t\t\t<button class="promaster_popup_dl_btn">${chrome.i18n.getMessage("download")}</button>\n\t\t\t\t\t</div>\n\t\t\t\t</form>\n\t\t\t\t<div class="promaster_form_advanced_switch"><span>${chrome.i18n.getMessage("hide_advanced")}</span></div>`;
+              var o = `\n\t\t\t\t<div class="promaster_count_header">\n\t\t\t\t\t<span class="promaster_big_font_part">${displayCount}</span>\n\t\t\t\t\t<span class="promaster_small_font_part">&nbsp;${foundLabel}</span>\n\t\t\t\t</div>\n\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("bulk_advanced")}</div>\n\t\t\t\t<form class="promaster_bulk_form">\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<input type="checkbox" name="for_days">\n\t\t\t\t\t\t\t<span class="promaster_form_custom_checkbox"><span class="promaster_form_custom_checkbox_checked"></span></span>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("for_days")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t\t<input type="number" name="for_days_count" max="999" min="1" value="30" disabled>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block promaster_form_type_tabs">\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("all")}<input name="promaster_form_type_tab" type="radio" value="all"></label>\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("photo")}<input name="promaster_form_type_tab" type="radio" value="photo"></label>\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("video")}<input name="promaster_form_type_tab" type="radio" value="video"></label>\n\t\t\t\t\t</div>\n\t\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<div class="promaster_form_switch">\n\t\t\t\t\t\t\t\t<input type="checkbox" name="most_liked">\n\t\t\t\t\t\t\t\t<div class="promaster_form_switch_slider"></div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("most_liked")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t<input class="percent_count" name="most_liked_percent" type="number" max="100" min="1" value="50" disabled>\n\t\t\t\t\t\t<span class="promaster_form_number_input_note">%</span>\n\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<div class="promaster_form_switch">\n\t\t\t\t\t\t\t\t<input type="checkbox" name="most_viewed">\n\t\t\t\t\t\t\t\t<div class="promaster_form_switch_slider"></div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("most_viewed")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t\t<input class="percent_count" name="most_viewed_percent" type="number" max="100" min="1" value="50" disabled>\n\t\t\t\t\t\t\t<span class="promaster_form_number_input_note">%</span>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_btn_wrap">\n\t\t\t\t\t\t<button class="promaster_popup_dl_btn">${chrome.i18n.getMessage("download")}</button>\n\t\t\t\t\t</div>\n\t\t\t\t</form>\n\t\t\t\t<div class="promaster_form_advanced_switch"><span>${chrome.i18n.getMessage("hide_advanced")}</span></div>`;
               (new i).Pe(o), document.querySelector(".promaster_form_advanced_switch span").addEventListener("click", (function() {
                 n.oe = !1, r.Y({
                   action: "bulk_advanced",
@@ -1913,10 +2092,31 @@
           },
           xe: function(t) {
             let n = this,
-              e = t.count,
-              o = e > 1e3 ? 1e3 : e,
-              s = (parseInt(e) - 1).toString(),
-              a = `\n\t\t\t<div class="promaster_count_header">\n\t\t\t\t<span class="promaster_big_font_part">${e}</span>\n\t\t\t\t<span class="promaster_small_font_part">&nbsp;${chrome.i18n.getMessage("files_found_on_page")}</span>\n\t\t\t</div>\n\t\t\t<form class="promaster_bulk_form">\n\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t<div class="promaster_form_number_input_wrap promaster_form_number_input_wrap_column">\n\t\t\t\t\t\t<span>${chrome.i18n.getMessage("from")}</span> \n\t\t\t\t\t\t<input id="promaster_dl_all_start" type="number" min="1" max="${s}" value="1">\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_form_number_input_wrap promaster_form_number_input_wrap_column">\n\t\t\t\t\t\t<span>${chrome.i18n.getMessage("to")}</span>\n\t\t\t\t\t\t<input id="promaster_dl_all_end" type="number" min="2" value="${o}" max="${e}">\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div class="promaster_modal_btn_wrap">\n\t\t\t\t\t<button class="promaster_popup_dl_btn">${chrome.i18n.getMessage("download")}</button>\n\t\t\t\t</div>\n\t\t\t</form>\n\t\t\t<div class="promaster_form_advanced_switch"><span>${chrome.i18n.getMessage("bulk_advanced")}</span></div>`;
+              isReels = n.isReels || (t && t.isReels),
+              hasNext = t && t.hasNextPage,
+              hasKnownCount = t.count !== null && t.count !== undefined && !isNaN(parseInt(t.count)),
+              parsedCount = hasKnownCount ? parseInt(t.count) : null,
+              maxLimit = Math.max(parsedCount || 0, 1e4),
+              displayCount,
+              defaultEnd;
+
+            if (hasKnownCount) {
+              displayCount = parsedCount;
+              defaultEnd = parsedCount > 1e3 ? 1e3 : parsedCount;
+            } else if (hasNext) {
+              let loadedCount = (n.de && n.de.length) || 12;
+              displayCount = loadedCount + "+";
+              defaultEnd = 1e3;
+            } else {
+              let loadedCount = (n.de && n.de.length) || 1;
+              displayCount = loadedCount;
+              defaultEnd = loadedCount;
+            }
+
+            let foundLabel = isReels ? (chrome.i18n.getMessage("reels_found_on_page") || "reels found") : chrome.i18n.getMessage("files_found_on_page"),
+              startMax = Math.max(1, defaultEnd - 1).toString(),
+              endMin = defaultEnd > 1 ? 2 : 1,
+              a = `\n\t\t\t<div class="promaster_count_header">\n\t\t\t\t<span class="promaster_big_font_part">${displayCount}</span>\n\t\t\t\t<span class="promaster_small_font_part">&nbsp;${foundLabel}</span>\n\t\t\t</div>\n\t\t\t<form class="promaster_bulk_form">\n\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t<div class="promaster_form_number_input_wrap promaster_form_number_input_wrap_column">\n\t\t\t\t\t\t<span>${chrome.i18n.getMessage("from")}</span> \n\t\t\t\t\t\t<input id="promaster_dl_all_start" type="number" min="1" max="${startMax}" value="1">\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_form_number_input_wrap promaster_form_number_input_wrap_column">\n\t\t\t\t\t\t<span>${chrome.i18n.getMessage("to")}</span>\n\t\t\t\t\t\t<input id="promaster_dl_all_end" type="number" min="${endMin}" value="${defaultEnd}" max="${maxLimit}">\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div class="promaster_modal_btn_wrap">\n\t\t\t\t\t<button class="promaster_popup_dl_btn">${chrome.i18n.getMessage("download")}</button>\n\t\t\t\t</div>\n\t\t\t</form>\n\t\t\t<div class="promaster_form_advanced_switch"><span>${chrome.i18n.getMessage("bulk_advanced")}</span></div>`;
             (new i).Pe(a), document.querySelector(".promaster_form_advanced_switch span").addEventListener("click", (function() {
               n.oe = !0, r.Y({
                 action: "bulk_advanced",
@@ -1929,7 +2129,7 @@
               c = document.querySelector("#promaster_dl_all_start");
             u.addEventListener("keydown", (function(t) {
               let n = t.target,
-                e = n.getAttribute("max");
+                e = parseInt(n.getAttribute("max")) || 1e4;
               setTimeout((function() {
                 let t = parseInt(n.value);
                 isNaN(t) || t < c.value ? n.value = c.value : t > e && (n.value = e)
@@ -1968,39 +2168,98 @@
               if (!r) return n({
                 error: 1
               });
-              e.le = t, o.Wn({
-                userName: e.le
-              }, (function(t) {
-                try {
-                  return e.Ne(t.data), n({
-                    success: 1,
-                    count: t.data.xdt_api__v1__feed__user_timeline_graphql_connection.edges.count,
-                    after: t.data.xdt_api__v1__feed__user_timeline_graphql_connection.page_info.end_cursor,
-                    has_next_page: t.data.xdt_api__v1__feed__user_timeline_graphql_connection.page_info.has_next_page,
-                    user_id: r
-                  })
-                } catch (t) {
-                  return e.be(), n({
-                    error: 1
-                  })
-                }
-              }))
+              e.le = t, e.fe = r;
+              if (e.isReels) {
+                o.fetchUserClips({
+                  user_id: r
+                }, (function(res) {
+                  try {
+                    if (!res || !res.data) return e.be(), n({ error: 1 });
+                    e.Ne(res.data);
+                    let clipsConn = res.data.xdt_api__v1__clips__user__connection_v2;
+                    let pageInfo = clipsConn && clipsConn.page_info;
+                    return n({
+                      success: 1,
+                      count: e.de.length,
+                      after: pageInfo && pageInfo.end_cursor,
+                      has_next_page: pageInfo && pageInfo.has_next_page,
+                      user_id: r
+                    });
+                  } catch (err) {
+                    return e.be(), n({ error: 1 });
+                  }
+                }));
+              } else {
+                o.Wn({
+                  userName: e.le,
+                  user_id: r
+                }, (function(res) {
+                  try {
+                    if (!res || !res.data) return e.be(), n({ error: 1 });
+                    e.Ne(res.data);
+                    let timelineConn = res.data.xdt_api__v1__feed__user_timeline_graphql_connection || (res.data.user && res.data.user.edge_owner_to_timeline_media);
+                    let pageInfo = timelineConn && timelineConn.page_info;
+                    let totalCount = null;
+                    if (res.data.user) {
+                      if (res.data.user.media_count != null) {
+                        totalCount = parseInt(res.data.user.media_count, 10);
+                      } else if (res.data.user.edge_owner_to_timeline_media && res.data.user.edge_owner_to_timeline_media.count != null) {
+                        totalCount = parseInt(res.data.user.edge_owner_to_timeline_media.count, 10);
+                      }
+                    }
+                    if (totalCount == null && timelineConn && timelineConn.count != null) {
+                      totalCount = parseInt(timelineConn.count, 10);
+                    }
+                    return n({
+                      success: 1,
+                      count: totalCount || e.de.length,
+                      totalCount: totalCount,
+                      after: pageInfo && pageInfo.end_cursor,
+                      has_next_page: pageInfo && pageInfo.has_next_page,
+                      user_id: r
+                    });
+                  } catch (err) {
+                    return e.be(), n({ error: 1 });
+                  }
+                }));
+              }
             }))
           },
           Ne: function(t) {
-            let n = t && t.xdt_api__v1__feed__user_timeline_graphql_connection || null;
-            if (n || (n = t && t.user && t.user.edge_owner_to_timeline_media || null), !n) return;
+            let n = t && (t.xdt_api__v1__clips__user__connection_v2 || t.xdt_api__v1__feed__user_timeline_graphql_connection || (t.user && t.user.edge_owner_to_timeline_media)) || null;
+            if (!n || !n.edges || !n.page_info) return;
             let e = this;
-            e.Te = n.page_info.has_next_page, e.he = n.page_info.end_cursor, n.edges.forEach((function(t) {
-              let n = [],
+            e.Te = n.page_info.has_next_page, e.he = n.page_info.end_cursor;
+            n.edges.forEach((function(edge) {
+              let mediaNode = (edge.node && edge.node.media) ? edge.node.media : edge.node;
+              if (!mediaNode) return;
+              let items = [],
                 r = {},
-                i = t.node.location && t.node.location.slug;
-              t.node.carousel_media ? t.node.carousel_media.forEach((function(o) {
-                r = a.Jn(o, e.ue, i), r.taken_at_timestamp = t.node.taken_at_timestamp || t.node.taken_at, r.likes_count = t.node.edge_media_preview_like && t.node.edge_media_preview_like.count || null, r.video_view_count = t.node.video_view_count || null, n.push(r)
-              })) : (r = a.Jn(t.node, e.ue, i), r.taken_at_timestamp = t.node.taken_at_timestamp || t.node.taken_at, r.likes_count = t.node.edge_media_preview_like && t.node.edge_media_preview_like.count || null, r.video_view_count = t.node.video_view_count || null, n.push(r)), e.de.push(n)
+                loc = mediaNode.location && mediaNode.location.slug;
+              if (mediaNode.carousel_media) {
+                mediaNode.carousel_media.forEach((function(o) {
+                  r = a.Jn(o, e.ue, loc);
+                  r.taken_at_timestamp = mediaNode.taken_at_timestamp || mediaNode.taken_at;
+                  r.likes_count = (mediaNode.edge_media_preview_like && mediaNode.edge_media_preview_like.count) || mediaNode.like_count || null;
+                  r.video_view_count = mediaNode.video_view_count || mediaNode.play_count || mediaNode.view_count || null;
+                  items.push(r);
+                }));
+              } else {
+                r = a.Jn(mediaNode, e.ue, loc);
+                r.taken_at_timestamp = mediaNode.taken_at_timestamp || mediaNode.taken_at;
+                r.likes_count = (mediaNode.edge_media_preview_like && mediaNode.edge_media_preview_like.count) || mediaNode.like_count || null;
+                r.video_view_count = mediaNode.video_view_count || mediaNode.play_count || mediaNode.view_count || null;
+                items.push(r);
+              }
+              e.de.push(items);
             }));
-            let r = n.edges.pop();
-            e.me = r.node.taken_at_timestamp || r.node.taken_at
+            if (n.edges.length) {
+              let lastEdge = n.edges[n.edges.length - 1];
+              let lastNode = (lastEdge.node && lastEdge.node.media) ? lastEdge.node.media : lastEdge.node;
+              if (lastNode) {
+                e.me = lastNode.taken_at_timestamp || lastNode.taken_at || 0;
+              }
+            }
           },
           Ce: function(t) {
             if (!this.oe) return r.A(this.de.slice(t.start - 1, t.end));
@@ -2031,11 +2290,14 @@
             function u(i) {
               return e.Te && e.he ? !e.oe && e._e <= e.de.length || e.oe && (t.advanced_options.for_days && r.S(t.advanced_options.for_days_count) >= e.me || e.de.length > 5e3) ? n({
                 success: 1
-              }) : void(e.se && (i = i || 1, o.Wn({
+              }) : void(e.se && (i = i || 1, (e.isReels ? o.fetchUserClips.bind(o, {
+                user_id: e.fe,
+                after: e.he
+              }) : o.Wn.bind(o, {
                 userName: e.le,
                 user_id: e.fe,
                 after: e.he
-              }, (function(r) {
+              }))((function(r) {
                 if (!r || r.error || !r.data) return i > 3 ? (e.be(), n({
                   error: 1,
                   reason: "request_error"
@@ -2409,12 +2671,49 @@
             let cursor = 0;
             const concurrency = 6;
 
+            async function resolveVideoUrl(pk) {
+              if (!pk) return null;
+              try {
+                let res = await fetch(`https://www.instagram.com/api/v1/media/${pk}/info/`, {
+                  headers: {
+                    "x-ig-app-id": "936619743392459",
+                    "accept": "*/*"
+                  },
+                  credentials: "include"
+                });
+                if (res.ok) {
+                  let json = await res.json();
+                  let item = json.items && json.items[0];
+                  if (item) {
+                    let vList = (Array.isArray(item.video_resources) && item.video_resources.length && item.video_resources) || 
+                                (Array.isArray(item.video_versions) && item.video_versions.length && item.video_versions) || [];
+                    if (vList.length) {
+                      let sorted = vList.slice().sort((a, b) => ((b.config_width || b.width || 0) - (a.config_width || a.width || 0)));
+                      return sorted[0].src || sorted[0].url || null;
+                    }
+                  }
+                }
+              } catch (e) {}
+              return null;
+            }
+
             async function worker() {
               while (cursor < u.length && !stopped && !cancelled) {
                 const idx = cursor++;
                 const item = u[idx];
                 try {
-                  const buf = await downloadWithRetry(item.url, abortController.signal);
+                  let downloadUrl = item.url;
+                  if ((item.type === "video" || item.isReels) && (!downloadUrl || !downloadUrl.includes(".mp4"))) {
+                    if (item.pk) {
+                      let resolved = await resolveVideoUrl(item.pk);
+                      if (resolved) {
+                        downloadUrl = resolved;
+                        item.url = resolved;
+                      }
+                    }
+                  }
+                  if (!downloadUrl) downloadUrl = item.url || item.prev;
+                  const buf = await downloadWithRetry(downloadUrl, abortController.signal);
                   if (buf && !cancelled) {
                     let filename = item.filename || `file_${idx}`;
                     if (seenNames.has(filename)) {
