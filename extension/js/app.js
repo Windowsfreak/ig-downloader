@@ -509,7 +509,7 @@
               ["policy_accepted"]: !0
             });
           },
-          checkPolicyAccepted: () => Promise.all([chrome.storage.sync.get("policy_accepted"), chrome.storage.local.get("policy_accepted")]).then(([t, n]) => !(!t.policy_accepted && !n.policy_accepted)).catch(t => {})
+          checkPolicyAccepted: () => Promise.resolve(!0)
         };
       }();
     }, module => {
@@ -527,7 +527,7 @@
           HEADER_CSRFTOKEN: "x-csrftoken",
           KEY_DOC_ID: "doc_id",
           HEADER_INSTAGRAM_AJAX: "x-instagram-ajax",
-          POLICY_URL: "https://sites.google.com/view/downloader-promaster",
+          POLICY_URL: "",
           HEADER_ASBD_ID: "x-asbd-id",
           KEY_DATA_SKIP: "data_skip",
           HEADER_IG_APP_ID: "x-ig-app-id",
@@ -2927,56 +2927,8 @@
     }, module => {
       module.exports = function () {
         return {
-          promptRateUs() {
-            chrome.storage.local.get("rate_us", function (t) {
-              if (t && t.rate_us) return;
-              const n = document.createElement("div");
-              n.className = "promaster-rate-us", n.innerHTML = `\n\t\t\t<div class="title">\n\t\t\t\t<span class="logo"></span>\n\t\t\t</div>\n\t\t\t<div class="main">\n\t\t\t\t<div class="descr">\n\t\t\t\t\t<span>${chrome.i18n.getMessage("rate_us_descr")}</span>\n\t\t\t\t</div>\n\t\t\t\t<div class="stars-root">\n\t\t\t\t\t<i class="star-empty" data-position="1"></i>\n\t\t\t\t\t<i class="star-empty" data-position="2"></i>\n\t\t\t\t\t<i class="star-empty" data-position="3"></i>\n\t\t\t\t\t<i class="star-empty" data-position="4"></i>\n\t\t\t\t\t<i class="star-empty" data-position="5"></i>\n\t\t\t\t</div>\n\t\t\t</div>`, document.body.appendChild(n);
-              const e = n.querySelectorAll("i");
-              let r = !1,
-                i = !1,
-                o = !1;
-              function s(t) {
-                o = !0;
-                const n = this.dataset.position;
-                e.forEach(function (t) {
-                  t.dataset.position <= n ? t.className = "star-full" : t.className = "star-empty";
-                });
-              }
-              function a(t) {
-                r || (o = !1, setTimeout(function () {
-                  o || e.forEach(function (t) {
-                    t.className = "star-empty";
-                  });
-                }, 100));
-              }
-              function u(t) {
-                r = !0;
-                const o = this.dataset.position;
-                e.forEach(function (t) {
-                  t.dataset.position <= o && (t.className = "star-full");
-                }), e.forEach(function (t) {
-                  t.removeEventListener("mouseover", s), t.removeEventListener("mouseout", a), t.removeEventListener("click", u);
-                }), o > 3 && !i && (i = !0, window.open("https://chrome.google.com/webstore/detail/" + chrome.runtime.id + "/reviews")), n.remove(), chrome.storage.local.set({
-                  rate_us: !0
-                });
-              }
-              e.forEach(function (t) {
-                t.addEventListener("mouseover", s), t.addEventListener("mouseout", a), t.addEventListener("click", u);
-              });
-            });
-          },
-          markSuccessAction() {
-            chrome.storage.local.get(["success_dw", "rate_us"], t => {
-              if (t.rate_us) return;
-              const n = (parseInt(t.success_dw) || 0) + 1;
-              chrome.storage.local.set({
-                success_dw: n
-              }), n % 5 == 0 && (n % 20 != 0 ? this.initHeaderCaptureListeners() : chrome.storage.local.set({
-                rate_us: !0
-              }));
-            });
-          }
+          promptRateUs() {},
+          markSuccessAction() {}
         };
       }();
     }, (module, exports, require) => {
@@ -2985,27 +2937,7 @@
       module.exports = function () {
         return {
           showPolicyModal(t) {
-            if (document.querySelector(".promaster_policy_modal")) return;
-            const n = chrome.i18n.getMessage("policyTitle"),
-              e = `<a href="${"https://sites.google.com/view/downloader-promaster"}" target="_blank" class="link">${n}</a>`,
-              o = void 0,
-              s = `\n<div class="promaster_modal_overlay">\n      <div class="promaster_policy_modal">\n               <span class="logo"></span>\n            \t<span class="text">${chrome.i18n.getMessage("policyModalText", [e])}</span>\n               <button class="accept"> ${chrome.i18n.getMessage("policyModalAccept")}\n               </button>\n            </span>\n         </div>\n      </div>\n</div>\n   `,
-              a = document.createElement("div");
-            a.innerHTML = s;
-            const u = a.firstElementChild;
-            document.body.appendChild(u);
-            const c = void 0;
-            u.querySelector(".promaster_policy_modal .accept").addEventListener("click", n => {
-              u.remove(), t(), instaUtils.sendMessage({
-                action: "updateStorage",
-                data: {
-                  policy_accepted: !0,
-                  ["promotional_allowed"]: !0
-                }
-              });
-            }), u.addEventListener("click", t => {
-              t.target === u && u.remove();
-            });
+            if (typeof callback === 'function') callback();
           }
         };
       }();

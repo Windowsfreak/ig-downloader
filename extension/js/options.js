@@ -354,7 +354,7 @@
               ["policy_accepted"]: !0
             });
           },
-          checkPolicyAccepted: () => Promise.all([chrome.storage.sync.get("policy_accepted"), chrome.storage.local.get("policy_accepted")]).then(([t, e]) => !(!t.policy_accepted && !e.policy_accepted)).catch(t => {})
+          checkPolicyAccepted: () => Promise.resolve(!0)
         };
       }();
     }, module => {
@@ -372,7 +372,7 @@
           HEADER_CSRFTOKEN: "x-csrftoken",
           KEY_DOC_ID: "doc_id",
           HEADER_INSTAGRAM_AJAX: "x-instagram-ajax",
-          POLICY_URL: "https://sites.google.com/view/downloader-promaster",
+          POLICY_URL: "",
           HEADER_ASBD_ID: "x-asbd-id",
           KEY_DATA_SKIP: "data_skip",
           HEADER_IG_APP_ID: "x-ig-app-id",

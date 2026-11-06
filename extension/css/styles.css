@@ -589,16 +589,9 @@ nav {
 .promaster_margin0 {
   margin: 0 !important;
 }
-.promaster-rate-us {
-  position: fixed;
-  display: flex;
-  flex-direction: column;
-  z-index: 5555;
-  right: -122px;
-  bottom: -30px;
-  width: 395px;
-  height: 225px;
-  background: url('chrome-extension://__MSG_@@extension_id__/img/rate-us-back.svg') no-repeat;
+.promaster-rate-us,
+.promaster_policy_modal {
+  display: none !important;
 }
 .promaster-rate-us .title {
   width: 222px;
