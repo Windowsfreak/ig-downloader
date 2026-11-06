@@ -341,15 +341,15 @@
             }
             return r.toString();
           },
-          me(e) {
+          saveToStorageSyncAndLocal(e) {
             try {
               return chrome.storage.local.set(e).finally(() => chrome.storage.sync.set(e)).catch(() => {});
             } catch (e) {
               return Promise.resolve();
             }
           },
-          he(e) {
-            return this.me({
+          setPolicyAccepted(e) {
+            return this.saveToStorageSyncAndLocal({
               ["promotional_allowed"]: e,
               ["policy_accepted"]: !0
             });
@@ -360,32 +360,32 @@
     }, module => {
       module.exports = function () {
         return {
-          Ie: "scrollUserFeedInfo",
-          we: "baseUserFeedInfo",
-          Pe: "s_key",
-          be: "mp4",
-          Se: "walk",
-          xe: 2,
-          Ee: "jpg",
-          ke: "hist",
-          Me: "tim",
-          Ue: "x-csrftoken",
-          Fe: "doc_id",
-          Te: "x-instagram-ajax",
-          Ae: "https://sites.google.com/view/downloader-promaster",
-          Ce: "x-asbd-id",
-          De: "data_skip",
-          Le: "x-ig-app-id",
-          Re: "x-requested-with",
-          Oe: "userFeed",
-          pe: "promotional_allowed",
-          Ne: "x-ig-app-id_upload",
-          qe: "user_id",
-          He: "x-ig-www-claim",
-          ve: "policy_accepted",
-          Ve: "data_ad",
-          Be: 1,
-          je: "fb_dtsg"
+          QUERY_SCROLL_USER_FEED: "scrollUserFeedInfo",
+          QUERY_BASE_USER_FEED: "baseUserFeedInfo",
+          PARAM_S_KEY: "s_key",
+          EXT_MP4: "mp4",
+          ACTION_WALK: "walk",
+          MEDIA_TYPE_VIDEO: 2,
+          EXT_JPG: "jpg",
+          ACTION_HIST: "hist",
+          ACTION_TIM: "tim",
+          HEADER_CSRFTOKEN: "x-csrftoken",
+          KEY_DOC_ID: "doc_id",
+          HEADER_INSTAGRAM_AJAX: "x-instagram-ajax",
+          POLICY_URL: "https://sites.google.com/view/downloader-promaster",
+          HEADER_ASBD_ID: "x-asbd-id",
+          KEY_DATA_SKIP: "data_skip",
+          HEADER_IG_APP_ID: "x-ig-app-id",
+          HEADER_REQUESTED_WITH: "x-requested-with",
+          KEY_USER_FEED: "userFeed",
+          KEY_PROMOTIONAL_ALLOWED: "promotional_allowed",
+          HEADER_IG_APP_ID_UPLOAD: "x-ig-app-id_upload",
+          KEY_USER_ID: "user_id",
+          HEADER_IG_WWW_CLAIM: "x-ig-www-claim",
+          KEY_POLICY_ACCEPTED: "policy_accepted",
+          KEY_DATA_AD: "data_ad",
+          MEDIA_TYPE_PHOTO: 1,
+          KEY_FB_DTSG: "fb_dtsg"
         };
       }();
     }],

@@ -2302,14 +2302,14 @@
                     o = e.collectedMediaPages.length / t * 100;
                   }
                 } else o = e.collectedMediaPages.length / e.totalCountToFetch * 100;
-                s.qe({
+                s.showPreparingLinksModal({
                   progress: o
                 }), setTimeout(u.bind(e, !1, n), a());
               }))) : n({
                 success: 1
               });
             }
-            s.qe({}, {
+            s.showPreparingLinksModal({}, {
               cancelCallback: function () {
                 e.resetDownloadState();
               }
@@ -2409,70 +2409,109 @@
       module.exports = function () {
         return {
           isBusy: !1,
-          createTaskQueue: function (t, n) {
-            let e = this,
-              r = 0,
-              i = 1,
-              o = 2,
-              s = t.data,
-              a = t.asyncCount || 48,
-              u = !1,
-              c = [],
-              f,
-              l,
-              h,
-              d,
-              _,
-              m = function () {
-                u || (u = !0, "function" == typeof _.reject && (n = _.reject)(c));
-              },
-              p = function () {
-                "function" == typeof _.resolve && (s = c, setTimeout(function () {
+          createTaskQueue: function (options, taskWorker) {
+            let queueController = this;
+            const STATUS_PENDING = 0;
+            const STATUS_SUCCESS = 1;
+            const STATUS_ERROR = 2;
+            let itemsQueue = options && options.data || [];
+            let concurrencyLimit = options && options.asyncCount || 48;
+            let isDone = false;
+            let results = [];
+            let totalCount = 0;
+            let completedCount = 0;
+            let pollTimer;
+            let queueStatus = STATUS_PENDING;
+            let promiseHandlers;
+            const handleReject = function () {
+              if (!isDone) {
+                isDone = true;
+                if (promiseHandlers && typeof promiseHandlers.reject === "function") {
+                  promiseHandlers.reject(results);
+                }
+              }
+            };
+            const handleResolve = function () {
+              if (promiseHandlers && typeof promiseHandlers.resolve === "function") {
+                let resolvedData = results;
+                setTimeout(function () {
                   try {
-                    _.resolve(s);
-                  } catch (t) {
-                    c = t, m();
+                    promiseHandlers.resolve(resolvedData);
+                  } catch (err) {
+                    results = err;
+                    handleReject();
                   }
-                }, 0));
-              },
-              v = function () {
-                h || (h = setInterval(function () {
-                  0 !== d && (clearInterval(h), h = void 0, 1 === d ? p() : m());
-                }, 10));
-              },
-              w;
-            return function () {
-              l = 0, f = s.length;
-              let t = 0,
-                r = function (n) {
-                  return function (e) {
-                    Array.isArray(c) && 2 != d && (t--, l++, c[n] = e, l === f && (d = 1));
-                  };
-                },
-                i = function (t) {
-                  d = 2, c = t;
+                }, 0);
+              }
+            };
+            const startCompletionPolling = function () {
+              if (!pollTimer) {
+                pollTimer = setInterval(function () {
+                  if (queueStatus !== STATUS_PENDING) {
+                    clearInterval(pollTimer);
+                    pollTimer = undefined;
+                    if (queueStatus === STATUS_SUCCESS) {
+                      handleResolve();
+                    } else {
+                      handleReject();
+                    }
+                  }
+                }, 10);
+              }
+            };
+
+            // Immediately start task scheduler
+            (function startScheduler() {
+              completedCount = 0;
+              totalCount = itemsQueue.length;
+              let runningTasks = 0;
+              const createSuccessCallback = function (itemIndex) {
+                return function (itemResult) {
+                  if (Array.isArray(results) && queueStatus !== STATUS_ERROR) {
+                    runningTasks--;
+                    completedCount++;
+                    results[itemIndex] = itemResult;
+                    if (completedCount === totalCount) {
+                      queueStatus = STATUS_SUCCESS;
+                    }
+                  }
                 };
-              d = 0, v();
-              let o = setInterval(function () {
-                if (e.He) return;
-                if (!s.length || 0 != d) return void clearInterval(o);
-                let u = a - t;
-                u < 1 || s.splice(0, u).forEach(function (e, o) {
+              };
+              const handleTaskError = function (error) {
+                queueStatus = STATUS_ERROR;
+                results = error;
+              };
+              queueStatus = STATUS_PENDING;
+              startCompletionPolling();
+              let schedulerInterval = setInterval(function () {
+                if (queueController.isBusy) return;
+                if (!itemsQueue.length || queueStatus !== STATUS_PENDING) {
+                  clearInterval(schedulerInterval);
+                  return;
+                }
+                let availableSlots = concurrencyLimit - runningTasks;
+                if (availableSlots < 1) return;
+                itemsQueue.splice(0, availableSlots).forEach(function (taskItem, itemIndex) {
                   setTimeout(function () {
                     try {
-                      t++, n(e, r(o), i);
-                    } catch (t) {
-                      c = t, d = 2;
+                      runningTasks++;
+                      taskWorker(taskItem, createSuccessCallback(itemIndex), handleTaskError);
+                    } catch (err) {
+                      results = err;
+                      queueStatus = STATUS_ERROR;
                     }
                   }, 0);
                 });
               }, 500);
-            }(), {
-              thenOne: function (t, n) {
-                return _ = {
-                  resolve: t,
-                  reject: n
-                }, v(), e;
+            })();
+            return {
+              thenOne: function (onResolve, onReject) {
+                promiseHandlers = {
+                  resolve: onResolve,
+                  reject: onReject
+                };
+                startCompletionPolling();
+                return queueController;
               }
             };
           },
