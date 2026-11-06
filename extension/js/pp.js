@@ -4,23 +4,23 @@
       module.exports = function () {
         return {
           t: [],
-          o: function (e) {
+          extractVariablesFromUrl: function (e) {
             let t = e.match(/variables=([^&]+)/);
             return t && t[1] || null;
           },
-          i: function (e) {
+          extractQueryHashFromUrl: function (e) {
             let t = e.match(/query_hash=([^&]+)/);
             return t && t[1] || null;
           },
-          _: function () {
+          polyfillNodeList: function () {
             void 0 === NodeList.prototype.forEach && (NodeList.prototype.forEach = Array.prototype.forEach), void 0 === HTMLCollection.prototype.forEach && (HTMLCollection.prototype.forEach = Array.prototype.forEach);
           },
-          u: function (e) {
+          getTimestampDaysAgo: function (e) {
             let t = new Date(),
               n = new Date(t.getFullYear() + "-" + (t.getMonth() + 1) + "-" + t.getDate()).getTime();
             return Math.floor((n - 864e5 * e) / 1e3);
           },
-          l: function (e) {
+          flattenArray: function (e) {
             let t = [];
             return e.forEach(function (e) {
               t = t.concat(e);
@@ -37,17 +37,17 @@
             }
             return r;
           },
-          m: function (e, t) {
+          fetchBlob: function (e, t) {
             let n = new XMLHttpRequest();
             n.open("GET", e, !0), n.responseType = "blob", n.onreadystatechange = function () {
               4 === this.readyState && (200 === this.status ? t(this.response) : t());
             }, n.send();
           },
-          h: function () {
+          extractShortcodeFromPath: function () {
             let e = location.pathname.match(/(?<=\/p\/|\/reel\/|\/reels\/videos\/|\/reels\/).*?(?=\/|$)/);
             return e && e[0];
           },
-          p: function (e) {
+          extractShortcodeFromElement: function (e) {
             if (!e || !e.tagName) return null;
             let t;
             if ("a" === e.tagName.toLowerCase()) t = e.getAttribute("href");else {
@@ -58,9 +58,9 @@
               let e = t.match(/\/(tv|p|reel)\/([^/]+)/);
               return e && e[2];
             }
-            return Insta_Utils.v() || Insta_Utils.I() ? Insta_Utils.h() : void 0;
+            return Insta_Utils.v() || Insta_Utils.isPostOrReelDetailPage() ? Insta_Utils.extractShortcodeFromPath() : void 0;
           },
-          P: function () {
+          isHomePage: function () {
             return "/" === location.pathname && "instagram.com" === location.host.replace(/^w{3}\./, "") && null == document.querySelector('input[name="username"]');
           },
           S() {
@@ -71,61 +71,61 @@
             let e = location.pathname.match("^/reel/[^/]+/?$");
             return e && e[0];
           },
-          k: function () {
+          isSavedPostsPage: function () {
             return /\/*.+\/saved\/all-posts\/$|\/saved\/*.+\/[0-9]+\/$/.test(location.pathname);
           },
-          M: function () {
+          isProfilePage: function () {
             return !document.querySelector('[role="dialog"]') && (null !== document.querySelector('a[href*="/tagged/"]') || null !== document.querySelector('a[href*="/followers/"]') || null !== document.querySelector('a[href*="/following/"]'));
           },
-          U: function () {
+          isUserReelsPath: function () {
             let e = location.pathname.match("^/reels/.*/$");
             return e && e[0];
           },
-          F: function () {
-            return this.M() && location.href.includes("/tagged/");
+          isTaggedPage: function () {
+            return this.isProfilePage() && location.href.includes("/tagged/");
           },
-          T: function () {
-            return this.M() && location.href.includes("/guides/");
+          isGuidesPage: function () {
+            return this.isProfilePage() && location.href.includes("/guides/");
           },
-          A: function () {
+          isOwnProfilePage: function () {
             return null !== document.querySelector('a[href^="/accounts/edit"]');
           },
-          C: function () {
-            return this.A() && location.href.includes("/saved/");
+          isSavedCollectionPage: function () {
+            return this.isOwnProfilePage() && location.href.includes("/saved/");
           },
-          D: function () {
+          isStoriesPage: function () {
             return /instagram\.com\/stories\/[^/]+\//.test(location.href);
           },
-          L: function () {
+          isExplorePage: function () {
             return "/explore/" === location.pathname;
           },
-          R: function () {
+          isLocationPage: function () {
             return /instagram\.com\/explore\/locations\/[^/]+\//.test(location.href);
           },
-          O: function () {
+          isTagExplorePage: function () {
             return /instagram\.com\/explore\/tags\/[^/]+\//.test(location.href);
           },
-          I: function () {
+          isPostOrReelDetailPage: function () {
             return /instagram.com\/(p|tv|reel)\/[^/]+\//.test(location.href);
           },
-          N: function () {
+          isIframe: function () {
             return top !== self;
           },
-          q: function () {
+          isHighlightsPage: function () {
             return location.pathname.includes("stories/highlights");
           },
-          H: function (e, t) {
+          extractFilenameFromUrl: function (e, t) {
             if (!e) return null;
             let n = e.match(/\/([^\/?]+)(?:$|\?)/);
             return n = n && n[1], n ? (t && (n = t + "_" + n), n) : null;
           },
-          V: function (e) {
+          isMediaUrl: function (e) {
             return !("string" != typeof e || -1 != e.indexOf("blob:") || !e.match(/\.(png|jpg|mp4|flv)/));
           },
-          B: function (e) {
-            Insta_Utils.j("getQueryHashes", e);
+          getQueryHashes: function (e) {
+            Insta_Utils.sendMessage("getQueryHashes", e);
           },
-          G: function (e, t, n) {
+          downloadWithChrome: function (e, t, n) {
             if (!e || !e.url) return n();
             var r = {
               url: e.url
@@ -138,8 +138,8 @@
               });
             });
           },
-          Z: function (e, t) {
-            this.j({
+          downloadFileViaBackground: function (e, t) {
+            this.sendMessage({
               action: "downloadFile",
               options: {
                 url: e.url,
@@ -150,7 +150,7 @@
               "function" == typeof t && t(e);
             });
           },
-          J: function (e, t, n) {
+          sortByProperty: function (e, t, n) {
             function r(e, r) {
               var o = parseInt(e[t]),
                 i = parseInt(r[t]);
@@ -158,20 +158,20 @@
             }
             e.sort(r);
           },
-          X: function (e) {
+          shuffleArray: function (e) {
             var t, n, r;
             for (r = e.length - 1; r > 0; r--) t = Math.floor(Math.random() * (r + 1)), n = e[r], e[r] = e[t], e[t] = n;
             return e;
           },
-          Y: function () {
+          extractUsernameFromUrl: function () {
             if (location.href.indexOf("instagram.com/p/") > -1) return null;
             var e = location.href.match(/instagram\.com\/([^\/]+)/);
             return e && e[1].trim() || null;
           },
-          j: function (e, t) {
+          sendMessage: function (e, t) {
             void 0 === t ? chrome.runtime.sendMessage(e) : chrome.runtime.sendMessage(e, t);
           },
-          K: function (e) {
+          countCarouselVideos: function (e) {
             var t = 0;
             return e.querySelectorAll("ul li").forEach(function (e) {
               e.querySelector("video") ? t++ : e.querySelectorAll("img").forEach(function (e) {
@@ -179,7 +179,7 @@
               });
             }), t > 1;
           },
-          W: function (e) {
+          extractCarouselIndex: function (e) {
             if (!e) return 0;
             var t = 0,
               n = e.querySelector('button[aria-current="step"], button[aria-current="true"], [role="button"][aria-current="step"], [role="button"][aria-current="true"]');
@@ -215,38 +215,38 @@
               e.classList.length > m && (m = e.classList.length, t = n);
             }), t;
           },
-          ee: function (e) {
+          formatSecondsToTime: function (e) {
             var t = Math.floor(parseInt(e) / 60).toString(),
               n = Math.floor(parseInt(e) % 60).toString();
             return 1 === t.length && (t = "0" + t), 1 === n.length && (n = "0" + n), t + ":" + n;
           },
-          te: function () {
+          getUsernameFromDOMHeader: function () {
             let e = document.querySelector("section main header section h2,section main header section h1,section main header section h3");
             if (e) {
               let t = e.closest("section");
               return t && (t.style.overflow = "visible"), t && t.querySelector("div>div") || t || null;
             }
           },
-          ne: function (e) {
+          findVideoElement: function (e) {
             return e.querySelector("video");
           },
-          re: function (e) {
+          getVideoSrc: function (e) {
             var t = e.getAttribute("src");
             if (t) return t;
             var n = e.querySelector("source");
             return n && (t = n.getAttribute("src")) ? t : null;
           },
-          oe: function (e) {
+          hasReelsIconSvg: function (e) {
             const t = "m12.823 1 2.974 5.002h-5.58l-2.65-4.971c.206-.013.419-.022.642-.027L8.55 1Zm2.327 0h.298c3.06 0 4.468.754 5.64 1.887a6.007 6.007 0 0 1 1.596 2.82l.07.295h-4.629L15.15 1Zm-9.667.377L7.95 6.002H1.244a6.01 6.01 0 0 1 3.942-4.53Zm9.735 12.834-4.545-2.624a.909.909 0 0 0-1.356.668l-.008.12v5.248a.91.91 0 0 0 1.255.84l.109-.053 4.545-2.624a.909.909 0 0 0 .1-1.507l-.1-.068-4.545-2.624Zm-14.2-6.209h21.964l.015.36.003.189v6.899c0 3.061-.755 4.469-1.888 5.64-1.151 1.114-2.5 1.856-5.33 1.909l-.334.003H8.551c-3.06 0-4.467-.755-5.64-1.889-1.114-1.15-1.854-2.498-1.908-5.33L1 15.45V8.551l.003-.189Z";
             if (e.querySelector(`svg path[d="${t}"]`)) return !0;
             {
               let t = e.querySelector("video,img"),
                 n = getComputedStyle(t);
-              return this.ie(parseInt(n.width) / parseInt(n.height));
+              return this.isAspectRatioReel(parseInt(n.width) / parseInt(n.height));
             }
           },
-          ie: e => e >= .5 && e <= .6 || e === 9 / 16,
-          ae: function (e) {
+          isAspectRatioReel: e => e >= .5 && e <= .6 || e === 9 / 16,
+          getSrcsetFromImage: function (e) {
             if (!e) return null;
             var t = e.getAttribute("srcset");
             if (t) {
@@ -263,13 +263,13 @@
             }
             return "string" == typeof a && a.match(new RegExp("\\.(jpg|png)")) || (a = e.getAttribute("src")), a;
           },
-          _e: function (e) {
+          findLargestImageFromContainer: function (e) {
             let t = null,
               n = e.querySelectorAll("img[src], img[srcset]");
             if (1 === n.length) t = n[0];else if (n.length > 1) for (let e = 0; n[e]; e++) n[e].width < 200 || n[e].height < 200 || (n[e].getAttribute("src") || n[e].getAttribute("srcset")) && (t = t || n[e], n[e].width > t.width && n[e].height > t.height && (t = n[e]));
             return t || null;
           },
-          ue: function (e, t) {
+          requestUserId: function (e, t) {
             chrome.runtime.sendMessage({
               action: "requestUserId",
               userName: e
@@ -278,7 +278,7 @@
               t(e.userId);
             });
           },
-          se: function (e, t) {
+          requestUserPostCount: function (e, t) {
             chrome.runtime.sendMessage({
               action: "requestUserPostCount",
               userName: e
@@ -287,14 +287,14 @@
               t(e.postCount);
             });
           },
-          le: function (e, t) {
+          compareMediaDimensions: function (e, t) {
             let n = e.width || e.config_width || null,
               r = t.width || t.config_width || null,
               o = e.height || e.config_height || null,
               i = t.height || t.config_height || null;
             return n && r && n !== o && r !== i ? n !== r ? r > n ? 1 : -1 : i > o ? 1 : -1 : 0;
           },
-          ce: function (e, t) {
+          filterMediaByAdvancedParams: function (e, t) {
             t && !Array.isArray(t) && (t = [t]);
             for (var n = [], r = {
                 "{": 0,
@@ -313,18 +313,18 @@
             } catch (e) {}
             return c;
           },
-          fe: function () {
+          getActiveSection: function () {
             return Array.from(document.querySelectorAll("section")).find(e => !e.closest("[hidden]"));
           },
-          de: function () {
-            const e = this.fe();
+          findStoriesContainer: function () {
+            const e = this.getActiveSection();
             return Array.from(e.querySelectorAll("div")).find(e => {
               let t = e.clientHeight || e.offsetHeight;
               if (t > 0 && t < 6) return e.parentElement;
             });
           },
-          ge: function () {
-            const e = this.de();
+          getStoriesCurrentIndex: function () {
+            const e = this.findStoriesContainer();
             if (!e) return 0;
             let t = e.querySelectorAll("div[style]"),
               n;
@@ -354,7 +354,7 @@
               ["policy_accepted"]: !0
             });
           },
-          ye: () => Promise.all([chrome.storage.sync.get("policy_accepted"), chrome.storage.local.get("policy_accepted")]).then(([e, t]) => !(!e.policy_accepted && !t.policy_accepted)).catch(e => {})
+          checkPolicyAccepted: () => Promise.all([chrome.storage.sync.get("policy_accepted"), chrome.storage.local.get("policy_accepted")]).then(([e, t]) => !(!e.policy_accepted && !t.policy_accepted)).catch(e => {})
         };
       }();
     }, module => {
@@ -400,7 +400,7 @@
   }
   const constants = n(4),
     instaUtils = n(3);
-  function i() {
+  function localizeHtml() {
     for (var e = document.getElementsByTagName("html"), t = 0; t < e.length; t++) {
       var n = e[t],
         r = n.innerHTML.toString(),
@@ -410,12 +410,12 @@
       o != r && (n.innerHTML = o);
     }
   }
-  function a() {
-    i();
+  function initPrivacyPolicyPage() {
+    localizeHtml();
     const e = document.querySelector(".accept");
-    e && instaUtils.ye().then(t => {
+    e && instaUtils.checkPolicyAccepted().then(t => {
       t || e.addEventListener("click", () => {
-        instaUtils.j({
+        instaUtils.sendMessage({
           action: "updateStorage",
           data: {
             policy_accepted: !0,
@@ -427,5 +427,5 @@
       });
     });
   }
-  a();
+  initPrivacyPolicyPage();
 })();

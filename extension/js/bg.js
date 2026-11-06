@@ -7,8 +7,8 @@
           captureGraphQLQueryHash: function (e) {
             const t = this;
             let n = e.url,
-              i = instaUtils.o(n),
-              s = instaUtils.i(n);
+              i = instaUtils.extractVariablesFromUrl(n),
+              s = instaUtils.extractQueryHashFromUrl(n);
             if (i && s) {
               i = decodeURIComponent(i);
               try {
@@ -84,23 +84,23 @@
       module.exports = function () {
         return {
           v: [],
-          o: function (e) {
+          extractVariablesFromUrl: function (e) {
             let t = e.match(/variables=([^&]+)/);
             return t && t[1] || null;
           },
-          i: function (e) {
+          extractQueryHashFromUrl: function (e) {
             let t = e.match(/query_hash=([^&]+)/);
             return t && t[1] || null;
           },
-          P: function () {
+          polyfillNodeList: function () {
             void 0 === NodeList.prototype.forEach && (NodeList.prototype.forEach = Array.prototype.forEach), void 0 === HTMLCollection.prototype.forEach && (HTMLCollection.prototype.forEach = Array.prototype.forEach);
           },
-          I: function (e) {
+          getTimestampDaysAgo: function (e) {
             let t = new Date(),
               n = new Date(t.getFullYear() + "-" + (t.getMonth() + 1) + "-" + t.getDate()).getTime();
             return Math.floor((n - 864e5 * e) / 1e3);
           },
-          q: function (e) {
+          flattenArray: function (e) {
             let t = [];
             return e.forEach(function (e) {
               t = t.concat(e);
@@ -117,17 +117,17 @@
             }
             return r;
           },
-          S: function (e, t) {
+          fetchBlob: function (e, t) {
             let n = new XMLHttpRequest();
             n.open("GET", e, !0), n.responseType = "blob", n.onreadystatechange = function () {
               4 === this.readyState && (200 === this.status ? t(this.response) : t());
             }, n.send();
           },
-          U: function () {
+          extractShortcodeFromPath: function () {
             let e = location.pathname.match(/(?<=\/p\/|\/reel\/|\/reels\/videos\/|\/reels\/).*?(?=\/|$)/);
             return e && e[0];
           },
-          R: function (e) {
+          extractShortcodeFromElement: function (e) {
             if (!e || !e.tagName) return null;
             let t;
             if ("a" === e.tagName.toLowerCase()) t = e.getAttribute("href");else {
@@ -138,9 +138,9 @@
               let e = t.match(/\/(tv|p|reel)\/([^/]+)/);
               return e && e[2];
             }
-            return Insta_Utils.C() || Insta_Utils.D() ? Insta_Utils.U() : void 0;
+            return Insta_Utils.C() || Insta_Utils.isPostOrReelDetailPage() ? Insta_Utils.extractShortcodeFromPath() : void 0;
           },
-          T: function () {
+          isHomePage: function () {
             return "/" === location.pathname && "instagram.com" === location.host.replace(/^w{3}\./, "") && null == document.querySelector('input[name="username"]');
           },
           N() {
@@ -151,61 +151,61 @@
             let e = location.pathname.match("^/reel/[^/]+/?$");
             return e && e[0];
           },
-          A: function () {
+          isSavedPostsPage: function () {
             return /\/*.+\/saved\/all-posts\/$|\/saved\/*.+\/[0-9]+\/$/.test(location.pathname);
           },
-          H: function () {
+          isProfilePage: function () {
             return !document.querySelector('[role="dialog"]') && (null !== document.querySelector('a[href*="/tagged/"]') || null !== document.querySelector('a[href*="/followers/"]') || null !== document.querySelector('a[href*="/following/"]'));
           },
-          M: function () {
+          isUserReelsPath: function () {
             let e = location.pathname.match("^/reels/.*/$");
             return e && e[0];
           },
-          O: function () {
-            return this.H() && location.href.includes("/tagged/");
+          isTaggedPage: function () {
+            return this.isProfilePage() && location.href.includes("/tagged/");
           },
-          F: function () {
-            return this.H() && location.href.includes("/guides/");
+          isGuidesPage: function () {
+            return this.isProfilePage() && location.href.includes("/guides/");
           },
-          L: function () {
+          isOwnProfilePage: function () {
             return null !== document.querySelector('a[href^="/accounts/edit"]');
           },
-          B: function () {
-            return this.L() && location.href.includes("/saved/");
+          isSavedCollectionPage: function () {
+            return this.isOwnProfilePage() && location.href.includes("/saved/");
           },
-          j: function () {
+          isStoriesPage: function () {
             return /instagram\.com\/stories\/[^/]+\//.test(location.href);
           },
-          V: function () {
+          isExplorePage: function () {
             return "/explore/" === location.pathname;
           },
-          J: function () {
+          isLocationPage: function () {
             return /instagram\.com\/explore\/locations\/[^/]+\//.test(location.href);
           },
-          G: function () {
+          isTagExplorePage: function () {
             return /instagram\.com\/explore\/tags\/[^/]+\//.test(location.href);
           },
-          D: function () {
+          isPostOrReelDetailPage: function () {
             return /instagram.com\/(p|tv|reel)\/[^/]+\//.test(location.href);
           },
-          X: function () {
+          isIframe: function () {
             return top !== self;
           },
-          Z: function () {
+          isHighlightsPage: function () {
             return location.pathname.includes("stories/highlights");
           },
-          Y: function (e, t) {
+          extractFilenameFromUrl: function (e, t) {
             if (!e) return null;
             let n = e.match(/\/([^\/?]+)(?:$|\?)/);
             return n = n && n[1], n ? (t && (n = t + "_" + n), n) : null;
           },
-          K: function (e) {
+          isMediaUrl: function (e) {
             return !("string" != typeof e || -1 != e.indexOf("blob:") || !e.match(/\.(png|jpg|mp4|flv)/));
           },
-          h: function (e) {
-            Insta_Utils.W("getQueryHashes", e);
+          getQueryHashes: function (e) {
+            Insta_Utils.sendMessage("getQueryHashes", e);
           },
-          ee: function (e, t, n) {
+          downloadWithChrome: function (e, t, n) {
             if (!e || !e.url) return n();
             var r = {
               url: e.url
@@ -218,8 +218,8 @@
               });
             });
           },
-          te: function (e, t) {
-            this.W({
+          downloadFileViaBackground: function (e, t) {
+            this.sendMessage({
               action: "downloadFile",
               options: {
                 url: e.url,
@@ -230,7 +230,7 @@
               "function" == typeof t && t(e);
             });
           },
-          ne: function (e, t, n) {
+          sortByProperty: function (e, t, n) {
             function r(e, r) {
               var o = parseInt(e[t]),
                 i = parseInt(r[t]);
@@ -238,20 +238,20 @@
             }
             e.sort(r);
           },
-          re: function (e) {
+          shuffleArray: function (e) {
             var t, n, r;
             for (r = e.length - 1; r > 0; r--) t = Math.floor(Math.random() * (r + 1)), n = e[r], e[r] = e[t], e[t] = n;
             return e;
           },
-          oe: function () {
+          extractUsernameFromUrl: function () {
             if (location.href.indexOf("instagram.com/p/") > -1) return null;
             var e = location.href.match(/instagram\.com\/([^\/]+)/);
             return e && e[1].trim() || null;
           },
-          W: function (e, t) {
+          sendMessage: function (e, t) {
             void 0 === t ? chrome.runtime.sendMessage(e) : chrome.runtime.sendMessage(e, t);
           },
-          ie: function (e) {
+          countCarouselVideos: function (e) {
             var t = 0;
             return e.querySelectorAll("ul li").forEach(function (e) {
               e.querySelector("video") ? t++ : e.querySelectorAll("img").forEach(function (e) {
@@ -259,7 +259,7 @@
               });
             }), t > 1;
           },
-          se: function (e) {
+          extractCarouselIndex: function (e) {
             if (!e) return 0;
             var t = 0,
               n = e.querySelector('button[aria-current="step"], button[aria-current="true"], [role="button"][aria-current="step"], [role="button"][aria-current="true"]');
@@ -295,38 +295,38 @@
               e.classList.length > p && (p = e.classList.length, t = n);
             }), t;
           },
-          ue: function (e) {
+          formatSecondsToTime: function (e) {
             var t = Math.floor(parseInt(e) / 60).toString(),
               n = Math.floor(parseInt(e) % 60).toString();
             return 1 === t.length && (t = "0" + t), 1 === n.length && (n = "0" + n), t + ":" + n;
           },
-          ae: function () {
+          getUsernameFromDOMHeader: function () {
             let e = document.querySelector("section main header section h2,section main header section h1,section main header section h3");
             if (e) {
               let t = e.closest("section");
               return t && (t.style.overflow = "visible"), t && t.querySelector("div>div") || t || null;
             }
           },
-          ce: function (e) {
+          findVideoElement: function (e) {
             return e.querySelector("video");
           },
-          _e: function (e) {
+          getVideoSrc: function (e) {
             var t = e.getAttribute("src");
             if (t) return t;
             var n = e.querySelector("source");
             return n && (t = n.getAttribute("src")) ? t : null;
           },
-          le: function (e) {
+          hasReelsIconSvg: function (e) {
             const t = "m12.823 1 2.974 5.002h-5.58l-2.65-4.971c.206-.013.419-.022.642-.027L8.55 1Zm2.327 0h.298c3.06 0 4.468.754 5.64 1.887a6.007 6.007 0 0 1 1.596 2.82l.07.295h-4.629L15.15 1Zm-9.667.377L7.95 6.002H1.244a6.01 6.01 0 0 1 3.942-4.53Zm9.735 12.834-4.545-2.624a.909.909 0 0 0-1.356.668l-.008.12v5.248a.91.91 0 0 0 1.255.84l.109-.053 4.545-2.624a.909.909 0 0 0 .1-1.507l-.1-.068-4.545-2.624Zm-14.2-6.209h21.964l.015.36.003.189v6.899c0 3.061-.755 4.469-1.888 5.64-1.151 1.114-2.5 1.856-5.33 1.909l-.334.003H8.551c-3.06 0-4.467-.755-5.64-1.889-1.114-1.15-1.854-2.498-1.908-5.33L1 15.45V8.551l.003-.189Z";
             if (e.querySelector(`svg path[d="${t}"]`)) return !0;
             {
               let t = e.querySelector("video,img"),
                 n = getComputedStyle(t);
-              return this.fe(parseInt(n.width) / parseInt(n.height));
+              return this.isAspectRatioReel(parseInt(n.width) / parseInt(n.height));
             }
           },
-          fe: e => e >= .5 && e <= .6 || e === 9 / 16,
-          de: function (e) {
+          isAspectRatioReel: e => e >= .5 && e <= .6 || e === 9 / 16,
+          getSrcsetFromImage: function (e) {
             if (!e) return null;
             var t = e.getAttribute("srcset");
             if (t) {
@@ -343,13 +343,13 @@
             }
             return "string" == typeof s && s.match(new RegExp("\\.(jpg|png)")) || (s = e.getAttribute("src")), s;
           },
-          he: function (e) {
+          findLargestImageFromContainer: function (e) {
             let t = null,
               n = e.querySelectorAll("img[src], img[srcset]");
             if (1 === n.length) t = n[0];else if (n.length > 1) for (let e = 0; n[e]; e++) n[e].width < 200 || n[e].height < 200 || (n[e].getAttribute("src") || n[e].getAttribute("srcset")) && (t = t || n[e], n[e].width > t.width && n[e].height > t.height && (t = n[e]));
             return t || null;
           },
-          me: function (e, t) {
+          requestUserId: function (e, t) {
             chrome.runtime.sendMessage({
               action: "requestUserId",
               userName: e
@@ -358,7 +358,7 @@
               t(e.userId);
             });
           },
-          pe: function (e, t) {
+          requestUserPostCount: function (e, t) {
             chrome.runtime.sendMessage({
               action: "requestUserPostCount",
               userName: e
@@ -367,14 +367,14 @@
               t(e.postCount);
             });
           },
-          ge: function (e, t) {
+          compareMediaDimensions: function (e, t) {
             let n = e.width || e.config_width || null,
               r = t.width || t.config_width || null,
               o = e.height || e.config_height || null,
               i = t.height || t.config_height || null;
             return n && r && n !== o && r !== i ? n !== r ? r > n ? 1 : -1 : i > o ? 1 : -1 : 0;
           },
-          $e: function (e, t) {
+          filterMediaByAdvancedParams: function (e, t) {
             t && !Array.isArray(t) && (t = [t]);
             for (var n = [], r = {
                 "{": 0,
@@ -393,18 +393,18 @@
             } catch (e) {}
             return l;
           },
-          we: function () {
+          getActiveSection: function () {
             return Array.from(document.querySelectorAll("section")).find(e => !e.closest("[hidden]"));
           },
-          ye: function () {
-            const e = this.we();
+          findStoriesContainer: function () {
+            const e = this.getActiveSection();
             return Array.from(e.querySelectorAll("div")).find(e => {
               let t = e.clientHeight || e.offsetHeight;
               if (t > 0 && t < 6) return e.parentElement;
             });
           },
           ve: function () {
-            const e = this.ye();
+            const e = this.findStoriesContainer();
             if (!e) return 0;
             let t = e.querySelectorAll("div[style]"),
               n;
@@ -434,7 +434,7 @@
               ["policy_accepted"]: !0
             });
           },
-          ke: () => Promise.all([chrome.storage.sync.get("policy_accepted"), chrome.storage.local.get("policy_accepted")]).then(([e, t]) => !(!e.policy_accepted && !t.policy_accepted)).catch(e => {})
+          checkPolicyAccepted: () => Promise.all([chrome.storage.sync.get("policy_accepted"), chrome.storage.local.get("policy_accepted")]).then(([e, t]) => !(!e.policy_accepted && !t.policy_accepted)).catch(e => {})
         };
       }();
     }, module => {
@@ -479,17 +479,17 @@
         instaUtils = require(3);
       module.exports = function () {
         return {
-          Ke() {
+          openPrivacyPolicyTab() {
             chrome.tabs.create({
               url: chrome.runtime.getURL("html/pp.html"),
               active: !0
             });
           },
-          We: function () {
+          initBackgroundScript: function () {
             const e = this;
             chrome.runtime.onInstalled.addListener(async t => {
-              instaUtils.ke().then(n => {
-                n || "install" === t.reason && e.Ke();
+              instaUtils.checkPolicyAccepted().then(n => {
+                n || "install" === t.reason && e.openPrivacyPolicyTab();
               });
             }), chrome.runtime.onConnect.addListener(function (e) {}), chrome.action.onClicked.addListener(function () {
               chrome.tabs.create({
@@ -506,7 +506,7 @@
                 case "checkBulkDownloadNow":
                   return tabManager.isBulkDownloadActiveInAnyTab(sendResponse), !0;
                 case "check_policy_accept":
-                  return instaUtils.ke().then(sendResponse), !0;
+                  return instaUtils.checkPolicyAccepted().then(sendResponse), !0;
                 case "getCsrftoken":
                   return cookieManager.getCsrfToken().then(sendResponse).catch(() => sendResponse), !0;
                 case "is_bulk_advanced":
@@ -517,7 +517,7 @@
                   return;
               } else if ("object" == typeof message && "string" == typeof message.action) switch (message.action) {
                 case "downloadFile":
-                  return instaUtils.ee(message.options, sender, sendResponse), !0;
+                  return instaUtils.downloadWithChrome(message.options, sender, sendResponse), !0;
                 case "bulk_advanced":
                   chrome.storage.local.set({
                     bulk_advanced: message.value
@@ -1232,7 +1232,7 @@
             const n = this,
               a = ["x-asbd-id", "x-ig-app-id"];
             let c;
-            return instaUtils.W(), cookieManager.getCsrfToken().then(async function (e) {
+            return instaUtils.sendMessage(), cookieManager.getCsrfToken().then(async function (e) {
               return e || (e = await messageClient.getCsrfToken()), c = e, headerManager.getSpecificHeaders(a);
             }).then(function (r) {
               return n.xt(e, {
@@ -1393,11 +1393,11 @@
     };
     return e[r](i, i.exports, n), i.exports;
   }
-  const r = n(1),
-    o = n(5),
-    i = n(6);
-  function s() {
-    o.We(), r.l(), i.l();
+  const queryHashManager = n(1),
+    backgroundController = n(5),
+    headerManager = n(6);
+  function initBackground() {
+    backgroundController.initBackgroundScript(), queryHashManager.initQueryHashesListener(), headerManager.initHeaderCaptureListeners();
   }
-  s();
+  initBackground();
 })();

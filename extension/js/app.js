@@ -4,7 +4,7 @@
         instaUtils = require(3);
       module.exports = function () {
         return {
-          t: function (t) {
+          captureGraphQLQueryHash: function (t) {
             const n = this;
             let e = t.url,
               o = instaUtils.i(e),
@@ -19,7 +19,7 @@
               });
             }
           },
-          h: function () {
+          initStorage: function () {
             const t = this;
             chrome.storage.local.get("query_hashes", function (t) {
               t.query_hashes || chrome.storage.local.set({
@@ -34,14 +34,14 @@
               types: ["xmlhttprequest"]
             }, ["requestHeaders"]);
           },
-          u: function (t, n) {
+          updateQueryHash: function (t, n) {
             chrome.storage.local.get("query_hashes", function (e) {
               e.query_hashes[t] = n, chrome.storage.local.set({
                 query_hashes: e.query_hashes
               });
             });
           },
-          _: function () {
+          getQueryHashes: function () {
             return chrome.storage.local.get("query_hashes").then(function (t) {
               if (t.query_hashes) return t.query_hashes;
               throw "No query_hashes";
@@ -485,7 +485,7 @@
               e;
             return n && n.length ? (n = n[n.length - 1].parentElement || null, null == n ? 0 : t.children && Array.from(t.children).indexOf(n) || 0) : 0;
           },
-          Et(t) {
+          shortcodeToPk(t) {
             t.length > 28 && (t = t.substr(0, t.length - 28));
             const n = "abcdefghijklmnopqrstuvwxyz",
               e = n.toUpperCase() + n + "0123456789-_";
@@ -496,15 +496,15 @@
             }
             return r.toString();
           },
-          At(t) {
+          saveToStorageSyncAndLocal(t) {
             try {
               return chrome.storage.local.set(t).finally(() => chrome.storage.sync.set(t)).catch(() => {});
             } catch (t) {
               return Promise.resolve();
             }
           },
-          It(t) {
-            return this.At({
+          setPolicyAccepted(t) {
+            return this.saveToStorageSyncAndLocal({
               ["promotional_allowed"]: t,
               ["policy_accepted"]: !0
             });
@@ -554,8 +554,8 @@
             "x-ig-app-id": "936619743392459",
             "x-ig-app-id_upload": "1217981644879628"
           },
-          en: function (t) {
-            this.rn().then(function (n) {
+          saveHeaders: function (t) {
+            this.getHeaders().then(function (n) {
               chrome.storage.local.set({
                 headers: {
                   ...n,
@@ -568,14 +568,14 @@
               });
             });
           },
-          rn: function () {
+          getHeaders: function () {
             return chrome.storage.local.get("headers").then(function (t) {
               if (t.headers) return t.headers;
               throw "No headers";
             });
           },
-          sn: function (t) {
-            return this.rn().then(function (n) {
+          getSpecificHeaders: function (t) {
+            return this.getHeaders().then(function (n) {
               let e = [];
               for (let r = 0; t[r]; r++) {
                 if (!n.hasOwnProperty(t[r])) throw `Not found requested header [${t[r]}]`;
@@ -592,15 +592,15 @@
               fb_dtsg: e
             });
           },
-          un: function (t) {
+          captureFbDtsgFromBody: function (t) {
             const n = ["x-ig-www-claim", "x-instagram-ajax", "x-asbd-id", "x-requested-with", "x-ig-app-id"],
               e = {};
             for (let r = 0; t.requestHeaders[r]; r++) {
               let i = t.requestHeaders[r];
-              n.includes(i.name.toLowerCase()) && i.value.length && (e[i.name.toLowerCase()] = i.value), this.en(e);
+              n.includes(i.name.toLowerCase()) && i.value.length && (e[i.name.toLowerCase()] = i.value), this.saveHeaders(e);
             }
           },
-          cn: function (t) {
+          captureHeadersFromRequest: function (t) {
             const n = "x-ig-app-id",
               e = {};
             for (let r = 0; t.requestHeaders[r]; r++) {
@@ -609,7 +609,7 @@
                 e[n] = i.value;
                 break;
               }
-              this.en(e);
+              this.saveHeaders(e);
             }
           },
           h: function () {
@@ -632,7 +632,7 @@
     }, module => {
       module.exports = function () {
         return {
-          fn: function () {
+          getAllCookies: function () {
             return chrome.cookies ? chrome.cookies.getAll({
               url: "https://www.instagram.com"
             }).then(function (t) {
@@ -643,8 +643,8 @@
               throw "Not authorized";
             }) : Promise.resolve();
           },
-          ln: function () {
-            return this.fn().then(function (t) {
+          getCsrfToken: function () {
+            return this.getAllCookies().then(function (t) {
               return t && t.csrftoken || null;
             });
           }
@@ -660,13 +660,13 @@
         httpClient = require(11);
       module.exports = function () {
         return {
-          hn: function (t, n) {
+          requestHtmlByShortcode: function (t, n) {
             if (!t) return n(null);
             const e = `https://www.instagram.com/p/${t}/`,
               s = ["x-instagram-ajax", "x-asbd-id", "x-ig-app-id", "x-requested-with"];
             let a;
-            return cookieManager.ln().then(function (t) {
-              return a = t, headerManager.sn(s);
+            return cookieManager.getCsrfToken().then(function (t) {
+              return a = t, headerManager.getSpecificHeaders(s);
             }).then(function (t) {
               return httpClient.dn(e, {
                 headers: {
@@ -679,8 +679,8 @@
               n(t);
             });
           },
-          _n: function (t, n) {
-            headerManager.rn().then(e => {
+          requestUserIdByUsername: function (t, n) {
+            headerManager.getHeaders().then(e => {
               let r = "https://i.instagram.com/api/v1/users/web_profile_info/?username=" + t,
                 i = {
                   method: "GET",
@@ -699,8 +699,8 @@
               });
             });
           },
-          pn: function (t, n) {
-            headerManager.rn().then(e => {
+          requestUserPostCount: function (t, n) {
+            headerManager.getHeaders().then(e => {
               let r = "https://i.instagram.com/api/v1/users/web_profile_info/?username=" + t,
                 i = {
                   method: "GET",
@@ -719,7 +719,7 @@
               });
             });
           },
-          vn: function (t, n) {
+          getUserStoriesCount: function (t, n) {
             const e = "https://i.instagram.com/api/v1/feed/user/" + t + "/story/";
             httpClient.wn(e).then(function (t) {
               n(t);
@@ -729,7 +729,7 @@
               });
             });
           },
-          bn: function (t, n) {
+          requestStories: function (t, n) {
             const e = `https://i.instagram.com/api/v1/feed/reels_media/?reel_ids=${encodeURIComponent(t)}`;
             httpClient.wn(e).then(function (t) {
               n(t);
@@ -739,8 +739,8 @@
               });
             });
           },
-          yn: function (t, n) {
-            queryHashManager._().then(function (n) {
+          baseGraphqlQueryRequest: function (t, n) {
+            queryHashManager.getQueryHashes().then(function (n) {
               const e = void 0,
                 r = "https://www.instagram.com/graphql/query/?query_hash=" + n[t.request_type] + "&variables=" + encodeURIComponent(JSON.stringify(t.data));
               return httpClient.wn(r);
@@ -752,7 +752,7 @@
               });
             });
           },
-          gn: function (t, n) {
+          fetchUserFeed: function (t, n) {
             const e = this;
             let i = t.after || null,
               o = i ? "scrollUserFeedInfo" : "baseUserFeedInfo";
@@ -822,7 +822,7 @@
               });
             });
           },
-          Sn: function (t, n) {
+          baseMediaInfoRequest: function (t, n) {
             const e = `https://www.instagram.com/api/v1/media/${t.data.pk}/info/`;
             return httpClient.wn(e).then(function (t) {
               n(t);
@@ -832,9 +832,9 @@
               });
             });
           },
-          En: function (t, n) {
+          getUserIdByUserName: function (t, n) {
             let e = "https://www.instagram.com/" + t + "/";
-            httpClient.An(e).then(function (t) {
+            httpClient.fetchWithTimeout(e).then(function (t) {
               return t.text();
             }).then(function (t) {
               let r = t.match(/\"profile_id\":\s?\"(\d+)/) || t.match(/"props":\s*\{\s*"id":\s*"(\d+)"/) || t.match(/"user_id":\s*"(\d+)"/);
@@ -844,11 +844,11 @@
               return n();
             });
           },
-          In: function (t) {
-            return cookieManager.fn().then(async function (n) {
-              if (n || (n = await messageClient.xn()), !n) return Promise.reject();
+          requestHighlights: function (t) {
+            return cookieManager.getAllCookies().then(async function (n) {
+              if (n || (n = await messageClient.getCookies()), !n) return Promise.reject();
               const e = "https://i.instagram.com/api/v1/feed/user/" + n.ds_user_id + "/story/";
-              return headerManager.sn(["x-ig-www-claim", "x-ig-app-id"]).then(function (r) {
+              return headerManager.getSpecificHeaders(["x-ig-www-claim", "x-ig-app-id"]).then(function (r) {
                 return httpClient.mn(e, {
                   method: "GET",
                   headers: {
@@ -981,12 +981,12 @@
     }, module => {
       module.exports = function () {
         return {
-          Dn: () => new Promise(function (t, n) {
+          getCsrfToken: () => new Promise(function (t, n) {
             chrome.runtime.sendMessage("getCsrftoken", function (e) {
               e ? t(e) : n();
             });
           }),
-          xn: () => new Promise(function (t, n) {
+          getCookies: () => new Promise(function (t, n) {
             chrome.runtime.sendMessage("getCookies", function (e) {
               e ? t(e) : n();
             });
@@ -1001,7 +1001,7 @@
         messageClient = require(10);
       module.exports = function () {
         return {
-          An: (t, n) => (n = n || {}, fetch(t, n).then(function (n) {
+          fetchWithTimeout: (t, n) => (n = n || {}, fetch(t, n).then(function (n) {
             if (200 !== n.status && 202 !== n.status) throw `request error [${t}]`;
             return n;
           })),
@@ -1019,8 +1019,8 @@
             const n = this,
               e = ["x-instagram-ajax", "x-asbd-id", "x-ig-app-id", "x-requested-with"];
             let s;
-            return cookieManager.ln().then(function (t) {
-              return s = t, headerManager.sn(e);
+            return cookieManager.getCsrfToken().then(function (t) {
+              return s = t, headerManager.getSpecificHeaders(e);
             }).then(function (e) {
               return n.mn(t, {
                 headers: {
@@ -1034,8 +1034,8 @@
             const e = this,
               u = ["x-asbd-id", "x-ig-app-id"];
             let c;
-            return instaUtils.Y(), cookieManager.ln().then(async function (t) {
-              return t || (t = await messageClient.Dn()), c = t, headerManager.sn(u);
+            return instaUtils.Y(), cookieManager.getCsrfToken().then(async function (t) {
+              return t || (t = await messageClient.getCsrfToken()), c = t, headerManager.getSpecificHeaders(u);
             }).then(function (r) {
               let headers = {
                 ...r,
@@ -1068,10 +1068,10 @@
           Nn(t, n, e) {
             const u = ["x-instagram-ajax", "x-ig-app-id_upload", "x-asbd-id", "x-requested-with"];
             let c;
-            return e = e || {}, cookieManager.ln().then(async function (t) {
-              return t || (t = await messageClient.Dn()), c = t, headerManager.sn(u);
+            return e = e || {}, cookieManager.getCsrfToken().then(async function (t) {
+              return t || (t = await messageClient.getCsrfToken()), c = t, headerManager.getSpecificHeaders(u);
             }).then(function (i) {
-              return i["x-ig-app-id"] = i["x-ig-app-id_upload"], delete i["x-ig-app-id_upload"], httpClient.An(t, {
+              return i["x-ig-app-id"] = i["x-ig-app-id_upload"], delete i["x-ig-app-id_upload"], httpClient.fetchWithTimeout(t, {
                 method: "POST",
                 body: n,
                 headers: {
@@ -1082,7 +1082,7 @@
               });
             });
           },
-          Tn: function (t, n) {
+          uploadPhotoRequest: function (t, n) {
             let e;
             const r = `https://www.instagram.com/rupload_igphoto/${"reels" === t.destination ? "fb_uploader" : t.destination}_${t.upload_id}`,
               i = new Uint8Array(t.data).buffer,
@@ -1104,7 +1104,7 @@
               n();
             });
           },
-          qn: function (t, n) {
+          uploadVideoRequest: function (t, n) {
             let e;
             const r = `https://www.instagram.com/rupload_igvideo/${"reels" === t.destination ? "fb_uploader" : t.destination}_${t.upload_id}`,
               i = new Uint8Array(t.data).buffer,
@@ -1134,7 +1134,7 @@
               n();
             });
           },
-          Fn: function (t, n) {
+          uploadPostConfigureRequest: function (t, n) {
             let e = "story" === t.destination,
               r,
               i = {
@@ -1145,7 +1145,7 @@
             const o = this,
               s = "https://www.instagram.com/" + r,
               a = new URLSearchParams(i);
-            return e && void 0 === t.previous_count ? apiClient.In(function (n) {
+            return e && void 0 === t.previous_count ? apiClient.requestHighlights(function (n) {
               return t.previous_count = n, c();
             }) : c();
             function c() {
@@ -1158,7 +1158,7 @@
           },
           On: function (t, n) {
             const e = this;
-            return t.attempt = t.attempt || 0, apiClient.In(function (r) {
+            return t.attempt = t.attempt || 0, apiClient.requestHighlights(function (r) {
               if (!(r > t.previous_count)) {
                 if (t.attempt > 3) throw "FAIL";
                 return t.attempt++, e.Fn(t, n).then(function () {
@@ -1194,7 +1194,7 @@
         apiClient = require(8);
       module.exports = function () {
         return {
-          Mn: function (t, n) {
+          fetchPostCommentsAndDetails: function (t, n) {
             chrome.runtime.sendMessage({
               action: "baseGraphqlQueryRequest",
               opts: {
@@ -1209,8 +1209,8 @@
               }
             }, n);
           },
-          jn: function (t, n) {
-            let e = instaUtils.Et(t);
+          fetchMediaInfoByShortcode: function (t, n) {
+            let e = instaUtils.shortcodeToPk(t);
             chrome.runtime.sendMessage({
               action: "baseMediaInfoRequest",
               opts: {
@@ -1221,7 +1221,7 @@
               }
             }, n);
           },
-          Ln: function (t, n) {
+          fetchOwnerPostsGraphQL: function (t, n) {
             let e = {
               request_type: "owner",
               data: {
@@ -1234,19 +1234,19 @@
               opts: e
             }, n);
           },
-          Wn: function (t, n) {
+          fetchUserFeedAPI: function (t, n) {
             let e = {
               userName: t.userName,
               count: 12
             };
-            t.after && (e.after = t.after), apiClient.gn(e, n);
+            t.after && (e.after = t.after), apiClient.fetchUserFeed(e, n);
           },
           fetchUserClips: function (t, n) {
             apiClient.fetchUserClips(t, n);
           },
-          Gn: function (t, n) {
+          resolveMediaItemFromShortcode: function (t, n) {
             const e = void 0;
-            this.jn(t.shortcode, function (e) {
+            this.fetchMediaInfoByShortcode(t.shortcode, function (e) {
               if (!e || e.error) return n({
                 error: !0
               });
@@ -1255,7 +1255,7 @@
                 if (!o) throw new Error();
                 let s = o.owner && o.owner.username || null;
                 if (t.is_carousel) var r = o.carousel_media && o.carousel_media[t.carousel_position || 0];else r = o;
-                n(mediaItemFormatter.Zn(r, s));
+                n(mediaItemFormatter.formatRestMediaItem(r, s));
               } catch (t) {
                 return n({
                   error: !0
@@ -1263,7 +1263,7 @@
               }
             });
           },
-          En: function (t, n) {
+          getUserIdByUserName: function (t, n) {
             chrome.runtime.sendMessage({
               action: "getUserIdByUserName",
               userName: t
@@ -1276,7 +1276,7 @@
         constants = require(4);
       module.exports = function () {
         return {
-          Hn: function (t, n, e) {
+          formatGraphQLMediaItem: function (t, n, e) {
             let i,
               o,
               s,
@@ -1295,7 +1295,7 @@
               dimensions: t.dimensions
             };
           },
-          Jn: function (t, n, e) {
+          formatFeedMediaItem: function (t, n, e) {
             let i = null,
               o,
               s,
@@ -1336,7 +1336,7 @@
               }
             };
           },
-          Zn: function (t, n) {
+          formatRestMediaItem: function (t, n) {
             let e,
               o,
               s,
@@ -1797,7 +1797,7 @@
             let uId = await e.resolveUserId(t);
             if (!uId) {
               console.warn("[Downloader] Could not resolve userId for:", t);
-              bulkDownloadController.ee = !1;
+              bulkDownloadController.isDownloading = !1;
               return n(null);
             }
             let res = await e.fetchStories(uId, false);
@@ -1844,25 +1844,25 @@
         policyStorage = require(30);
       module.exports = function () {
         return {
-          oe: !1,
-          se: !1,
-          ae: !1,
-          ue: null,
-          ce: null,
-          fe: null,
-          le: null,
-          he: null,
-          de: [],
-          _e: 0,
-          me: 0,
-          ee: !1,
-          pe: {
-            ve: function (t) {
+          isAdvancedMode: !1,
+          isBulkRunning: !1,
+          isAborted: !1,
+          downloadPrefix: null,
+          cachedMediaCount: null,
+          userId: null,
+          userName: null,
+          nextCursor: null,
+          collectedMediaPages: [],
+          totalCountToFetch: 0,
+          fetchedCount: 0,
+          isDownloading: !1,
+          advancedParamsStorage: {
+            saveAdvancedParams: function (t) {
               chrome.storage.local.set({
                 advanced_params: t
               });
             },
-            we: function (t) {
+            getAdvancedParams: function (t) {
               let n = this;
               chrome.storage.local.get("advanced_params", function (e) {
                 e.advanced_params ? t(e.advanced_params) : n.ve({
@@ -1877,46 +1877,46 @@
               });
             }
           },
-          be: function () {
-            this.se = !1, this.ee = !1;
+          resetDownloadState: function () {
+            this.isBulkRunning = !1, this.isDownloading = !1;
           },
-          ye: function () {
+          showBulkDownloadButton: function () {
             let t = document.querySelector(".promaster_first_bulk_btn_wrap");
             if (t) return void (t.style.display = "block");
             let n = instaUtils.ct();
             if (!n) return;
-            if (this.ue = instaUtils.it(), !this.ue) {
+            if (this.downloadPrefix = instaUtils.it(), !this.downloadPrefix) {
               let t = document.querySelector("main header section h2");
-              this.ue = t && t.innerText;
+              this.downloadPrefix = t && t.innerText;
             }
-            if (!this.ue) return;
-            this.ce = null, this.fe = null, this.he = null, this.de = [], this.me = 0;
+            if (!this.downloadPrefix) return;
+            this.cachedMediaCount = null, this.userId = null, this.nextCursor = null, this.collectedMediaPages = [], this.fetchedCount = 0;
             let e = document.createElement("div");
             e.innerHTML = `\n\t\t\t\t<div class="promaster_first_bulk_btn_wrap">\n\t\t\t\t\t<div class="promaster_first_bulk_btn"></div>\n\t\t\t\t\t<div class="promaster_first_bulk_hint">${chrome.i18n.getMessage("bulk_download")}</div>\n\t\t\t\t</div>`, n.append(e.firstElementChild);
             const i = this;
             n.querySelector(".promaster_first_bulk_btn").addEventListener("click", () => {
               instaUtils.Y("check_policy_accept", t => {
-                t ? i.ge.call(i) : policyStorage.ve(() => {
-                  i.ge.bind(i);
+                t ? i.openBulkDownloadModal.call(i) : policyStorage.showPolicyModal(() => {
+                  i.openBulkDownloadModal.bind(i);
                 });
               });
             });
           },
-          ke: function () {
+          hideBulkDownloadButton: function () {
             let t = document.querySelector(".promaster_first_bulk_btn_wrap");
             t && (t.style.display = "none");
           },
-          ge: function () {
+          openBulkDownloadModal: function () {
             let t = this,
               n = new domHelpers();
             if (t.lastPath !== location.pathname) {
-              t.ce = null;
-              t.fe = null;
-              t.he = null;
+              t.cachedMediaCount = null;
+              t.userId = null;
+              t.nextCursor = null;
               t.Te = null;
-              t.de = [];
-              t.me = 0;
-              t.ue = instaUtils.it();
+              t.collectedMediaPages = [];
+              t.fetchedCount = 0;
+              t.downloadPrefix = instaUtils.it();
               t.lastPath = location.pathname;
             }
             let isReels = instaUtils.isReelsTab();
@@ -1925,82 +1925,82 @@
               width: 300,
               height: 300
             }), instaUtils.Y("checkBulkDownloadNow", function (e) {
-              if (e) return n.Se(chrome.i18n.getMessage("synchronous_bulk_download_denied"));
+              if (e) return n.showMessageModal(chrome.i18n.getMessage("synchronous_bulk_download_denied"));
               if (isReels) {
-                if (null === t.fe || !t.de || !t.de.length) {
-                  t.Ee(t.ue, function (res) {
+                if (null === t.userId || !t.collectedMediaPages || !t.collectedMediaPages.length) {
+                  t.fetchInitialUserMedia(t.downloadPrefix, function (res) {
                     if (res && !res.error && res.success) {
-                      t.he = res.after;
-                      t.fe = res.user_id;
+                      t.nextCursor = res.after;
+                      t.userId = res.user_id;
                       t.Te = res.has_next_page;
-                      let count = t.de ? t.de.length : 12;
-                      t.ce = count;
-                      t.Ae({
+                      let count = t.collectedMediaPages ? t.collectedMediaPages.length : 12;
+                      t.cachedMediaCount = count;
+                      t.showModalPrompt({
                         count: count,
                         hasNextPage: res.has_next_page,
                         isReels: true
                       });
                     } else {
-                      t.be();
-                      n.Se(chrome.i18n.getMessage("sww_error"));
+                      t.resetDownloadState();
+                      n.showMessageModal(chrome.i18n.getMessage("sww_error"));
                     }
                   });
                 } else {
-                  t.Ae({
-                    count: t.ce,
+                  t.showModalPrompt({
+                    count: t.cachedMediaCount,
                     hasNextPage: t.Te,
                     isReels: true
                   });
                 }
               } else {
-                null === t.ce || isNaN(t.ce) ? instaUtils.bt(t.ue, function (postCount) {
-                  t.Ee(t.ue, function (res) {
+                null === t.cachedMediaCount || isNaN(t.cachedMediaCount) ? instaUtils.bt(t.downloadPrefix, function (postCount) {
+                  t.fetchInitialUserMedia(t.downloadPrefix, function (res) {
                     if (res && !res.error && res.success) {
                       let finalCount = postCount !== null && !isNaN(postCount) ? postCount : res.totalCount || null;
-                      t.ce = finalCount;
-                      t.he = res.after;
-                      t.fe = res.user_id;
+                      t.cachedMediaCount = finalCount;
+                      t.nextCursor = res.after;
+                      t.userId = res.user_id;
                       t.Te = res.has_next_page;
-                      t.Ae({
+                      t.showModalPrompt({
                         count: finalCount,
                         hasNextPage: res.has_next_page,
                         isReels: false
                       });
                     } else {
-                      t.be();
-                      n.Se(chrome.i18n.getMessage("sww_error"));
+                      t.resetDownloadState();
+                      n.showMessageModal(chrome.i18n.getMessage("sww_error"));
                     }
                   });
-                }) : t.Ae({
-                  count: t.ce,
+                }) : t.showModalPrompt({
+                  count: t.cachedMediaCount,
                   hasNextPage: t.Te,
                   isReels: false
                 });
               }
             });
           },
-          Ae: function (t) {
+          showModalPrompt: function (t) {
             let n = this;
-            if (0 === t.count) return new domHelpers().Se(chrome.i18n.getMessage("no_media_found"));
+            if (0 === t.count) return new domHelpers().showMessageModal(chrome.i18n.getMessage("no_media_found"));
             instaUtils.Y("is_bulk_advanced", function (e) {
-              n.oe = e, e ? n.Ie(t) : n.xe(t);
+              n.isAdvancedMode = e, e ? n.showBasicBulkModal(t) : n.showAdvancedBulkModal(t);
             });
           },
-          Ie: function (t) {
+          showBasicBulkModal: function (t) {
             let n = this,
               isReels = n.isReels || t && t.isReels,
               hasNext = t && t.hasNextPage,
               hasKnownCount = t.count !== null && t.count !== undefined && !isNaN(parseInt(t.count)),
               parsedCount = hasKnownCount ? parseInt(t.count) : null,
-              displayCount = hasKnownCount ? parsedCount : (n.de && n.de.length || 12) + (hasNext ? "+" : ""),
+              displayCount = hasKnownCount ? parsedCount : (n.collectedMediaPages && n.collectedMediaPages.length || 12) + (hasNext ? "+" : ""),
               foundLabel = isReels ? chrome.i18n.getMessage("reels_found_on_page") || "reels found" : chrome.i18n.getMessage("files_found_on_page");
-            n.pe.we(function (e) {
+            n.advancedParamsStorage.we(function (e) {
               var o = `\n\t\t\t\t<div class="promaster_count_header">\n\t\t\t\t\t<span class="promaster_big_font_part">${displayCount}</span>\n\t\t\t\t\t<span class="promaster_small_font_part">&nbsp;${foundLabel}</span>\n\t\t\t\t</div>\n\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("bulk_advanced")}</div>\n\t\t\t\t<form class="promaster_bulk_form">\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<input type="checkbox" name="for_days">\n\t\t\t\t\t\t\t<span class="promaster_form_custom_checkbox"><span class="promaster_form_custom_checkbox_checked"></span></span>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("for_days")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t\t<input type="number" name="for_days_count" max="999" min="1" value="30" disabled>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block promaster_form_type_tabs">\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("all")}<input name="promaster_form_type_tab" type="radio" value="all"></label>\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("photo")}<input name="promaster_form_type_tab" type="radio" value="photo"></label>\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("video")}<input name="promaster_form_type_tab" type="radio" value="video"></label>\n\t\t\t\t\t</div>\n\t\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<div class="promaster_form_switch">\n\t\t\t\t\t\t\t\t<input type="checkbox" name="most_liked">\n\t\t\t\t\t\t\t\t<div class="promaster_form_switch_slider"></div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("most_liked")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t<input class="percent_count" name="most_liked_percent" type="number" max="100" min="1" value="50" disabled>\n\t\t\t\t\t\t<span class="promaster_form_number_input_note">%</span>\n\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<div class="promaster_form_switch">\n\t\t\t\t\t\t\t\t<input type="checkbox" name="most_viewed">\n\t\t\t\t\t\t\t\t<div class="promaster_form_switch_slider"></div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("most_viewed")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t\t<input class="percent_count" name="most_viewed_percent" type="number" max="100" min="1" value="50" disabled>\n\t\t\t\t\t\t\t<span class="promaster_form_number_input_note">%</span>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_btn_wrap">\n\t\t\t\t\t\t<button class="promaster_popup_dl_btn">${chrome.i18n.getMessage("download")}</button>\n\t\t\t\t\t</div>\n\t\t\t\t</form>\n\t\t\t\t<div class="promaster_form_advanced_switch"><span>${chrome.i18n.getMessage("hide_advanced")}</span></div>`;
-              new domHelpers().Pe(o), document.querySelector(".promaster_form_advanced_switch span").addEventListener("click", function () {
-                n.oe = !1, instaUtils.Y({
+              new domHelpers().showCustomModal(o), document.querySelector(".promaster_form_advanced_switch span").addEventListener("click", function () {
+                n.isAdvancedMode = !1, instaUtils.Y({
                   action: "bulk_advanced",
                   value: !1
-                }), n.xe(t);
+                }), n.showAdvancedBulkModal(t);
               });
               let s = document.querySelector(".promaster_bulk_form"),
                 a = s.querySelectorAll('[name="promaster_form_type_tab"]'),
@@ -2022,7 +2022,7 @@
                 }
               }
               document.querySelector(".promaster_popup_dl_btn").addEventListener("click", function (t) {
-                t.stopPropagation(), t.preventDefault(), n.pe.ve(e), n.Ue();
+                t.stopPropagation(), t.preventDefault(), n.advancedParamsStorage.ve(e), n.startBulkDownload();
               }), s.addEventListener("change", function (t) {
                 switch (t.target.name) {
                   case "for_days":
@@ -2068,7 +2068,7 @@
               m && (m.checked = !0, m.closest(".promaster_form_type_tab").classList.add("promaster_selected"));
             });
           },
-          xe: function (t) {
+          showAdvancedBulkModal: function (t) {
             let n = this,
               isReels = n.isReels || t && t.isReels,
               hasNext = t && t.hasNextPage,
@@ -2081,11 +2081,11 @@
               displayCount = parsedCount;
               defaultEnd = parsedCount > 1e3 ? 1e3 : parsedCount;
             } else if (hasNext) {
-              let loadedCount = n.de && n.de.length || 12;
+              let loadedCount = n.collectedMediaPages && n.collectedMediaPages.length || 12;
               displayCount = loadedCount + "+";
               defaultEnd = 1e3;
             } else {
-              let loadedCount = n.de && n.de.length || 1;
+              let loadedCount = n.collectedMediaPages && n.collectedMediaPages.length || 1;
               displayCount = loadedCount;
               defaultEnd = loadedCount;
             }
@@ -2093,13 +2093,13 @@
               startMax = Math.max(1, defaultEnd - 1).toString(),
               endMin = defaultEnd > 1 ? 2 : 1,
               a = `\n\t\t\t<div class="promaster_count_header">\n\t\t\t\t<span class="promaster_big_font_part">${displayCount}</span>\n\t\t\t\t<span class="promaster_small_font_part">&nbsp;${foundLabel}</span>\n\t\t\t</div>\n\t\t\t<form class="promaster_bulk_form">\n\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t<div class="promaster_form_number_input_wrap promaster_form_number_input_wrap_column">\n\t\t\t\t\t\t<span>${chrome.i18n.getMessage("from")}</span> \n\t\t\t\t\t\t<input id="promaster_dl_all_start" type="number" min="1" max="${startMax}" value="1">\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_form_number_input_wrap promaster_form_number_input_wrap_column">\n\t\t\t\t\t\t<span>${chrome.i18n.getMessage("to")}</span>\n\t\t\t\t\t\t<input id="promaster_dl_all_end" type="number" min="${endMin}" value="${defaultEnd}" max="${maxLimit}">\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div class="promaster_modal_btn_wrap">\n\t\t\t\t\t<button class="promaster_popup_dl_btn">${chrome.i18n.getMessage("download")}</button>\n\t\t\t\t</div>\n\t\t\t</form>\n\t\t\t<div class="promaster_form_advanced_switch"><span>${chrome.i18n.getMessage("bulk_advanced")}</span></div>`;
-            new domHelpers().Pe(a), document.querySelector(".promaster_form_advanced_switch span").addEventListener("click", function () {
-              n.oe = !0, instaUtils.Y({
+            new domHelpers().showCustomModal(a), document.querySelector(".promaster_form_advanced_switch span").addEventListener("click", function () {
+              n.isAdvancedMode = !0, instaUtils.Y({
                 action: "bulk_advanced",
                 value: !0
-              }), n.Ie(t);
+              }), n.showBasicBulkModal(t);
             }), document.querySelector(".promaster_popup_dl_btn").addEventListener("click", function (t) {
-              t.stopPropagation(), t.preventDefault(), n.Ue();
+              t.stopPropagation(), t.preventDefault(), n.startBulkDownload();
             });
             let u = document.querySelector("#promaster_dl_all_end"),
               c = document.querySelector("#promaster_dl_all_start");
@@ -2122,63 +2122,63 @@
               t.target.select();
             });
           },
-          Ue: function () {
+          startBulkDownload: function () {
             let t = this;
-            t.se || (t.se = !0, t.ae = !1, t.ee = !0, this.Re(function (n) {
-              t.Be(n, function (e) {
-                if (e.error) return t.be(), new domHelpers().Se(chrome.i18n.getMessage("sww_error"));
-                let r = t.Ce(n);
-                if (r && "not_match" === r.error && t.oe) return t.be(), new domHelpers().Se(chrome.i18n.getMessage("bulk_advanced_params_not_match"));
+            t.isBulkRunning || (t.isBulkRunning = !0, t.isAborted = !1, t.isDownloading = !0, this.getDownloadRangeOrAdvancedOptions(function (n) {
+              t.fetchRemainingMediaPages(n, function (e) {
+                if (e.error) return t.resetDownloadState(), new domHelpers().showMessageModal(chrome.i18n.getMessage("sww_error"));
+                let r = t.filterCollectedMedia(n);
+                if (r && "not_match" === r.error && t.isAdvancedMode) return t.resetDownloadState(), new domHelpers().showMessageModal(chrome.i18n.getMessage("bulk_advanced_params_not_match"));
                 taskQueue.startBulkDownloadZipStream({
                   files: r,
-                  filename_prefix: t.ue
+                  filename_prefix: t.downloadPrefix
                 }, t, n => {
-                  t.be(), n.err && new domHelpers().Se(chrome.i18n.getMessage("sww_error"));
+                  t.resetDownloadState(), n.err && new domHelpers().showMessageModal(chrome.i18n.getMessage("sww_error"));
                 });
               });
             }));
           },
-          Ee: function (t, n) {
+          fetchInitialUserMedia: function (t, n) {
             let e = this;
-            postDetailsResolver.En(t, function (r) {
+            postDetailsResolver.getUserIdByUserName(t, function (r) {
               if (!r) return n({
                 error: 1
               });
-              e.le = t, e.fe = r;
+              e.userName = t, e.userId = r;
               if (e.isReels) {
                 postDetailsResolver.fetchUserClips({
                   user_id: r
                 }, function (res) {
                   try {
-                    if (!res || !res.data) return e.be(), n({
+                    if (!res || !res.data) return e.resetDownloadState(), n({
                       error: 1
                     });
-                    e.Ne(res.data);
+                    e.extractMediaNodesFromGraphql(res.data);
                     let clipsConn = res.data.xdt_api__v1__clips__user__connection_v2;
                     let pageInfo = clipsConn && clipsConn.page_info;
                     return n({
                       success: 1,
-                      count: e.de.length,
+                      count: e.collectedMediaPages.length,
                       after: pageInfo && pageInfo.end_cursor,
                       has_next_page: pageInfo && pageInfo.has_next_page,
                       user_id: r
                     });
                   } catch (err) {
-                    return e.be(), n({
+                    return e.resetDownloadState(), n({
                       error: 1
                     });
                   }
                 });
               } else {
-                postDetailsResolver.Wn({
-                  userName: e.le,
+                postDetailsResolver.fetchUserFeedAPI({
+                  userName: e.userName,
                   user_id: r
                 }, function (res) {
                   try {
-                    if (!res || !res.data) return e.be(), n({
+                    if (!res || !res.data) return e.resetDownloadState(), n({
                       error: 1
                     });
-                    e.Ne(res.data);
+                    e.extractMediaNodesFromGraphql(res.data);
                     let timelineConn = res.data.xdt_api__v1__feed__user_timeline_graphql_connection || res.data.user && res.data.user.edge_owner_to_timeline_media;
                     let pageInfo = timelineConn && timelineConn.page_info;
                     let totalCount = null;
@@ -2194,14 +2194,14 @@
                     }
                     return n({
                       success: 1,
-                      count: totalCount || e.de.length,
+                      count: totalCount || e.collectedMediaPages.length,
                       totalCount: totalCount,
                       after: pageInfo && pageInfo.end_cursor,
                       has_next_page: pageInfo && pageInfo.has_next_page,
                       user_id: r
                     });
                   } catch (err) {
-                    return e.be(), n({
+                    return e.resetDownloadState(), n({
                       error: 1
                     });
                   }
@@ -2209,11 +2209,11 @@
               }
             });
           },
-          Ne: function (t) {
+          extractMediaNodesFromGraphql: function (t) {
             let n = t && (t.xdt_api__v1__clips__user__connection_v2 || t.xdt_api__v1__feed__user_timeline_graphql_connection || t.user && t.user.edge_owner_to_timeline_media) || null;
             if (!n || !n.edges || !n.page_info) return;
             let e = this;
-            e.Te = n.page_info.has_next_page, e.he = n.page_info.end_cursor;
+            e.Te = n.page_info.has_next_page, e.nextCursor = n.page_info.end_cursor;
             n.edges.forEach(function (edge) {
               let mediaNode = edge.node && edge.node.media ? edge.node.media : edge.node;
               if (!mediaNode) return;
@@ -2222,38 +2222,38 @@
                 loc = mediaNode.location && mediaNode.location.slug;
               if (mediaNode.carousel_media) {
                 mediaNode.carousel_media.forEach(function (o) {
-                  r = mediaItemFormatter.Jn(o, e.ue, loc);
+                  r = mediaItemFormatter.formatFeedMediaItem(o, e.downloadPrefix, loc);
                   r.taken_at_timestamp = mediaNode.taken_at_timestamp || mediaNode.taken_at;
                   r.likes_count = mediaNode.edge_media_preview_like && mediaNode.edge_media_preview_like.count || mediaNode.like_count || null;
                   r.video_view_count = mediaNode.video_view_count || mediaNode.play_count || mediaNode.view_count || null;
                   items.push(r);
                 });
               } else {
-                r = mediaItemFormatter.Jn(mediaNode, e.ue, loc);
+                r = mediaItemFormatter.formatFeedMediaItem(mediaNode, e.downloadPrefix, loc);
                 r.taken_at_timestamp = mediaNode.taken_at_timestamp || mediaNode.taken_at;
                 r.likes_count = mediaNode.edge_media_preview_like && mediaNode.edge_media_preview_like.count || mediaNode.like_count || null;
                 r.video_view_count = mediaNode.video_view_count || mediaNode.play_count || mediaNode.view_count || null;
                 items.push(r);
               }
-              e.de.push(items);
+              e.collectedMediaPages.push(items);
             });
             if (n.edges.length) {
               let lastEdge = n.edges[n.edges.length - 1];
               let lastNode = lastEdge.node && lastEdge.node.media ? lastEdge.node.media : lastEdge.node;
               if (lastNode) {
-                e.me = lastNode.taken_at_timestamp || lastNode.taken_at || 0;
+                e.fetchedCount = lastNode.taken_at_timestamp || lastNode.taken_at || 0;
               }
             }
           },
-          Ce: function (t) {
-            if (!this.oe) return instaUtils.A(this.de.slice(t.start - 1, t.end));
+          filterCollectedMedia: function (t) {
+            if (!this.isAdvancedMode) return instaUtils.A(this.collectedMediaPages.slice(t.start - 1, t.end));
             let n = [],
               e = [];
-            if (t.advanced_options.for_days && this.de.forEach(function (e) {
+            if (t.advanced_options.for_days && this.collectedMediaPages.forEach(function (e) {
               e.forEach(function (e) {
                 e.taken_at_timestamp >= instaUtils.S(t.advanced_options.for_days_count) && n.push(e);
               });
-            }), n.length || (n = instaUtils.A(this.de.slice(t.start - 1, t.end))), "all" !== t.advanced_options.media_type) {
+            }), n.length || (n = instaUtils.A(this.collectedMediaPages.slice(t.start - 1, t.end))), "all" !== t.advanced_options.media_type) {
               if (n.forEach(function (n) {
                 t.advanced_options.media_type === n.type && e.push(n);
               }), !e || !e.length) return {
@@ -2263,45 +2263,45 @@
             let i = null;
             return "video" === t.advanced_options.media_type && t.advanced_options.most_viewed ? (instaUtils.et(e, "video_view_count", !0), i = Math.ceil(e.length * t.advanced_options.most_viewed_percent / 100)) : t.advanced_options.most_liked && (instaUtils.et(e, "likes_count", !0), i = Math.ceil(e.length * t.advanced_options.most_liked_percent / 100)), i && (e = e.splice(0, i)), e;
           },
-          Be: function (t, n) {
+          fetchRemainingMediaPages: function (t, n) {
             let e = this,
               s = new domHelpers();
             function a() {
               return Math.floor(3e3 * Math.random());
             }
             function u(i) {
-              return e.Te && e.he ? !e.oe && e._e <= e.de.length || e.oe && (t.advanced_options.for_days && instaUtils.S(t.advanced_options.for_days_count) >= e.me || e.de.length > 5e3) ? n({
+              return e.Te && e.nextCursor ? !e.isAdvancedMode && e.totalCountToFetch <= e.collectedMediaPages.length || e.isAdvancedMode && (t.advanced_options.for_days && instaUtils.S(t.advanced_options.for_days_count) >= e.fetchedCount || e.collectedMediaPages.length > 5e3) ? n({
                 success: 1
-              }) : void (e.se && (i = i || 1, (e.isReels ? postDetailsResolver.fetchUserClips.bind(postDetailsResolver, {
-                user_id: e.fe,
-                after: e.he
-              }) : postDetailsResolver.Wn.bind(postDetailsResolver, {
-                userName: e.le,
-                user_id: e.fe,
-                after: e.he
+              }) : void (e.isBulkRunning && (i = i || 1, (e.isReels ? postDetailsResolver.fetchUserClips.bind(postDetailsResolver, {
+                user_id: e.userId,
+                after: e.nextCursor
+              }) : postDetailsResolver.fetchUserFeedAPI.bind(postDetailsResolver, {
+                userName: e.userName,
+                user_id: e.userId,
+                after: e.nextCursor
               }))(function (r) {
-                if (!r || r.error || !r.data) return i > 3 ? (e.be(), n({
+                if (!r || r.error || !r.data) return i > 3 ? (e.resetDownloadState(), n({
                   error: 1,
                   reason: "request_error"
                 })) : (i++, setTimeout(u.bind(e, i, n), a()));
                 try {
-                  e.Ne(r.data);
+                  e.extractMediaNodesFromGraphql(r.data);
                 } catch (t) {
-                  return e.be(), n({
+                  return e.resetDownloadState(), n({
                     error: 1,
                     reason: "media_list_adding_error"
                   });
                 }
                 let o;
-                if (e.oe) {
+                if (e.isAdvancedMode) {
                   if (t.advanced_options.for_days) {
                     let n;
-                    o = (Date.now() / 1e3 - e.me) / 86400 / t.advanced_options.for_days_count * 100;
+                    o = (Date.now() / 1e3 - e.fetchedCount) / 86400 / t.advanced_options.for_days_count * 100;
                   } else {
-                    let t = e.ce < 5e3 ? e.ce : 5e3;
-                    o = e.de.length / t * 100;
+                    let t = e.cachedMediaCount < 5e3 ? e.cachedMediaCount : 5e3;
+                    o = e.collectedMediaPages.length / t * 100;
                   }
-                } else o = e.de.length / e._e * 100;
+                } else o = e.collectedMediaPages.length / e.totalCountToFetch * 100;
                 s.qe({
                   progress: o
                 }), setTimeout(u.bind(e, !1, n), a());
@@ -2311,19 +2311,19 @@
             }
             s.qe({}, {
               cancelCallback: function () {
-                e.be();
+                e.resetDownloadState();
               }
             }), u();
           },
-          Re: function (t) {
-            if (this.oe) this.pe.we(function (n) {
+          getDownloadRangeOrAdvancedOptions: function (t) {
+            if (this.isAdvancedMode) this.advancedParamsStorage.we(function (n) {
               t({
                 advanced_options: n
               });
             });else {
               let n = document.querySelector("#promaster_dl_all_start").value,
                 e = document.querySelector("#promaster_dl_all_end").value;
-              isNaN(n) && (n = 1), isNaN(e) && (e = 1), this._e = e, t({
+              isNaN(n) && (n = 1), isNaN(e) && (e = 1), this.totalCountToFetch = e, t({
                 start: n,
                 end: e
               });
@@ -2338,18 +2338,18 @@
           Oe;
           ze;
           constructor() {
-            return this.ze = document.querySelector(".promaster_modal"), this.ze || (this.ze = document.createElement("div"), this.ze.className = "promaster_modal", this.ze.innerHTML = '<div class="promaster_modal_content"></div>', document.querySelector("body").appendChild(this.ze)), this;
+            return this.modalElement = document.querySelector(".promaster_modal"), this.modalElement || (this.modalElement = document.createElement("div"), this.modalElement.className = "promaster_modal", this.modalElement.innerHTML = '<div class="promaster_modal_content"></div>', document.querySelector("body").appendChild(this.modalElement)), this;
           }
           hideAndCleanup(t) {
-            this.ze.remove(), document.body.classList.remove("promaster-scroll-hidden"), "function" == typeof t && t();
+            this.modalElement.remove(), document.body.classList.remove("promaster-scroll-hidden"), "function" == typeof t && t();
           }
           je(t) {
             t.stopPropagation();
             let n = this;
-            t.target === this.ze && n.Me();
+            t.target === this.modalElement && n.hideAndCleanup();
           }
           showModal() {
-            this.ze.style.display = "block", document.body.classList.add("promaster-scroll-hidden"), setTimeout(function () {
+            this.modalElement.style.display = "block", document.body.classList.add("promaster-scroll-hidden"), setTimeout(function () {
               document.querySelector(".promaster_modal_content").style.opacity = "1";
             }, 100);
           }
@@ -2359,45 +2359,45 @@
           showPreparingLinksModal(t, n) {
             let e = this,
               r;
-            this.ze.querySelector("#bulk_preparing") || (document.removeEventListener("click", e.je), this.ze.innerHTML = `\n\t\t\t\t<div id="bulk_preparing" class="promaster_modal_content">\n\t\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("preparing_links")}...</div>\n\t\t\t\t\t<div class="promaster_modal_progress"><div class="promaster_modal_progressbar"></div>\n\t\t\t\t</div>\n\t\t\t\t<div class="promaster_modal_btn_wrap promaster_one_btn_inside">\n\t\t\t\t\t<button class="promaster_btn_cancel">${chrome.i18n.getMessage("btn_cancel")}</button>\n\t\t\t\t</div>`, this.Fe = this.ze.querySelector(".promaster_modal_progressbar"), this.ze.querySelector(".promaster_btn_cancel").addEventListener("click", function () {
-              e.Me(n && n.cancelCallback);
-            }), e.Le());
+            this.modalElement.querySelector("#bulk_preparing") || (document.removeEventListener("click", e.handleBackdropClick), this.modalElement.innerHTML = `\n\t\t\t\t<div id="bulk_preparing" class="promaster_modal_content">\n\t\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("preparing_links")}...</div>\n\t\t\t\t\t<div class="promaster_modal_progress"><div class="promaster_modal_progressbar"></div>\n\t\t\t\t</div>\n\t\t\t\t<div class="promaster_modal_btn_wrap promaster_one_btn_inside">\n\t\t\t\t\t<button class="promaster_btn_cancel">${chrome.i18n.getMessage("btn_cancel")}</button>\n\t\t\t\t</div>`, this.progressBarElement = this.modalElement.querySelector(".promaster_modal_progressbar"), this.modalElement.querySelector(".promaster_btn_cancel").addEventListener("click", function () {
+              e.hideAndCleanup(n && n.cancelCallback);
+            }), e.showModal());
             let i = t.progress || 0;
-            if (i && this.Fe) {
+            if (i && this.progressBarElement) {
               const t = 100;
-              i > t && (i = t), i > parseInt(this.Fe.style.width || 0) && (this.Fe.style.width = i + "%");
+              i > t && (i = t), i > parseInt(this.progressBarElement.style.width || 0) && (this.progressBarElement.style.width = i + "%");
             }
           }
           showDownloadingModal(t, n) {
             let e = this,
               r;
-            this.ze.querySelector("#bulk_downloading") || (document.removeEventListener("click", e.je), this.ze.innerHTML = `\n\t\t\t\t<div id="bulk_downloading" class="promaster_modal_content">\n\t\t\t\t\t<div class="promaster_modal_header">\n\t\t\t\t\t\t${chrome.i18n.getMessage("downloading")}...\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_count_header promaster_margin0">\n\t\t\t\t\t\t<span class="promaster_big_font_part"></span>\n\t\t\t\t\t\t<span class="promaster_small_font_part">&nbsp;/&nbsp;${t.total}</span>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_progress">\n\t\t\t\t\t\t<div class="promaster_modal_progressbar"></div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_btn_wrap promaster_align_right">\n\t\t\t\t\t\t<button class="promaster_btn_enough">${chrome.i18n.getMessage("btn_enough")}</button>\n\t\t\t\t\t\t<button class="promaster_btn_cancel cancel_download small_btn_cancel">${chrome.i18n.getMessage("btn_cancel")}</button>\n\t\t\t\t\t</div>\n\t\t\t\t</div>`, this.Oe = this.ze.querySelector(".promaster_big_font_part"), this.Fe = this.ze.querySelector(".promaster_modal_progressbar"), this.ze.querySelector(".promaster_btn_cancel").addEventListener("click", function () {
-              e.Me(n && n.cancelCallback);
-            }), this.ze.querySelector(".promaster_btn_enough").addEventListener("click", function () {
-              e.Me(n && n.enoughCallback);
-            }), e.Le());
+            this.modalElement.querySelector("#bulk_downloading") || (document.removeEventListener("click", e.handleBackdropClick), this.modalElement.innerHTML = `\n\t\t\t\t<div id="bulk_downloading" class="promaster_modal_content">\n\t\t\t\t\t<div class="promaster_modal_header">\n\t\t\t\t\t\t${chrome.i18n.getMessage("downloading")}...\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_count_header promaster_margin0">\n\t\t\t\t\t\t<span class="promaster_big_font_part"></span>\n\t\t\t\t\t\t<span class="promaster_small_font_part">&nbsp;/&nbsp;${t.total}</span>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_progress">\n\t\t\t\t\t\t<div class="promaster_modal_progressbar"></div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_btn_wrap promaster_align_right">\n\t\t\t\t\t\t<button class="promaster_btn_enough">${chrome.i18n.getMessage("btn_enough")}</button>\n\t\t\t\t\t\t<button class="promaster_btn_cancel cancel_download small_btn_cancel">${chrome.i18n.getMessage("btn_cancel")}</button>\n\t\t\t\t\t</div>\n\t\t\t\t</div>`, this.counterElement = this.modalElement.querySelector(".promaster_big_font_part"), this.progressBarElement = this.modalElement.querySelector(".promaster_modal_progressbar"), this.modalElement.querySelector(".promaster_btn_cancel").addEventListener("click", function () {
+              e.hideAndCleanup(n && n.cancelCallback);
+            }), this.modalElement.querySelector(".promaster_btn_enough").addEventListener("click", function () {
+              e.hideAndCleanup(n && n.enoughCallback);
+            }), e.showModal());
             let i = t.progress || 0;
             const o = 100;
-            this.Oe.innerText = t.done || 0, i > o && (i = o), this.Fe.style.width = i + "%";
+            this.counterElement.innerText = t.done || 0, i > o && (i = o), this.progressBarElement.style.width = i + "%";
           }
           showZippingModal(t) {
             let n = this,
               e;
-            if (n.ze.querySelector("#bulk_zipping") || (document.removeEventListener("click", n.je), n.ze.innerHTML = `\n\t\t\t<div id="bulk_zipping" class="promaster_modal_content">\n\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("zipping_files")}...</div>\n\t\t\t\t<div class="promaster_count_header"></div>\n\t\t\t\t<div class="promaster_modal_progress">\n\t\t\t\t\t<div class="promaster_modal_progressbar"></div>\n\t\t\t\t</div>\n\t\t\t</div>`, n.Fe = n.ze.querySelector(".promaster_modal_progressbar"), n.Oe = n.ze.querySelector(".promaster_big_font_part"), n.Le()), !n.Oe || !n.Fe) return;
+            if (n.modalElement.querySelector("#bulk_zipping") || (document.removeEventListener("click", n.handleBackdropClick), n.modalElement.innerHTML = `\n\t\t\t<div id="bulk_zipping" class="promaster_modal_content">\n\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("zipping_files")}...</div>\n\t\t\t\t<div class="promaster_count_header"></div>\n\t\t\t\t<div class="promaster_modal_progress">\n\t\t\t\t\t<div class="promaster_modal_progressbar"></div>\n\t\t\t\t</div>\n\t\t\t</div>`, n.progressBarElement = n.modalElement.querySelector(".promaster_modal_progressbar"), n.counterElement = n.modalElement.querySelector(".promaster_big_font_part"), n.showModal()), !n.counterElement || !n.progressBarElement) return;
             let r = t.progress || 0;
-            n.Oe.innerText = r + "%", n.Fe.style.width = r + "%";
+            n.counterElement.innerText = r + "%", n.progressBarElement.style.width = r + "%";
           }
           showMessageModal(t, n) {
             let e = this;
-            this.ze.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<span class="promaster_modal_close"></span>\n\t\t\t<div>${t}</div>\n\t\t</div>`, document.addEventListener("click", e.je), this.ze.querySelector(".promaster_modal_close").addEventListener("click", function () {
-              e.Me(n && n.cancelCallback);
-            }), e.Le();
+            this.modalElement.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<span class="promaster_modal_close"></span>\n\t\t\t<div>${t}</div>\n\t\t</div>`, document.addEventListener("click", e.handleBackdropClick), this.modalElement.querySelector(".promaster_modal_close").addEventListener("click", function () {
+              e.hideAndCleanup(n && n.cancelCallback);
+            }), e.showModal();
           }
           showErrorModal(t) {
             this.showMessageModal(`<div class="promaster_modal_message_container">${t}</div>`);
           }
           showLoaderModal(t) {
-            this.ze.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<div class="promaster_modal_loader" style="width:${t && t.width || 300}px;height:${t && t.height || 300}px;">\n\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t</div>\n\t\t</div>`, this.showModal();
+            this.modalElement.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<div class="promaster_modal_loader" style="width:${t && t.width || 300}px;height:${t && t.height || 300}px;">\n\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t</div>\n\t\t</div>`, this.showModal();
           }
         };
       }();
@@ -2408,8 +2408,8 @@
         ratingManager = require(29);
       module.exports = function () {
         return {
-          He: !1,
-          Je: function (t, n) {
+          isBusy: !1,
+          createTaskQueue: function (t, n) {
             let e = this,
               r = 0,
               i = 1,
@@ -2726,7 +2726,7 @@
                 });
               }
               downloadController.se = !1;
-              stateController.be();
+              stateController.resetDownloadState();
             }
             progressModal.showDownloadingModal({
               total: total,
@@ -2741,7 +2741,7 @@
                 stopped = !0;
                 abortController.abort();
                 downloadController.se = !1;
-                stateController.be();
+                stateController.resetDownloadState();
                 progressModal.closeModal();
                 "function" == typeof callback && callback({
                   cancelled: 1
@@ -2760,7 +2760,7 @@
                 }
               } catch (err) {
                 downloadController.se = !1;
-                stateController.be();
+                stateController.resetDownloadState();
                 progressModal.showErrorModal(chrome.i18n.getMessage("error_bulk"));
                 "function" == typeof callback && callback({
                   error: 1
@@ -6027,7 +6027,7 @@
     }, module => {
       module.exports = function () {
         return {
-          h() {
+          promptRateUs() {
             chrome.storage.local.get("rate_us", function (t) {
               if (t && t.rate_us) return;
               const n = document.createElement("div");
@@ -6066,7 +6066,7 @@
               });
             });
           },
-          Ve() {
+          markSuccessAction() {
             chrome.storage.local.get(["success_dw", "rate_us"], t => {
               if (t.rate_us) return;
               const n = (parseInt(t.success_dw) || 0) + 1;
@@ -6084,7 +6084,7 @@
         instaUtils = require(3);
       module.exports = function () {
         return {
-          ve(t) {
+          showPolicyModal(t) {
             if (document.querySelector(".promaster_policy_modal")) return;
             const n = chrome.i18n.getMessage("policyTitle"),
               e = `<a href="${"https://sites.google.com/view/downloader-promaster"}" target="_blank" class="link">${n}</a>`,
@@ -6120,31 +6120,31 @@
       };
       module.exports = function () {
         return {
-          Qe: null,
-          Xe: null,
-          Ke: null,
-          Ye: function () {
-            this.Qe = null, this.Xe = null, this.Ke = null;
+          mediaType: null,
+          mediaData: null,
+          destination: null,
+          resetSession: function () {
+            this.mediaType = null, this.mediaData = null, this.destination = null;
           },
-          tr: function (t) {
+          openUploadDialog: function (t) {
             if (!t || !t.file) return;
             let n = this;
-            n.Xe = {
+            n.mediaData = {
               type: t.file.type,
               size: t.file.size,
               file: t.file,
               dimensions: t.dimensions
-            }, t.file.type.includes("video") ? (n.Qe = 2, n.Xe.prev = t.prev) : n.Qe = 1, n.Ke = t.destination, n.nr();
+            }, t.file.type.includes("video") ? (n.mediaType = 2, n.mediaData.prev = t.prev) : n.mediaType = 1, n.destination = t.destination, n.showRepostModal();
           },
-          nr: function () {
+          showRepostModal: function () {
             let t = this;
-            if ("feed" === t.Ke) var n = chrome.i18n.getMessage("repost"),
-              e = `<textarea id="promaster_post_textarea" maxlength="2000" placeholder="${chrome.i18n.getMessage("write_caption")}" ></textarea>`;else "reels" === t.Ke ? (n = chrome.i18n.getMessage("repost_reels"), e = `<input type="checkbox" id="allow-share-feed" checked>${chrome.i18n.getMessage("allow_share_to_feed")}`) : (n = chrome.i18n.getMessage("repost_story"), e = "");
-            let u = t.Qe === 2 ? t.Xe.prev : t.Xe.file,
+            if ("feed" === t.destination) var n = chrome.i18n.getMessage("repost"),
+              e = `<textarea id="promaster_post_textarea" maxlength="2000" placeholder="${chrome.i18n.getMessage("write_caption")}" ></textarea>`;else "reels" === t.destination ? (n = chrome.i18n.getMessage("repost_reels"), e = `<input type="checkbox" id="allow-share-feed" checked>${chrome.i18n.getMessage("allow_share_to_feed")}`) : (n = chrome.i18n.getMessage("repost_story"), e = "");
+            let u = t.mediaType === 2 ? t.mediaData.prev : t.mediaData.file,
               c = `\n\t\t\t<div class="promaster_modal_header">${n}</div>\n\t\t\t<div class="promaster_repost_preview">\n\t\t\t\t<div>\n\t\t\t\t\t<img src="${URL.createObjectURL(u)}">\n\t\t\t\t</div>\n\t\t\t${e}\n\t\t\t</div>\n\t\t\t<div class="promaster_modal_btn_wrap">\n\t\t\t\t<button class="share_btn">${chrome.i18n.getMessage("share")}</button>\n\t\t\t</div>`;
-            new domHelpers().Pe(c, {
+            new domHelpers().showCustomModal(c, {
               cancelCallback: function () {
-                t.Ye();
+                t.resetSession();
               }
             });
             let f = document.querySelector("#allow-share-feed"),
@@ -6154,14 +6154,14 @@
             }), document.querySelector(".share_btn").addEventListener("click", function (n) {
               n.stopPropagation(), a();
               let e = document.querySelector("#promaster_post_textarea");
-              e && (t.Xe.caption = e.value, e.remove());
+              e && (t.mediaData.caption = e.value, e.remove());
               let r = {
-                media: t.Xe,
-                media_type: t.Qe,
-                destination: t.Ke
+                media: t.mediaData,
+                media_type: t.mediaType,
+                destination: t.destination
               };
-              "reels" === t.Ke && (r.shareReelsToFeed = l), uploadSessionManager.er(r, function (t) {
-                return t ? (ratingManager.Ve(), new domHelpers().Se(chrome.i18n.getMessage("reposted"))) : new domHelpers().Se(chrome.i18n.getMessage("repost_error"));
+              "reels" === t.destination && (r.shareReelsToFeed = l), uploadSessionManager.startUpload(r, function (t) {
+                return t ? (ratingManager.markSuccessAction(), new domHelpers().showMessageModal(chrome.i18n.getMessage("reposted"))) : new domHelpers().showMessageModal(chrome.i18n.getMessage("repost_error"));
               });
             });
           }
@@ -6174,36 +6174,36 @@
         uploadApiBridge = require(33);
       module.exports = function () {
         return {
-          rr: {
+          sessionState: {
             upload_id: null,
             media: null,
             media_type: null,
             destination: null
           },
-          er: function (t, n) {
+          startUpload: function (t, n) {
             let e = this;
-            e.rr = t, t.shareReelsToFeed && (e.ir = t.shareReelsToFeed), instaUtils.Y("getCookies", function (t) {
-              if (!t) return new domHelpers().Se(chrome.i18n.getMessage("not_authorized_upload_attempt"));
-              e.rr.upload_id = Date.now(), 2 === e.rr.media_type ? e.sr({
-                blob: e.rr.media.file
+            e.sessionState = t, t.shareReelsToFeed && (e.shareReelsToFeed = t.shareReelsToFeed), instaUtils.Y("getCookies", function (t) {
+              if (!t) return new domHelpers().showMessageModal(chrome.i18n.getMessage("not_authorized_upload_attempt"));
+              e.sessionState.upload_id = Date.now(), 2 === e.sessionState.media_type ? e.uploadVideo({
+                blob: e.sessionState.media.file
               }).then(function (t) {
                 if (!t) throw new Error();
-                return e.ar({
-                  blob: e.rr.media.prev
+                return e.uploadPhoto({
+                  blob: e.sessionState.media.prev
                 });
               }).then(function (t) {
                 if (!t) throw new Error();
-                return e.ur();
+                return e.configurePost();
               }).then(function (t) {
                 if (!t) throw new Error();
                 n(!0);
               }).catch(function (t) {
                 n(!1);
-              }) : e.ar({
-                blob: e.rr.media.file
+              }) : e.uploadPhoto({
+                blob: e.sessionState.media.file
               }).then(function (t) {
                 if (!t) throw new Error();
-                return e.ur();
+                return e.configurePost();
               }).then(function (t) {
                 if (!t) throw new Error();
                 n(!0);
@@ -6212,16 +6212,16 @@
               });
             });
           },
-          ar: function (t) {
+          uploadPhoto: function (t) {
             let n = this;
             return new Promise(function (e, r) {
               let i = new FileReader();
               i.readAsArrayBuffer(t.blob), i.onload = function (t) {
-                uploadApiBridge.Tn({
-                  upload_id: n.rr.upload_id,
-                  destination: n.rr.destination,
-                  media_height: n.rr.media.height,
-                  media_width: n.rr.media.width,
+                uploadApiBridge.uploadPhoto({
+                  upload_id: n.sessionState.upload_id,
+                  destination: n.sessionState.destination,
+                  media_height: n.sessionState.media.height,
+                  media_width: n.sessionState.media.width,
                   data: Array.from(new Uint8Array(i.result))
                 }, function (t) {
                   t ? e(t) : r();
@@ -6229,17 +6229,17 @@
               };
             });
           },
-          sr: function (t) {
+          uploadVideo: function (t) {
             let n = this;
             return new Promise(function (e, r) {
               let i = new FileReader();
               i.readAsArrayBuffer(t.blob), i.onload = function (t) {
-                uploadClient.qn({
-                  upload_id: n.rr.upload_id,
-                  destination: n.rr.destination,
-                  media_height: n.rr.media.height,
-                  media_width: n.rr.media.width,
-                  duration: n.rr.media.duration,
+                uploadClient.uploadVideoRequest({
+                  upload_id: n.sessionState.upload_id,
+                  destination: n.sessionState.destination,
+                  media_height: n.sessionState.media.height,
+                  media_width: n.sessionState.media.width,
+                  duration: n.sessionState.media.duration,
                   data: Array.from(new Uint8Array(i.result))
                 }, function (t) {
                   t ? e(t) : r();
@@ -6247,14 +6247,14 @@
               };
             });
           },
-          ur: function () {
+          configurePost: function () {
             let t = this;
             return new Promise(function (n, e) {
-              return uploadApiBridge.Fn({
-                upload_id: t.rr.upload_id,
-                caption: t.rr.media.caption || "",
-                destination: t.rr.destination,
-                shareReelsToFeed: t.ir || null
+              return uploadApiBridge.configurePost({
+                upload_id: t.sessionState.upload_id,
+                caption: t.sessionState.media.caption || "",
+                destination: t.sessionState.destination,
+                shareReelsToFeed: t.shareReelsToFeed || null
               }, function (t) {
                 t ? n(t) : e();
               });
@@ -6265,13 +6265,13 @@
     }, module => {
       module.exports = function () {
         return {
-          Tn: function (t, n) {
+          uploadPhoto: function (t, n) {
             chrome.runtime.sendMessage({
               action: "uploadPhotoRequest",
               opts: t
             }, n);
           },
-          Fn: function (t, n) {
+          configurePost: function (t, n) {
             chrome.runtime.sendMessage({
               action: "uploadPostConfigureRequest",
               opts: t
@@ -6283,7 +6283,7 @@
       const fileSaver = require(28);
       module.exports = function () {
         return {
-          cr: function (t, n) {
+          downloadDirect: function (t, n) {
             if (!t || !t.url) return n({
               err: !0
             });
@@ -6354,12 +6354,12 @@
         if (!i) return void uiController.buttonStateManager.hideButtonLoader(t.target);
         instaUtils.P(i.url, function (n) {
           "video" === i.type && i.prev ? instaUtils.P(i.prev, function (t) {
-            mediaUploadUI.tr({
+            mediaUploadUI.openUploadDialog({
               file: n,
               prev: t,
               destination: "story"
             });
-          }) : mediaUploadUI.tr({
+          }) : mediaUploadUI.openUploadDialog({
             file: n,
             destination: "story"
           }), uiController.buttonStateManager.hideButtonLoader(t.target);
@@ -6367,7 +6367,7 @@
       }) : uiController.buttonStateManager.hideButtonLoader(t.target);
     },
     handleMediaDownloadClick: function (t) {
-      if (bulkDownloadController.wr = !1, uiController.buttonStateManager.showButtonLoader(t.target), domExtractor.pauseStoryVideo(), instaUtils.V()) {
+      if (bulkDownloadController.isStoryDownloadActive = !1, uiController.buttonStateManager.showButtonLoader(t.target), domExtractor.pauseStoryVideo(), instaUtils.V()) {
         let n = location.pathname.match(new RegExp("stories\\/highlights\\/([^/]+)"));
         if (n = n && n[1], n) {
           let e = "highlight:" + n;
@@ -6416,7 +6416,7 @@
     },
     handleBulkDownloadClick: function (t) {
       instaUtils.Y("checkBulkDownloadNow", function (n) {
-        if (n) return new domHelpers().Se(chrome.i18n.getMessage("synchronous_bulk_download_denied"));
+        if (n) return new domHelpers().showMessageModal(chrome.i18n.getMessage("synchronous_bulk_download_denied"));
         function e(n, prefix) {
           uiController.buttonStateManager.hideButtonLoader(t.target);
           if (n && n.length) {
@@ -6425,13 +6425,13 @@
               files: n,
               filename_prefix: prefix || "stories"
             }, bulkDownloadController, function () {
-              bulkDownloadController.ee = !1;
+              bulkDownloadController.isDownloading = !1;
             });
           } else {
-            bulkDownloadController.ee = !1;
+            bulkDownloadController.isDownloading = !1;
           }
         }
-        if (bulkDownloadController.ee = !0, bulkDownloadController.wr = !1, uiController.buttonStateManager.showButtonLoader(t.target), domExtractor.pauseStoryVideo(), instaUtils.V()) {
+        if (bulkDownloadController.isDownloading = !0, bulkDownloadController.isStoryDownloadActive = !1, uiController.buttonStateManager.showButtonLoader(t.target), domExtractor.pauseStoryVideo(), instaUtils.V()) {
           let tLoc = location.pathname.match(new RegExp("stories\\/highlights\\/([^/]+)"));
           if (tLoc = tLoc && tLoc[1], tLoc) {
             let nReel = "highlight:" + tLoc;
@@ -6440,7 +6440,7 @@
               let reels = res && res.data && res.data.reels_media || connectionEdges && connectionEdges.map(e => e && e.node).filter(Boolean) || res && res.reels_media || [];
               if (!reels.length || !reels[0].items) {
                 uiController.buttonStateManager.hideButtonLoader(t.target);
-                return void (bulkDownloadController.ee = !1);
+                return void (bulkDownloadController.isDownloading = !1);
               }
               let reel = reels[0];
               let uname = reel.owner && reel.owner.username || reel.user && reel.user.username || (domExtractor.getStoryUsername ? domExtractor.getStoryUsername(reel, tLoc) : "highlight");
@@ -6454,7 +6454,7 @@
           }
         }
         let i = location.pathname.match(/stories\/([^\/]+)/);
-        i = i && i[1], i ? domExtractor.fetchUserStories(i, e) : (uiController.buttonStateManager.hideButtonLoader(t.target), bulkDownloadController.ee = !1);
+        i = i && i[1], i ? domExtractor.fetchUserStories(i, e) : (uiController.buttonStateManager.hideButtonLoader(t.target), bulkDownloadController.isDownloading = !1);
       });
     },
     handleReelsDownloadClick: function (t) {
@@ -6470,14 +6470,14 @@
           if ("video" === t.type && t.prev) {
             let i = t.isReels ? "reels" : "feed";
             instaUtils.P(t.prev, function (r) {
-              uiController.buttonStateManager.hideButtonLoader(n), mediaUploadUI.tr({
+              uiController.buttonStateManager.hideButtonLoader(n), mediaUploadUI.openUploadDialog({
                 file: e,
                 prev: r,
                 destination: i,
                 dimensions: t.dimensions
               });
             });
-          } else uiController.buttonStateManager.hideButtonLoader(n), mediaUploadUI.tr({
+          } else uiController.buttonStateManager.hideButtonLoader(n), mediaUploadUI.openUploadDialog({
             file: e,
             destination: "feed",
             dimensions: t.dimensions
@@ -6487,8 +6487,8 @@
     },
     executeDownload: function (t, n) {
       let e = this;
-      t && t.error && !t.hasAlt && (t = e.Sr(n)), octetStreamDownloader.cr(t, function (r) {
-        return r.err && t.hasAlt ? e.Er(t, n) : (e.mr.pr(n), r.err ? e.Ar(n) : void ratingManager.Ve());
+      t && t.error && !t.hasAlt && (t = e.Sr(n)), octetStreamDownloader.downloadDirect(t, function (r) {
+        return r.err && t.hasAlt ? e.Er(t, n) : (e.mr.pr(n), r.err ? e.Ar(n) : void ratingManager.markSuccessAction());
       });
     },
     Ir: function (t, n) {
@@ -6562,7 +6562,7 @@
           is_carousel: t.dataset.carousel,
           carousel_position: t.dataset.carousel ? instaUtils.st(e) : void 0
         };
-      "reels" === o.shortcode && (o.shortcode = instaUtils.U()), postDetailsResolver.Gn(o, function (t) {
+      "reels" === o.shortcode && (o.shortcode = instaUtils.U()), postDetailsResolver.resolveMediaItemFromShortcode(o, function (t) {
         return t.shortcode = o.shortcode, t.isCarousel = o.is_carousel, n(t);
       });
     },
@@ -6667,7 +6667,7 @@
         });
       }
       function u() {
-        instaUtils.q() && !(instaUtils.O() || instaUtils.L() || instaUtils.M()) && document.querySelectorAll('a[href*="/p/"],a[href*="/reel/"]').length > 1 ? bulkDownloadController.ye() : bulkDownloadController.ke(), instaUtils.W() ? t() : (e(), i());
+        instaUtils.q() && !(instaUtils.O() || instaUtils.L() || instaUtils.M()) && document.querySelectorAll('a[href*="/p/"],a[href*="/reel/"]').length > 1 ? bulkDownloadController.showBulkDownloadButton() : bulkDownloadController.hideBulkDownloadButton(), instaUtils.W() ? t() : (e(), i());
       }
       instaUtils.J() ? s() : (u(), setInterval(function () {
         u();
@@ -6676,7 +6676,7 @@
     initRuntimeMessageListener: function () {
       chrome.runtime.onMessage.addListener(function (t, n, e) {
         if (!t) return !1;
-        "string" == typeof t && "handshake" === t ? e(!0) : "string" == typeof t && "isBulkDownloadNowInTab" === t ? e(bulkDownloadController.ee) : "setDownloadingStatus" === t.action ? bulkDownloadController_2.ee = t.options.status : t.action;
+        "string" == typeof t && "handshake" === t ? e(!0) : "string" == typeof t && "isBulkDownloadNowInTab" === t ? e(bulkDownloadController.isDownloading) : "setDownloadingStatus" === t.action ? bulkDownloadController_2.ee = t.options.status : t.action;
       });
     },
     initClickEventInterceptors: function () {
@@ -6691,14 +6691,14 @@
         if (t.target.classList.contains(`${uiController.DOWNLOAD_BTN_CLASS}`) || t.target.parentElement && t.target.parentElement.classList.contains(uiController.DOWNLOAD_BTN_CLASS)) {
           if (n(t)) return;
           instaUtils.Y("check_policy_accept", n => {
-            n ? uiController.handleReelsDownloadClick.call(e, t) : policyStorage.ve(() => {
+            n ? uiController.handleReelsDownloadClick.call(e, t) : policyStorage.showPolicyModal(() => {
               uiController.handleReelsDownloadClick.call(e, t);
             });
           });
         } else if (t.target.classList.contains(uiController.REPOST_BTN_CLASS) || t.target.parentElement.classList.contains(uiController.REPOST_BTN_CLASS)) {
           if (n(t)) return;
           instaUtils.Y("check_policy_accept", n => {
-            n ? uiController.handleAudioDownloadClick.call(e, t) : policyStorage.ve(() => {
+            n ? uiController.handleAudioDownloadClick.call(e, t) : policyStorage.showPolicyModal(() => {
               uiController.handleAudioDownloadClick.call(e, t);
             });
           });
@@ -6706,21 +6706,21 @@
         if (!instaUtils.J()) if (t.target.classList.contains("promaster_ns_dl_btn") || t.target.parentElement.classList.contains("promaster_ns_dl_btn")) {
           if (n(t)) return;
           instaUtils.Y("check_policy_accept", n => {
-            n ? uiController.handleMediaDownloadClick.call(e, t) : policyStorage.ve(() => {
+            n ? uiController.handleMediaDownloadClick.call(e, t) : policyStorage.showPolicyModal(() => {
               uiController.handleMediaDownloadClick.call(e, t);
             });
           });
         } else if (t.target.classList.contains("promaster_ns_rp_btn") || t.target.parentElement.classList.contains("promaster_ns_rp_btn")) {
           if (n(t)) return;
           instaUtils.Y("check_policy_accept", n => {
-            n ? uiController.handleStoryDownloadClick.call(e, t) : policyStorage.ve(() => {
+            n ? uiController.handleStoryDownloadClick.call(e, t) : policyStorage.showPolicyModal(() => {
               uiController.handleStoryDownloadClick.call(e, t);
             });
           });
         } else if (t.target.classList.contains("promaster_ns_dl_all_btn") || t.target.parentElement.classList.contains("promaster_ns_dl_all_btn")) {
           if (n(t)) return;
           instaUtils.Y("check_policy_accept", n => {
-            n ? uiController.handleBulkDownloadClick.call(e, t) : policyStorage.ve(() => {
+            n ? uiController.handleBulkDownloadClick.call(e, t) : policyStorage.showPolicyModal(() => {
               uiController.handleBulkDownloadClick.call(e, t);
             });
           });
