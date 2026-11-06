@@ -2403,7 +2403,7 @@
       }();
     }, (module, exports, require) => {
       const domHelpers = require(25),
-        modalUiAndDownloadManager = require(27),
+        jszip = require(27),
         fileSaver = require(28),
         ratingManager = require(29);
       module.exports = function () {
@@ -2836,14 +2836,14 @@
           for (var o = void 0, s = 0; s < r.length; s++) i(r[s]);
           return i;
         }({
-          1: [function (t, n, e) {
-            var r = t("./utils"),
-              i = t("./support"),
+          1: [function (require, module, exports) {
+            var r = require("./utils"),
+              i = require("./support"),
               o = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-            e.encode = function (t) {
+            exports.encode = function (t) {
               for (var n, e, i, s, a, u, c, f = [], l = 0, h = t.length, d = h, _ = "string" !== r.getTypeOf(t); l < t.length;) d = h - l, i = _ ? (n = t[l++], e = l < h ? t[l++] : 0, l < h ? t[l++] : 0) : (n = t.charCodeAt(l++), e = l < h ? t.charCodeAt(l++) : 0, l < h ? t.charCodeAt(l++) : 0), s = n >> 2, a = (3 & n) << 4 | e >> 4, u = 1 < d ? (15 & e) << 2 | i >> 6 : 64, c = 2 < d ? 63 & i : 64, f.push(o.charAt(s) + o.charAt(a) + o.charAt(u) + o.charAt(c));
               return f.join("");
-            }, e.decode = function (t) {
+            }, exports.decode = function (t) {
               var n,
                 e,
                 r,
@@ -2864,15 +2864,15 @@
             "./support": 30,
             "./utils": 32
           }],
-          2: [function (t, n, e) {
-            var r = t("./external"),
-              i = t("./stream/DataWorker"),
-              o = t("./stream/DataLengthProbe"),
-              s = t("./stream/Crc32Probe");
+          2: [function (require, module, exports) {
+            var r = require("./external"),
+              i = require("./stream/DataWorker"),
+              o = require("./stream/DataLengthProbe"),
+              s = require("./stream/Crc32Probe");
             function a(t, n, e, r, i) {
               this.compressedSize = t, this.uncompressedSize = n, this.crc32 = e, this.compression = r, this.compressedContent = i;
             }
-            o = t("./stream/DataLengthProbe"), a.prototype = {
+            o = require("./stream/DataLengthProbe"), a.prototype = {
               getContentWorker: function () {
                 var t = new i(r.Promise.resolve(this.compressedContent)).pipe(this.compression.uncompressWorker()).pipe(new o("data_length")),
                   n = this;
@@ -2885,16 +2885,16 @@
               }
             }, a.createWorkerFrom = function (t, n, e) {
               return t.pipe(new s()).pipe(new o("uncompressedSize")).pipe(n.compressWorker(e)).pipe(new o("compressedSize")).withStreamInfo("compression", n);
-            }, n.exports = a;
+            }, module.exports = a;
           }, {
             "./external": 6,
             "./stream/Crc32Probe": 25,
             "./stream/DataLengthProbe": 26,
             "./stream/DataWorker": 27
           }],
-          3: [function (t, n, e) {
-            var r = t("./stream/GenericWorker");
-            e.STORE = {
+          3: [function (require, module, exports) {
+            var r = require("./stream/GenericWorker");
+            exports.STORE = {
               magic: "\0\0",
               compressWorker: function (t) {
                 return new r("STORE compression");
@@ -2902,13 +2902,13 @@
               uncompressWorker: function () {
                 return new r("STORE decompression");
               }
-            }, e.DEFLATE = t("./flate");
+            }, exports.DEFLATE = require("./flate");
           }, {
             "./flate": 7,
             "./stream/GenericWorker": 28
           }],
-          4: [function (t, n, e) {
-            var r = t("./utils"),
+          4: [function (require, module, exports) {
+            var r = require("./utils"),
               i = function () {
                 for (var t, n = [], e = 0; e < 256; e++) {
                   t = e;
@@ -2917,7 +2917,7 @@
                 }
                 return n;
               }();
-            n.exports = function (t, n) {
+            module.exports = function (t, n) {
               return void 0 !== t && t.length ? "string" !== r.getTypeOf(t) ? function (t, n, e, r) {
                 var o = i,
                   s = 0 + e;
@@ -2935,27 +2935,27 @@
           }, {
             "./utils": 32
           }],
-          5: [function (t, n, e) {
-            e.base64 = !1, e.binary = !1, e.dir = !1, e.createFolders = !0, e.date = null, e.compression = null, e.compressionOptions = null, e.comment = null, e.unixPermissions = null, e.dosPermissions = null;
+          5: [function (require, module, exports) {
+            exports.base64 = !1, exports.binary = !1, exports.dir = !1, exports.createFolders = !0, exports.date = null, exports.compression = null, exports.compressionOptions = null, exports.comment = null, exports.unixPermissions = null, exports.dosPermissions = null;
           }, {}],
-          6: [function (t, n, e) {
+          6: [function (require, module, exports) {
             var r = null;
-            r = "undefined" != typeof Promise ? Promise : t("lie"), n.exports = {
+            r = "undefined" != typeof Promise ? Promise : require("lie"), module.exports = {
               Promise: r
             };
           }, {
             lie: 37
           }],
-          7: [function (t, n, e) {
+          7: [function (require, module, exports) {
             var r = "undefined" != typeof Uint8Array && "undefined" != typeof Uint16Array && "undefined" != typeof Uint32Array,
-              i = t("pako"),
-              o = t("./utils"),
-              s = t("./stream/GenericWorker"),
+              i = require("pako"),
+              o = require("./utils"),
+              s = require("./stream/GenericWorker"),
               a = r ? "uint8array" : "array";
             function u(t, n) {
               s.call(this, "FlateWorker/" + t), this._pako = null, this._pakoAction = t, this._pakoOptions = n, this.meta = {};
             }
-            e.magic = "\b\0", o.inherits(u, s), u.prototype.processChunk = function (t) {
+            exports.magic = "\b\0", o.inherits(u, s), u.prototype.processChunk = function (t) {
               this.meta = t.meta, null === this._pako && this._createPako(), this._pako.push(o.transformTo(a, t.data), !1);
             }, u.prototype.flush = function () {
               s.prototype.flush.call(this), null === this._pako && this._createPako(), this._pako.push([], !0);
@@ -2973,9 +2973,9 @@
                   meta: t.meta
                 });
               };
-            }, e.compressWorker = function (t) {
+            }, exports.compressWorker = function (t) {
               return new u("Deflate", t);
-            }, e.uncompressWorker = function () {
+            }, exports.uncompressWorker = function () {
               return new u("Inflate", {});
             };
           }, {
@@ -2983,7 +2983,7 @@
             "./utils": 32,
             pako: 38
           }],
-          8: [function (t, n, e) {
+          8: [function (require, module, exports) {
             function r(t, n) {
               var e,
                 r = "";
@@ -3030,11 +3030,11 @@
                 dirRecord: c.CENTRAL_FILE_HEADER + r(R, 2) + B + r(b.length, 2) + "\0\0\0\0" + r(U, 4) + r(i, 4) + p + $ + b
               };
             }
-            var o = t("../utils"),
-              s = t("../stream/GenericWorker"),
-              a = t("../utf8"),
-              u = t("../crc32"),
-              c = t("../signature");
+            var o = require("../utils"),
+              s = require("../stream/GenericWorker"),
+              a = require("../utf8"),
+              u = require("../crc32"),
+              c = require("../signature");
             function f(t, n, e, r) {
               s.call(this, "ZipFileWorker"), this.bytesWritten = 0, this.zipComment = n, this.zipPlatform = e, this.encodeFileName = r, this.streamFiles = t, this.accumulate = !1, this.contentBuffer = [], this.dirRecords = [], this.currentSourceOffset = 0, this.entriesCount = 0, this.currentFile = null, this._sources = [];
             }
@@ -3121,7 +3121,7 @@
             }, f.prototype.lock = function () {
               s.prototype.lock.call(this);
               for (var t = this._sources, n = 0; n < t.length; n++) t[n].lock();
-            }, n.exports = f;
+            }, module.exports = f;
           }, {
             "../crc32": 4,
             "../signature": 23,
@@ -3129,10 +3129,10 @@
             "../utf8": 31,
             "../utils": 32
           }],
-          9: [function (t, n, e) {
-            var r = t("../compressions"),
-              i = t("./ZipFileWorker");
-            e.generateWorker = function (t, n, e) {
+          9: [function (require, module, exports) {
+            var r = require("../compressions"),
+              i = require("./ZipFileWorker");
+            exports.generateWorker = function (t, n, e) {
               var o = new i(n.streamFiles, e, n.platform, n.encodeFileName),
                 s = 0;
               try {
@@ -3165,7 +3165,7 @@
             "../compressions": 3,
             "./ZipFileWorker": 8
           }],
-          10: [function (t, n, e) {
+          10: [function (require, module, exports) {
             function r() {
               if (!(this instanceof r)) return new r();
               if (arguments.length) throw new Error("The constructor with parameters has been removed in JSZip 3.0, please check the upgrade guide.");
@@ -3175,9 +3175,9 @@
                 return t;
               };
             }
-            (r.prototype = t("./object")).loadAsync = t("./load"), r.support = t("./support"), r.defaults = t("./defaults"), r.version = "3.5.0", r.loadAsync = function (t, n) {
+            (r.prototype = require("./object")).loadAsync = require("./load"), r.support = require("./support"), r.defaults = require("./defaults"), r.version = "3.5.0", r.loadAsync = function (t, n) {
               return new r().loadAsync(t, n);
-            }, r.external = t("./external"), n.exports = r;
+            }, r.external = require("./external"), module.exports = r;
           }, {
             "./defaults": 5,
             "./external": 6,
@@ -3185,13 +3185,13 @@
             "./object": 15,
             "./support": 30
           }],
-          11: [function (t, n, e) {
-            var r = t("./utils"),
-              i = t("./external"),
-              o = t("./utf8"),
-              s = (r = t("./utils"), t("./zipEntries")),
-              a = t("./stream/Crc32Probe"),
-              u = t("./nodejsUtils");
+          11: [function (require, module, exports) {
+            var r = require("./utils"),
+              i = require("./external"),
+              o = require("./utf8"),
+              s = (r = require("./utils"), require("./zipEntries")),
+              a = require("./stream/Crc32Probe"),
+              u = require("./nodejsUtils");
             function c(t) {
               return new i.Promise(function (n, e) {
                 var r = t.decompressed.getContentWorker().pipe(new a());
@@ -3202,7 +3202,7 @@
                 }).resume();
               });
             }
-            n.exports = function (t, n) {
+            module.exports = function (t, n) {
               var e = this;
               return n = r.extend(n || {}, {
                 base64: !1,
@@ -3243,9 +3243,9 @@
             "./utils": 32,
             "./zipEntries": 33
           }],
-          12: [function (t, n, e) {
-            var r = t("../utils"),
-              i = t("../stream/GenericWorker");
+          12: [function (require, module, exports) {
+            var r = require("../utils"),
+              i = require("../stream/GenericWorker");
             function o(t, n) {
               i.call(this, "Nodejs stream input adapter for " + t), this._upstreamEnded = !1, this._bindStream(n);
             }
@@ -3267,13 +3267,13 @@
               return !!i.prototype.pause.call(this) && (this._stream.pause(), !0);
             }, o.prototype.resume = function () {
               return !!i.prototype.resume.call(this) && (this._upstreamEnded ? this.end() : this._stream.resume(), !0);
-            }, n.exports = o;
+            }, module.exports = o;
           }, {
             "../stream/GenericWorker": 28,
             "../utils": 32
           }],
-          13: [function (t, n, e) {
-            var r = t("readable-stream").Readable;
+          13: [function (require, module, exports) {
+            var r = require("readable-stream").Readable;
             function i(t, n, e) {
               r.call(this, n), this._helper = t;
               var i = this;
@@ -3285,15 +3285,15 @@
                 i.push(null);
               });
             }
-            t("../utils").inherits(i, r), i.prototype._read = function () {
+            require("../utils").inherits(i, r), i.prototype._read = function () {
               this._helper.resume();
-            }, n.exports = i;
+            }, module.exports = i;
           }, {
             "../utils": 32,
             "readable-stream": 16
           }],
-          14: [function (t, n, e) {
-            n.exports = {
+          14: [function (require, module, exports) {
+            module.exports = {
               isNode: "undefined" != typeof Buffer,
               newBufferFrom: function (t, n) {
                 if (Buffer.from && Buffer.from !== Uint8Array.from) return Buffer.from(t, n);
@@ -3313,7 +3313,7 @@
               }
             };
           }, {}],
-          15: [function (t, n, e) {
+          15: [function (require, module, exports) {
             function r(t, n, e) {
               var r,
                 i = o.getTypeOf(n),
@@ -3326,16 +3326,16 @@
               var w = new f(t, v, a);
               this.files[t] = w;
             }
-            var i = t("./utf8"),
-              o = t("./utils"),
-              s = t("./stream/GenericWorker"),
-              a = t("./stream/StreamHelper"),
-              u = t("./defaults"),
-              c = t("./compressedObject"),
-              f = t("./zipObject"),
-              l = t("./generate"),
-              h = t("./nodejsUtils"),
-              d = t("./nodejs/NodejsStreamInputAdapter"),
+            var i = require("./utf8"),
+              o = require("./utils"),
+              s = require("./stream/GenericWorker"),
+              a = require("./stream/StreamHelper"),
+              u = require("./defaults"),
+              c = require("./compressedObject"),
+              f = require("./zipObject"),
+              l = require("./generate"),
+              h = require("./nodejsUtils"),
+              d = require("./nodejs/NodejsStreamInputAdapter"),
               _ = function (t) {
                 "/" === t.slice(-1) && (t = t.substring(0, t.length - 1));
                 var n = t.lastIndexOf("/");
@@ -3428,7 +3428,7 @@
                 return (t = t || {}).type || (t.type = "nodebuffer"), this.generateInternalStream(t).toNodejsStream(n);
               }
             };
-            n.exports = w;
+            module.exports = w;
           }, {
             "./compressedObject": 2,
             "./defaults": 5,
@@ -3441,18 +3441,18 @@
             "./utils": 32,
             "./zipObject": 35
           }],
-          16: [function (t, n, e) {
-            n.exports = t("stream");
+          16: [function (require, module, exports) {
+            module.exports = require("stream");
           }, {
             stream: void 0
           }],
-          17: [function (t, n, e) {
-            var r = t("./DataReader");
+          17: [function (require, module, exports) {
+            var r = require("./DataReader");
             function i(t) {
               r.call(this, t);
               for (var n = 0; n < this.data.length; n++) t[n] = 255 & t[n];
             }
-            t("../utils").inherits(i, r), i.prototype.byteAt = function (t) {
+            require("../utils").inherits(i, r), i.prototype.byteAt = function (t) {
               return this.data[this.zero + t];
             }, i.prototype.lastIndexOfSignature = function (t) {
               for (var n = t.charCodeAt(0), e = t.charCodeAt(1), r = t.charCodeAt(2), i = t.charCodeAt(3), o = this.length - 4; 0 <= o; --o) if (this.data[o] === n && this.data[o + 1] === e && this.data[o + 2] === r && this.data[o + 3] === i) return o - this.zero;
@@ -3468,13 +3468,13 @@
               if (this.checkOffset(t), 0 === t) return [];
               var n = this.data.slice(this.zero + this.index, this.zero + this.index + t);
               return this.index += t, n;
-            }, n.exports = i;
+            }, module.exports = i;
           }, {
             "../utils": 32,
             "./DataReader": 18
           }],
-          18: [function (t, n, e) {
-            var r = t("../utils");
+          18: [function (require, module, exports) {
+            var r = require("../utils");
             function i(t) {
               this.data = t, this.length = t.length, this.index = 0, this.zero = 0;
             }
@@ -3508,30 +3508,30 @@
                 var t = this.readInt(4);
                 return new Date(Date.UTC(1980 + (t >> 25 & 127), (t >> 21 & 15) - 1, t >> 16 & 31, t >> 11 & 31, t >> 5 & 63, (31 & t) << 1));
               }
-            }, n.exports = i;
+            }, module.exports = i;
           }, {
             "../utils": 32
           }],
-          19: [function (t, n, e) {
-            var r = t("./Uint8ArrayReader");
+          19: [function (require, module, exports) {
+            var r = require("./Uint8ArrayReader");
             function i(t) {
               r.call(this, t);
             }
-            t("../utils").inherits(i, r), i.prototype.readData = function (t) {
+            require("../utils").inherits(i, r), i.prototype.readData = function (t) {
               this.checkOffset(t);
               var n = this.data.slice(this.zero + this.index, this.zero + this.index + t);
               return this.index += t, n;
-            }, n.exports = i;
+            }, module.exports = i;
           }, {
             "../utils": 32,
             "./Uint8ArrayReader": 21
           }],
-          20: [function (t, n, e) {
-            var r = t("./DataReader");
+          20: [function (require, module, exports) {
+            var r = require("./DataReader");
             function i(t) {
               r.call(this, t);
             }
-            t("../utils").inherits(i, r), i.prototype.byteAt = function (t) {
+            require("../utils").inherits(i, r), i.prototype.byteAt = function (t) {
               return this.data.charCodeAt(this.zero + t);
             }, i.prototype.lastIndexOfSignature = function (t) {
               return this.data.lastIndexOf(t) - this.zero;
@@ -3541,33 +3541,33 @@
               this.checkOffset(t);
               var n = this.data.slice(this.zero + this.index, this.zero + this.index + t);
               return this.index += t, n;
-            }, n.exports = i;
+            }, module.exports = i;
           }, {
             "../utils": 32,
             "./DataReader": 18
           }],
-          21: [function (t, n, e) {
-            var r = t("./ArrayReader");
+          21: [function (require, module, exports) {
+            var r = require("./ArrayReader");
             function i(t) {
               r.call(this, t);
             }
-            t("../utils").inherits(i, r), i.prototype.readData = function (t) {
+            require("../utils").inherits(i, r), i.prototype.readData = function (t) {
               if (this.checkOffset(t), 0 === t) return new Uint8Array(0);
               var n = this.data.subarray(this.zero + this.index, this.zero + this.index + t);
               return this.index += t, n;
-            }, n.exports = i;
+            }, module.exports = i;
           }, {
             "../utils": 32,
             "./ArrayReader": 17
           }],
-          22: [function (t, n, e) {
-            var r = t("../utils"),
-              i = t("../support"),
-              o = t("./ArrayReader"),
-              s = t("./StringReader"),
-              a = t("./NodeBufferReader"),
-              u = t("./Uint8ArrayReader");
-            n.exports = function (t) {
+          22: [function (require, module, exports) {
+            var r = require("../utils"),
+              i = require("../support"),
+              o = require("./ArrayReader"),
+              s = require("./StringReader"),
+              a = require("./NodeBufferReader"),
+              u = require("./Uint8ArrayReader");
+            module.exports = function (t) {
               var n = r.getTypeOf(t);
               return r.checkSupport(n), "string" !== n || i.uint8array ? "nodebuffer" === n ? new a(t) : i.uint8array ? new u(r.transformTo("uint8array", t)) : new o(r.transformTo("array", t)) : new s(t);
             };
@@ -3579,12 +3579,12 @@
             "./StringReader": 20,
             "./Uint8ArrayReader": 21
           }],
-          23: [function (t, n, e) {
-            e.LOCAL_FILE_HEADER = "PK", e.CENTRAL_FILE_HEADER = "PK", e.CENTRAL_DIRECTORY_END = "PK", e.ZIP64_CENTRAL_DIRECTORY_LOCATOR = "PK", e.ZIP64_CENTRAL_DIRECTORY_END = "PK", e.DATA_DESCRIPTOR = "PK\b";
+          23: [function (require, module, exports) {
+            exports.LOCAL_FILE_HEADER = "PK", exports.CENTRAL_FILE_HEADER = "PK", exports.CENTRAL_DIRECTORY_END = "PK", exports.ZIP64_CENTRAL_DIRECTORY_LOCATOR = "PK", exports.ZIP64_CENTRAL_DIRECTORY_END = "PK", exports.DATA_DESCRIPTOR = "PK\b";
           }, {}],
-          24: [function (t, n, e) {
-            var r = t("./GenericWorker"),
-              i = t("../utils");
+          24: [function (require, module, exports) {
+            var r = require("./GenericWorker"),
+              i = require("../utils");
             function o(t) {
               r.call(this, "ConvertWorker to " + t), this.destType = t;
             }
@@ -3593,28 +3593,28 @@
                 data: i.transformTo(this.destType, t.data),
                 meta: t.meta
               });
-            }, n.exports = o;
+            }, module.exports = o;
           }, {
             "../utils": 32,
             "./GenericWorker": 28
           }],
-          25: [function (t, n, e) {
-            var r = t("./GenericWorker"),
-              i = t("../crc32");
+          25: [function (require, module, exports) {
+            var r = require("./GenericWorker"),
+              i = require("../crc32");
             function o() {
               r.call(this, "Crc32Probe"), this.withStreamInfo("crc32", 0);
             }
-            t("../utils").inherits(o, r), o.prototype.processChunk = function (t) {
+            require("../utils").inherits(o, r), o.prototype.processChunk = function (t) {
               this.streamInfo.crc32 = i(t.data, this.streamInfo.crc32 || 0), this.push(t);
-            }, n.exports = o;
+            }, module.exports = o;
           }, {
             "../crc32": 4,
             "../utils": 32,
             "./GenericWorker": 28
           }],
-          26: [function (t, n, e) {
-            var r = t("../utils"),
-              i = t("./GenericWorker");
+          26: [function (require, module, exports) {
+            var r = require("../utils"),
+              i = require("./GenericWorker");
             function o(t) {
               i.call(this, "DataLengthProbe for " + t), this.propName = t, this.withStreamInfo(t, 0);
             }
@@ -3624,14 +3624,14 @@
                 this.streamInfo[this.propName] = n + t.data.length;
               }
               i.prototype.processChunk.call(this, t);
-            }, n.exports = o;
+            }, module.exports = o;
           }, {
             "../utils": 32,
             "./GenericWorker": 28
           }],
-          27: [function (t, n, e) {
-            var r = t("../utils"),
-              i = t("./GenericWorker");
+          27: [function (require, module, exports) {
+            var r = require("../utils"),
+              i = require("./GenericWorker");
             function o(t) {
               i.call(this, "DataWorker");
               var n = this;
@@ -3669,12 +3669,12 @@
                   percent: this.max ? this.index / this.max * 100 : 0
                 }
               });
-            }, n.exports = o;
+            }, module.exports = o;
           }, {
             "../utils": 32,
             "./GenericWorker": 28
           }],
-          28: [function (t, n, e) {
+          28: [function (require, module, exports) {
             function r(t) {
               this.name = t || "default", this.streamInfo = {}, this.generatedError = null, this.extraStreamInfo = {}, this.isPaused = !0, this.isFinished = !1, this.isLocked = !1, this._listeners = {
                 data: [],
@@ -3749,18 +3749,18 @@
                 var t = "Worker " + this.name;
                 return this.previous ? this.previous + " -> " + t : t;
               }
-            }, n.exports = r;
+            }, module.exports = r;
           }, {}],
-          29: [function (t, n, e) {
-            var r = t("../utils"),
-              i = t("./ConvertWorker"),
-              o = t("./GenericWorker"),
-              s = t("../base64"),
-              a = t("../support"),
-              u = t("../external"),
+          29: [function (require, module, exports) {
+            var r = require("../utils"),
+              i = require("./ConvertWorker"),
+              o = require("./GenericWorker"),
+              s = require("../base64"),
+              a = require("../support"),
+              u = require("../external"),
               c = null;
             if (a.nodestream) try {
-              c = t("../nodejs/NodejsStreamOutputAdapter");
+              c = require("../nodejs/NodejsStreamOutputAdapter");
             } catch (t) {}
             function f(t, n) {
               return new u.Promise(function (e, i) {
@@ -3851,7 +3851,7 @@
                   objectMode: "nodebuffer" !== this._outputType
                 }, t);
               }
-            }, n.exports = l;
+            }, module.exports = l;
           }, {
             "../base64": 1,
             "../external": 6,
@@ -3861,39 +3861,39 @@
             "./ConvertWorker": 24,
             "./GenericWorker": 28
           }],
-          30: [function (t, n, e) {
-            if (e.base64 = !0, e.array = !0, e.string = !0, e.arraybuffer = "undefined" != typeof ArrayBuffer && "undefined" != typeof Uint8Array, e.nodebuffer = "undefined" != typeof Buffer, e.uint8array = "undefined" != typeof Uint8Array, "undefined" == typeof ArrayBuffer) e.blob = !1;else {
+          30: [function (require, module, exports) {
+            if (exports.base64 = !0, exports.array = !0, exports.string = !0, exports.arraybuffer = "undefined" != typeof ArrayBuffer && "undefined" != typeof Uint8Array, exports.nodebuffer = "undefined" != typeof Buffer, exports.uint8array = "undefined" != typeof Uint8Array, "undefined" == typeof ArrayBuffer) exports.blob = !1;else {
               var r = new ArrayBuffer(0);
               try {
-                e.blob = 0 === new Blob([r], {
+                exports.blob = 0 === new Blob([r], {
                   type: "application/zip"
                 }).size;
               } catch (t) {
                 try {
                   var i = new (self.BlobBuilder || self.WebKitBlobBuilder || self.MozBlobBuilder || self.MSBlobBuilder)();
-                  i.append(r), e.blob = 0 === i.getBlob("application/zip").size;
+                  i.append(r), exports.blob = 0 === i.getBlob("application/zip").size;
                 } catch (t) {
-                  e.blob = !1;
+                  exports.blob = !1;
                 }
               }
             }
             try {
-              e.nodestream = !!t("readable-stream").Readable;
+              exports.nodestream = !!require("readable-stream").Readable;
             } catch (t) {
-              e.nodestream = !1;
+              exports.nodestream = !1;
             }
           }, {
             "readable-stream": 16
           }],
-          31: [function (t, n, e) {
-            for (var r = t("./utils"), i = t("./support"), o = t("./nodejsUtils"), s = t("./stream/GenericWorker"), a = new Array(256), u = 0; u < 256; u++) a[u] = 252 <= u ? 6 : 248 <= u ? 5 : 240 <= u ? 4 : 224 <= u ? 3 : 192 <= u ? 2 : 1;
+          31: [function (require, module, exports) {
+            for (var r = require("./utils"), i = require("./support"), o = require("./nodejsUtils"), s = require("./stream/GenericWorker"), a = new Array(256), u = 0; u < 256; u++) a[u] = 252 <= u ? 6 : 248 <= u ? 5 : 240 <= u ? 4 : 224 <= u ? 3 : 192 <= u ? 2 : 1;
             function c() {
               s.call(this, "utf-8 decode"), this.leftOver = null;
             }
             function f() {
               s.call(this, "utf-8 encode");
             }
-            a[254] = a[254] = 1, e.utf8encode = function (t) {
+            a[254] = a[254] = 1, exports.utf8encode = function (t) {
               return i.nodebuffer ? o.newBufferFrom(t, "utf-8") : function (t) {
                 var n,
                   e,
@@ -3906,7 +3906,7 @@
                 for (n = i.uint8array ? new Uint8Array(u) : new Array(u), o = s = 0; s < u; o++) 55296 == (64512 & (e = t.charCodeAt(o))) && o + 1 < a && 56320 == (64512 & (r = t.charCodeAt(o + 1))) && (e = 65536 + (e - 55296 << 10) + (r - 56320), o++), e < 128 ? n[s++] = e : (e < 2048 ? n[s++] = 192 | e >>> 6 : (e < 65536 ? n[s++] = 224 | e >>> 12 : (n[s++] = 240 | e >>> 18, n[s++] = 128 | e >>> 12 & 63), n[s++] = 128 | e >>> 6 & 63), n[s++] = 128 | 63 & e);
                 return n;
               }(t);
-            }, e.utf8decode = function (t) {
+            }, exports.utf8decode = function (t) {
               return i.nodebuffer ? r.transformTo("nodebuffer", t).toString("utf-8") : function (t) {
                 var n,
                   e,
@@ -3936,32 +3936,32 @@
                 }(n),
                 u = n;
               s !== n.length && (i.uint8array ? (u = n.subarray(0, s), this.leftOver = n.subarray(s, n.length)) : (u = n.slice(0, s), this.leftOver = n.slice(s, n.length))), this.push({
-                data: e.utf8decode(u),
+                data: exports.utf8decode(u),
                 meta: t.meta
               });
             }, c.prototype.flush = function () {
               this.leftOver && this.leftOver.length && (this.push({
-                data: e.utf8decode(this.leftOver),
+                data: exports.utf8decode(this.leftOver),
                 meta: {}
               }), this.leftOver = null);
-            }, e.Utf8DecodeWorker = c, r.inherits(f, s), f.prototype.processChunk = function (t) {
+            }, exports.Utf8DecodeWorker = c, r.inherits(f, s), f.prototype.processChunk = function (t) {
               this.push({
-                data: e.utf8encode(t.data),
+                data: exports.utf8encode(t.data),
                 meta: t.meta
               });
-            }, e.Utf8EncodeWorker = f;
+            }, exports.Utf8EncodeWorker = f;
           }, {
             "./nodejsUtils": 14,
             "./stream/GenericWorker": 28,
             "./support": 30,
             "./utils": 32
           }],
-          32: [function (t, n, e) {
-            var r = t("./support"),
-              i = t("./base64"),
-              o = t("./nodejsUtils"),
-              s = t("set-immediate-shim"),
-              a = t("./external");
+          32: [function (require, module, exports) {
+            var r = require("./support"),
+              i = require("./base64"),
+              o = require("./nodejsUtils"),
+              s = require("set-immediate-shim"),
+              a = require("./external");
             function u(t) {
               return t;
             }
@@ -3969,8 +3969,8 @@
               for (var e = 0; e < t.length; ++e) n[e] = 255 & t.charCodeAt(e);
               return n;
             }
-            e.newBlob = function (t, n) {
-              e.checkSupport("blob");
+            exports.newBlob = function (t, n) {
+              exports.checkSupport("blob");
               try {
                 return new Blob([t], {
                   type: n
@@ -4016,7 +4016,7 @@
             };
             function l(t) {
               var n = 65536,
-                r = e.getTypeOf(t),
+                r = exports.getTypeOf(t),
                 i = !0;
               if ("uint8array" === r ? i = f.applyCanBeUsed.uint8array : "nodebuffer" === r && (i = f.applyCanBeUsed.nodebuffer), i) for (; 1 < n;) try {
                 return f.stringifyByChunk(t, r, n);
@@ -4029,7 +4029,7 @@
               for (var e = 0; e < t.length; e++) n[e] = t[e];
               return n;
             }
-            e.applyFromCharCode = l;
+            exports.applyFromCharCode = l;
             var d = {};
             d.string = {
               string: u,
@@ -4095,35 +4095,35 @@
                 return h(t, new Uint8Array(t.length));
               },
               nodebuffer: u
-            }, e.transformTo = function (t, n) {
+            }, exports.transformTo = function (t, n) {
               if (n = n || "", !t) return n;
-              e.checkSupport(t);
-              var r = e.getTypeOf(n);
+              exports.checkSupport(t);
+              var r = exports.getTypeOf(n);
               return d[r][t](n);
-            }, e.getTypeOf = function (t) {
+            }, exports.getTypeOf = function (t) {
               return "string" == typeof t ? "string" : "[object Array]" === Object.prototype.toString.call(t) ? "array" : r.nodebuffer && o.isBuffer(t) ? "nodebuffer" : r.uint8array && t instanceof Uint8Array ? "uint8array" : r.arraybuffer && t instanceof ArrayBuffer ? "arraybuffer" : void 0;
-            }, e.checkSupport = function (t) {
+            }, exports.checkSupport = function (t) {
               if (!r[t.toLowerCase()]) throw new Error(t + " is not supported by this platform");
-            }, e.MAX_VALUE_16BITS = 65535, e.MAX_VALUE_32BITS = -1, e.pretty = function (t) {
+            }, exports.MAX_VALUE_16BITS = 65535, exports.MAX_VALUE_32BITS = -1, exports.pretty = function (t) {
               var n,
                 e,
                 r = "";
               for (e = 0; e < (t || "").length; e++) r += "\\x" + ((n = t.charCodeAt(e)) < 16 ? "0" : "") + n.toString(16).toUpperCase();
               return r;
-            }, e.delay = function (t, n, e) {
+            }, exports.delay = function (t, n, e) {
               s(function () {
                 t.apply(e || null, n || []);
               });
-            }, e.inherits = function (t, n) {
+            }, exports.inherits = function (t, n) {
               function e() {}
               e.prototype = n.prototype, t.prototype = new e();
-            }, e.extend = function () {
+            }, exports.extend = function () {
               var t,
                 n,
                 e = {};
               for (t = 0; t < arguments.length; t++) for (n in arguments[t]) arguments[t].hasOwnProperty(n) && void 0 === e[n] && (e[n] = arguments[t][n]);
               return e;
-            }, e.prepareContent = function (t, n, o, s, u) {
+            }, exports.prepareContent = function (t, n, o, s, u) {
               return a.Promise.resolve(n).then(function (t) {
                 return r.blob && (t instanceof Blob || -1 !== ["[object File]", "[object Blob]"].indexOf(Object.prototype.toString.call(t))) && "undefined" != typeof FileReader ? new a.Promise(function (n, e) {
                   var r = new FileReader();
@@ -4134,8 +4134,8 @@
                   }, r.readAsArrayBuffer(t);
                 }) : t;
               }).then(function (n) {
-                var f = e.getTypeOf(n);
-                return f ? ("arraybuffer" === f ? n = e.transformTo("uint8array", n) : "string" === f && (u ? n = i.decode(n) : o && !0 !== s && (n = function (t) {
+                var f = exports.getTypeOf(n);
+                return f ? ("arraybuffer" === f ? n = exports.transformTo("uint8array", n) : "string" === f && (u ? n = i.decode(n) : o && !0 !== s && (n = function (t) {
                   return c(t, r.uint8array ? new Uint8Array(t.length) : new Array(t.length));
                 }(n))), n) : a.Promise.reject(new Error("Can't read the data of '" + t + "'. Is it in a supported JavaScript type (String, Blob, ArrayBuffer, etc) ?"));
               });
@@ -4147,12 +4147,12 @@
             "./support": 30,
             "set-immediate-shim": 54
           }],
-          33: [function (t, n, e) {
-            var r = t("./reader/readerFor"),
-              i = t("./utils"),
-              o = t("./signature"),
-              s = t("./zipEntry"),
-              a = (t("./utf8"), t("./support"));
+          33: [function (require, module, exports) {
+            var r = require("./reader/readerFor"),
+              i = require("./utils"),
+              o = require("./signature"),
+              s = require("./zipEntry"),
+              a = (require("./utf8"), require("./support"));
             function u(t) {
               this.files = [], this.loadOptions = t;
             }
@@ -4220,7 +4220,7 @@
               load: function (t) {
                 this.prepareReader(t), this.readEndOfCentral(), this.readCentralDir(), this.readLocalFiles();
               }
-            }, n.exports = u;
+            }, module.exports = u;
           }, {
             "./reader/readerFor": 22,
             "./signature": 23,
@@ -4229,14 +4229,14 @@
             "./utils": 32,
             "./zipEntry": 34
           }],
-          34: [function (t, n, e) {
-            var r = t("./reader/readerFor"),
-              i = t("./utils"),
-              o = t("./compressedObject"),
-              s = t("./crc32"),
-              a = t("./utf8"),
-              u = t("./compressions"),
-              c = t("./support");
+          34: [function (require, module, exports) {
+            var r = require("./reader/readerFor"),
+              i = require("./utils"),
+              o = require("./compressedObject"),
+              s = require("./crc32"),
+              a = require("./utf8"),
+              u = require("./compressions"),
+              c = require("./support");
             function f(t, n) {
               this.options = t, this.loadOptions = n;
             }
@@ -4316,7 +4316,7 @@
                 }
                 return null;
               }
-            }, n.exports = f;
+            }, module.exports = f;
           }, {
             "./compressedObject": 2,
             "./compressions": 3,
@@ -4326,18 +4326,18 @@
             "./utf8": 31,
             "./utils": 32
           }],
-          35: [function (t, n, e) {
+          35: [function (require, module, exports) {
             function r(t, n, e) {
               this.name = t, this.dir = e.dir, this.date = e.date, this.comment = e.comment, this.unixPermissions = e.unixPermissions, this.dosPermissions = e.dosPermissions, this._data = n, this._dataBinary = e.binary, this.options = {
                 compression: e.compression,
                 compressionOptions: e.compressionOptions
               };
             }
-            var i = t("./stream/StreamHelper"),
-              o = t("./stream/DataWorker"),
-              s = t("./utf8"),
-              a = t("./compressedObject"),
-              u = t("./stream/GenericWorker");
+            var i = require("./stream/StreamHelper"),
+              o = require("./stream/DataWorker"),
+              s = require("./utf8"),
+              a = require("./compressedObject"),
+              u = require("./stream/GenericWorker");
             r.prototype = {
               internalStream: function (t) {
                 var n = null,
@@ -4371,7 +4371,7 @@
             for (var c = ["asText", "asBinary", "asNodeBuffer", "asUint8Array", "asArrayBuffer"], f = function () {
                 throw new Error("This method has been removed in JSZip 3.0, please check the upgrade guide.");
               }, l = 0; l < c.length; l++) r.prototype[c[l]] = f;
-            n.exports = r;
+            module.exports = r;
           }, {
             "./compressedObject": 2,
             "./stream/DataWorker": 27,
@@ -4379,7 +4379,7 @@
             "./stream/StreamHelper": 29,
             "./utf8": 31
           }],
-          36: [function (t, n, r) {
+          36: [function (require, module, r) {
             (function (t) {
               var e,
                 r,
@@ -4416,13 +4416,13 @@
                 }
                 r = !1;
               }
-              n.exports = function (t) {
+              module.exports = function (t) {
                 1 !== c.push(t) || r || e();
               };
             }).call(this, void 0 !== require.g ? require.g : "undefined" != typeof self ? self : "undefined" != typeof window ? window : {});
           }, {}],
-          37: [function (t, n, e) {
-            var r = t("immediate");
+          37: [function (require, module, exports) {
+            var r = require("immediate");
             function i() {}
             var o = {},
               s = ["REJECTED"],
@@ -4474,7 +4474,7 @@
               }
               return e;
             }
-            (n.exports = c).prototype.finally = function (t) {
+            (module.exports = c).prototype.finally = function (t) {
               if ("function" != typeof t) return this;
               var n = this.constructor;
               return this.then(function (e) {
@@ -4549,21 +4549,21 @@
           }, {
             immediate: 36
           }],
-          38: [function (t, n, e) {
+          38: [function (require, module, exports) {
             var r = {};
-            (0, t("./lib/utils/common").assign)(r, t("./lib/deflate"), t("./lib/inflate"), t("./lib/zlib/constants")), n.exports = r;
+            (0, require("./lib/utils/common").assign)(r, require("./lib/deflate"), require("./lib/inflate"), require("./lib/zlib/constants")), module.exports = r;
           }, {
             "./lib/deflate": 39,
             "./lib/inflate": 40,
             "./lib/utils/common": 41,
             "./lib/zlib/constants": 44
           }],
-          39: [function (t, n, e) {
-            var r = t("./zlib/deflate"),
-              i = t("./utils/common"),
-              o = t("./utils/strings"),
-              s = t("./zlib/messages"),
-              a = t("./zlib/zstream"),
+          39: [function (require, module, exports) {
+            var r = require("./zlib/deflate"),
+              i = require("./utils/common"),
+              o = require("./utils/strings"),
+              s = require("./zlib/messages"),
+              a = require("./zlib/zstream"),
               u = Object.prototype.toString,
               c = 0,
               f = -1,
@@ -4611,9 +4611,9 @@
               this.chunks.push(t);
             }, d.prototype.onEnd = function (t) {
               0 === t && ("string" === this.options.to ? this.result = this.chunks.join("") : this.result = i.flattenChunks(this.chunks)), this.chunks = [], this.err = t, this.msg = this.strm.msg;
-            }, e.Deflate = d, e.deflate = _, e.deflateRaw = function (t, n) {
+            }, exports.Deflate = d, exports.deflate = _, exports.deflateRaw = function (t, n) {
               return (n = n || {}).raw = !0, _(t, n);
-            }, e.gzip = function (t, n) {
+            }, exports.gzip = function (t, n) {
               return (n = n || {}).gzip = !0, _(t, n);
             };
           }, {
@@ -4623,14 +4623,14 @@
             "./zlib/messages": 51,
             "./zlib/zstream": 53
           }],
-          40: [function (t, n, e) {
-            var r = t("./zlib/inflate"),
-              i = t("./utils/common"),
-              o = t("./utils/strings"),
-              s = t("./zlib/constants"),
-              a = t("./zlib/messages"),
-              u = t("./zlib/zstream"),
-              c = t("./zlib/gzheader"),
+          40: [function (require, module, exports) {
+            var r = require("./zlib/inflate"),
+              i = require("./utils/common"),
+              o = require("./utils/strings"),
+              s = require("./zlib/constants"),
+              a = require("./zlib/messages"),
+              u = require("./zlib/zstream"),
+              c = require("./zlib/gzheader"),
               f = Object.prototype.toString;
             function l(t) {
               if (!(this instanceof l)) return new l(t);
@@ -4672,9 +4672,9 @@
               this.chunks.push(t);
             }, l.prototype.onEnd = function (t) {
               t === s.Z_OK && ("string" === this.options.to ? this.result = this.chunks.join("") : this.result = i.flattenChunks(this.chunks)), this.chunks = [], this.err = t, this.msg = this.strm.msg;
-            }, e.Inflate = l, e.inflate = h, e.inflateRaw = function (t, n) {
+            }, exports.Inflate = l, exports.inflate = h, exports.inflateRaw = function (t, n) {
               return (n = n || {}).raw = !0, h(t, n);
-            }, e.ungzip = h;
+            }, exports.ungzip = h;
           }, {
             "./utils/common": 41,
             "./utils/strings": 42,
@@ -4684,9 +4684,9 @@
             "./zlib/messages": 51,
             "./zlib/zstream": 53
           }],
-          41: [function (t, n, e) {
+          41: [function (require, module, exports) {
             var r = "undefined" != typeof Uint8Array && "undefined" != typeof Uint16Array && "undefined" != typeof Int32Array;
-            e.assign = function (t) {
+            exports.assign = function (t) {
               for (var n = Array.prototype.slice.call(arguments, 1); n.length;) {
                 var e = n.shift();
                 if (e) {
@@ -4695,7 +4695,7 @@
                 }
               }
               return t;
-            }, e.shrinkBuf = function (t, n) {
+            }, exports.shrinkBuf = function (t, n) {
               return t.length === n ? t : t.subarray ? t.subarray(0, n) : (t.length = n, t);
             };
             var i = {
@@ -4717,12 +4717,12 @@
                   return [].concat.apply([], t);
                 }
               };
-            e.setTyped = function (t) {
-              t ? (e.Buf8 = Uint8Array, e.Buf16 = Uint16Array, e.Buf32 = Int32Array, e.assign(e, i)) : (e.Buf8 = Array, e.Buf16 = Array, e.Buf32 = Array, e.assign(e, o));
-            }, e.setTyped(r);
+            exports.setTyped = function (t) {
+              t ? (exports.Buf8 = Uint8Array, exports.Buf16 = Uint16Array, exports.Buf32 = Int32Array, exports.assign(exports, i)) : (exports.Buf8 = Array, exports.Buf16 = Array, exports.Buf32 = Array, exports.assign(exports, o));
+            }, exports.setTyped(r);
           }, {}],
-          42: [function (t, n, e) {
-            var r = t("./common"),
+          42: [function (require, module, exports) {
+            var r = require("./common"),
               i = !0,
               o = !0;
             try {
@@ -4741,7 +4741,7 @@
               for (var e = "", s = 0; s < n; s++) e += String.fromCharCode(t[s]);
               return e;
             }
-            s[254] = s[254] = 1, e.string2buf = function (t) {
+            s[254] = s[254] = 1, exports.string2buf = function (t) {
               var n,
                 e,
                 i,
@@ -4752,12 +4752,12 @@
               for (o = 0; o < a; o++) 55296 == (64512 & (e = t.charCodeAt(o))) && o + 1 < a && 56320 == (64512 & (i = t.charCodeAt(o + 1))) && (e = 65536 + (e - 55296 << 10) + (i - 56320), o++), u += e < 128 ? 1 : e < 2048 ? 2 : e < 65536 ? 3 : 4;
               for (n = new r.Buf8(u), o = s = 0; s < u; o++) 55296 == (64512 & (e = t.charCodeAt(o))) && o + 1 < a && 56320 == (64512 & (i = t.charCodeAt(o + 1))) && (e = 65536 + (e - 55296 << 10) + (i - 56320), o++), e < 128 ? n[s++] = e : (e < 2048 ? n[s++] = 192 | e >>> 6 : (e < 65536 ? n[s++] = 224 | e >>> 12 : (n[s++] = 240 | e >>> 18, n[s++] = 128 | e >>> 12 & 63), n[s++] = 128 | e >>> 6 & 63), n[s++] = 128 | 63 & e);
               return n;
-            }, e.buf2binstring = function (t) {
+            }, exports.buf2binstring = function (t) {
               return u(t, t.length);
-            }, e.binstring2buf = function (t) {
+            }, exports.binstring2buf = function (t) {
               for (var n = new r.Buf8(t.length), e = 0, i = n.length; e < i; e++) n[e] = t.charCodeAt(e);
               return n;
-            }, e.buf2string = function (t, n) {
+            }, exports.buf2string = function (t, n) {
               var e,
                 r,
                 i,
@@ -4769,7 +4769,7 @@
                 1 < o ? c[r++] = 65533 : i < 65536 ? c[r++] = i : (i -= 65536, c[r++] = 55296 | i >> 10 & 1023, c[r++] = 56320 | 1023 & i);
               }
               return u(c, r);
-            }, e.utf8border = function (t, n) {
+            }, exports.utf8border = function (t, n) {
               var e;
               for ((n = n || t.length) > t.length && (n = t.length), e = n - 1; 0 <= e && 128 == (192 & t[e]);) e--;
               return e < 0 || 0 === e ? n : e + s[t[e]] > n ? e : n;
@@ -4777,8 +4777,8 @@
           }, {
             "./common": 41
           }],
-          43: [function (t, n, e) {
-            n.exports = function (t, n, e, r) {
+          43: [function (require, module, exports) {
+            module.exports = function (t, n, e, r) {
               for (var i = 65535 & t, o = t >>> 16 & 65535, s = 0; 0 !== e;) {
                 for (e -= s = 2e3 < e ? 2e3 : e; o = o + (i = i + n[r++] | 0) | 0, --s;);
                 i %= 65521, o %= 65521;
@@ -4786,8 +4786,8 @@
               return i | o << 16;
             };
           }, {}],
-          44: [function (t, n, e) {
-            n.exports = {
+          44: [function (require, module, exports) {
+            module.exports = {
               Z_NO_FLUSH: 0,
               Z_PARTIAL_FLUSH: 1,
               Z_SYNC_FLUSH: 2,
@@ -4817,7 +4817,7 @@
               Z_DEFLATED: 8
             };
           }, {}],
-          45: [function (t, n, e) {
+          45: [function (require, module, exports) {
             var r = function () {
               for (var t, n = [], e = 0; e < 256; e++) {
                 t = e;
@@ -4826,7 +4826,7 @@
               }
               return n;
             }();
-            n.exports = function (t, n, e, i) {
+            module.exports = function (t, n, e, i) {
               var o = r,
                 s = i + e;
               t ^= -1;
@@ -4834,13 +4834,13 @@
               return ~t;
             };
           }, {}],
-          46: [function (t, n, e) {
+          46: [function (require, module, exports) {
             var r,
-              i = t("../utils/common"),
-              o = t("./trees"),
-              s = t("./adler32"),
-              a = t("./crc32"),
-              u = t("./messages"),
+              i = require("../utils/common"),
+              o = require("./trees"),
+              s = require("./adler32"),
+              a = require("./crc32"),
+              u = require("./messages"),
               c = 0,
               f = 4,
               l = 0,
@@ -5004,11 +5004,11 @@
                 if (t.strstart - t.block_start >= t.w_size - E && (T(t, !1), 0 === t.strm.avail_out)) return 1;
               }
               return t.insert = 0, 4 === n ? (T(t, !0), 0 === t.strm.avail_out ? 3 : 4) : (t.strstart > t.block_start && (T(t, !1), t.strm.avail_out), 1);
-            }), new L(4, 4, 8, 4, M), new L(4, 5, 16, 8, M), new L(4, 6, 32, 32, M), new L(4, 4, 16, 16, j), new L(8, 16, 32, 32, j), new L(8, 16, 128, 128, j), new L(8, 32, 128, 256, j), new L(32, 128, 258, 1024, j), new L(32, 258, 258, 4096, j)], e.deflateInit = function (t, n) {
+            }), new L(4, 4, 8, 4, M), new L(4, 5, 16, 8, M), new L(4, 6, 32, 32, M), new L(4, 4, 16, 16, j), new L(8, 16, 32, 32, j), new L(8, 16, 128, 128, j), new L(8, 32, 128, 256, j), new L(32, 128, 258, 1024, j), new L(32, 258, 258, 4096, j)], exports.deflateInit = function (t, n) {
               return H(t, n, 8, 15, 8, 0);
-            }, e.deflateInit2 = H, e.deflateReset = Z, e.deflateResetKeep = G, e.deflateSetHeader = function (t, n) {
+            }, exports.deflateInit2 = H, exports.deflateReset = Z, exports.deflateResetKeep = G, exports.deflateSetHeader = function (t, n) {
               return t && t.state ? 2 !== t.state.wrap ? h : (t.state.gzhead = n, 0) : h;
-            }, e.deflate = function (t, n) {
+            }, exports.deflate = function (t, n) {
               var e, i, s, u;
               if (!t || !t.state || 5 < n || n < 0) return t ? B(t, h) : h;
               if (i = t.state, !t.output || !t.input && 0 !== t.avail_in || 666 === i.status && 4 !== n) return B(t, 0 === t.avail_out ? -5 : h);
@@ -5075,10 +5075,10 @@
                 if (2 === f && (1 === n ? o._tr_align(i) : 5 !== n && (o._tr_stored_block(i, 0, 0, !1), 3 === n && (D(i.head), 0 === i.lookahead && (i.strstart = 0, i.block_start = 0, i.insert = 0))), N(t), 0 === t.avail_out)) return i.last_flush = -1, 0;
               }
               return 4 !== n ? 0 : i.wrap <= 0 ? 1 : (2 === i.wrap ? (q(i, 255 & t.adler), q(i, t.adler >> 8 & 255), q(i, t.adler >> 16 & 255), q(i, t.adler >> 24 & 255), q(i, 255 & t.total_in), q(i, t.total_in >> 8 & 255), q(i, t.total_in >> 16 & 255), q(i, t.total_in >> 24 & 255)) : (F(i, t.adler >>> 16), F(i, 65535 & t.adler)), N(t), 0 < i.wrap && (i.wrap = -i.wrap), 0 !== i.pending ? 0 : 1);
-            }, e.deflateEnd = function (t) {
+            }, exports.deflateEnd = function (t) {
               var n;
               return t && t.state ? (n = t.state.status) !== A && 69 !== n && 73 !== n && 91 !== n && 103 !== n && n !== I && 666 !== n ? B(t, h) : (t.state = null, n === I ? B(t, -3) : 0) : h;
-            }, e.deflateSetDictionary = function (t, n) {
+            }, exports.deflateSetDictionary = function (t, n) {
               var e,
                 r,
                 o,
@@ -5095,7 +5095,7 @@
                 e.strstart = r, e.lookahead = 2, z(e);
               }
               return e.strstart += e.lookahead, e.block_start = e.strstart, e.insert = e.lookahead, e.lookahead = 0, e.match_length = e.prev_length = 2, e.match_available = 0, t.next_in = c, t.input = f, t.avail_in = u, e.wrap = a, 0;
-            }, e.deflateInfo = "pako deflate (from Nodeca project)";
+            }, exports.deflateInfo = "pako deflate (from Nodeca project)";
           }, {
             "../utils/common": 41,
             "./adler32": 43,
@@ -5103,13 +5103,13 @@
             "./messages": 51,
             "./trees": 52
           }],
-          47: [function (t, n, e) {
-            n.exports = function () {
+          47: [function (require, module, exports) {
+            module.exports = function () {
               this.text = 0, this.time = 0, this.xflags = 0, this.os = 0, this.extra = null, this.extra_len = 0, this.name = "", this.comment = "", this.hcrc = 0, this.done = !1;
             };
           }, {}],
-          48: [function (t, n, e) {
-            n.exports = function (t, n) {
+          48: [function (require, module, exports) {
+            module.exports = function (t, n) {
               var e, r, i, o, s, a, u, c, f, l, h, d, _, m, p, v, w, b, y, g, k, $, S, E, A;
               e = t.state, r = t.next_in, E = t.input, i = r + (t.avail_in - 5), o = t.next_out, A = t.output, s = o - (n - t.avail_out), a = o + (t.avail_out - 257), u = e.dmax, c = e.wsize, f = e.whave, l = e.wnext, h = e.window, d = e.hold, _ = e.bits, m = e.lencode, p = e.distcode, v = (1 << e.lenbits) - 1, w = (1 << e.distbits) - 1;
               t: do {
@@ -5179,12 +5179,12 @@
               r -= g = _ >> 3, d &= (1 << (_ -= g << 3)) - 1, t.next_in = r, t.next_out = o, t.avail_in = r < i ? i - r + 5 : 5 - (r - i), t.avail_out = o < a ? a - o + 257 : 257 - (o - a), e.hold = d, e.bits = _;
             };
           }, {}],
-          49: [function (t, n, e) {
-            var r = t("../utils/common"),
-              i = t("./adler32"),
-              o = t("./crc32"),
-              s = t("./inffast"),
-              a = t("./inftrees"),
+          49: [function (require, module, exports) {
+            var r = require("../utils/common"),
+              i = require("./adler32"),
+              o = require("./crc32"),
+              s = require("./inffast"),
+              a = require("./inftrees"),
               u = 1,
               c = 2,
               f = 0,
@@ -5238,9 +5238,9 @@
                 s = t.state;
               return null === s.window && (s.wsize = 1 << s.wbits, s.wnext = 0, s.whave = 0, s.window = new r.Buf8(s.wsize)), i >= s.wsize ? (r.arraySet(s.window, n, e - s.wsize, s.wsize, 0), s.wnext = 0, s.whave = s.wsize) : (i < (o = s.wsize - s.wnext) && (o = i), r.arraySet(s.window, n, e - i, o, s.wnext), (i -= o) ? (r.arraySet(s.window, n, e - i, i, 0), s.wnext = i, s.whave = s.wsize) : (s.wnext += o, s.wnext === s.wsize && (s.wnext = 0), s.whave < s.wsize && (s.whave += o))), 0;
             }
-            e.inflateReset = w, e.inflateReset2 = b, e.inflateResetKeep = v, e.inflateInit = function (t) {
+            exports.inflateReset = w, exports.inflateReset2 = b, exports.inflateResetKeep = v, exports.inflateInit = function (t) {
               return y(t, 15);
-            }, e.inflateInit2 = y, e.inflate = function (t, n) {
+            }, exports.inflateInit2 = y, exports.inflate = function (t, n) {
               var e,
                 u,
                 c,
@@ -5626,18 +5626,18 @@
                   return l;
               }
               return t.next_out = h, t.avail_out = _, t.next_in = f, t.avail_in = d, e.hold = p, e.bits = v, (e.wsize || b !== t.avail_out && e.mode < 30 && (e.mode < 27 || 4 !== n)) && E(t, t.output, t.next_out, b - t.avail_out) ? (e.mode = 31, -4) : (w -= t.avail_in, b -= t.avail_out, t.total_in += w, t.total_out += b, e.total += b, e.wrap && b && (t.adler = e.check = e.flags ? o(e.check, c, b, t.next_out - b) : i(e.check, c, b, t.next_out - b)), t.data_type = e.bits + (e.last ? 64 : 0) + (12 === e.mode ? 128 : 0) + (20 === e.mode || 15 === e.mode ? 256 : 0), (0 == w && 0 === b || 4 === n) && 0 === B && (B = -5), B);
-            }, e.inflateEnd = function (t) {
+            }, exports.inflateEnd = function (t) {
               if (!t || !t.state) return l;
               var n = t.state;
               return n.window && (n.window = null), t.state = null, 0;
-            }, e.inflateGetHeader = function (t, n) {
+            }, exports.inflateGetHeader = function (t, n) {
               var e;
               return t && t.state && 2 & (e = t.state).wrap ? ((e.head = n).done = !1, 0) : l;
-            }, e.inflateSetDictionary = function (t, n) {
+            }, exports.inflateSetDictionary = function (t, n) {
               var e,
                 r = n.length;
               return t && t.state ? 0 !== (e = t.state).wrap && 11 !== e.mode ? l : 11 === e.mode && i(1, n, r, 0) !== e.check ? -3 : E(t, n, r, r) ? (e.mode = 31, -4) : (e.havedict = 1, 0) : l;
-            }, e.inflateInfo = "pako inflate (from Nodeca project)";
+            }, exports.inflateInfo = "pako inflate (from Nodeca project)";
           }, {
             "../utils/common": 41,
             "./adler32": 43,
@@ -5645,13 +5645,13 @@
             "./inffast": 48,
             "./inftrees": 50
           }],
-          50: [function (t, n, e) {
-            var r = t("../utils/common"),
+          50: [function (require, module, exports) {
+            var r = require("../utils/common"),
               i = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0],
               o = [16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 16, 72, 78],
               s = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577, 0, 0],
               a = [16, 16, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29, 64, 64];
-            n.exports = function (t, n, e, u, c, f, l, h) {
+            module.exports = function (t, n, e, u, c, f, l, h) {
               var d,
                 _,
                 m,
@@ -5706,8 +5706,8 @@
           }, {
             "../utils/common": 41
           }],
-          51: [function (t, n, e) {
-            n.exports = {
+          51: [function (require, module, exports) {
+            module.exports = {
               2: "need dictionary",
               1: "stream end",
               0: "",
@@ -5719,8 +5719,8 @@
               "-6": "incompatible version"
             };
           }, {}],
-          52: [function (t, n, e) {
-            var r = t("../utils/common"),
+          52: [function (require, module, exports) {
+            var r = require("../utils/common"),
               i = 0,
               o = 1;
             function s(t) {
@@ -5888,7 +5888,7 @@
                 L(t), q(t, e), q(t, ~e), r.arraySet(t.pending_buf, t.window, n, e, t.pending), t.pending += e;
               }(t, n, e, !0);
             }
-            e._tr_init = function (t) {
+            exports._tr_init = function (t) {
               Q || (function () {
                 var t,
                   n,
@@ -5907,7 +5907,7 @@
                 for (M(E, 287, o), t = 0; t < l; t++) A[2 * t + 1] = 5, A[2 * t] = z(t, 5);
                 U = new D(E, g, 257, f, _), R = new D(A, k, 0, l, _), B = new D(new Array(0), $, 0, h, 7);
               }(), Q = !0), t.l_desc = new N(t.dyn_ltree, U), t.d_desc = new N(t.dyn_dtree, R), t.bl_desc = new N(t.bl_tree, B), t.bi_buf = 0, t.bi_valid = 0, j(t);
-            }, e._tr_stored_block = X, e._tr_flush_block = function (t, n, e, r) {
+            }, exports._tr_stored_block = X, exports._tr_flush_block = function (t, n, e, r) {
               var i,
                 o,
                 s = 0;
@@ -5927,9 +5927,9 @@
                 for (F(t, n - 257, 5), F(t, e - 1, 5), F(t, r - 4, 4), i = 0; i < r; i++) F(t, t.bl_tree[2 * S[i] + 1], 3);
                 V(t, t.dyn_ltree, n - 1), V(t, t.dyn_dtree, e - 1);
               }(t, t.l_desc.max_code + 1, t.d_desc.max_code + 1, s + 1), Z(t, t.dyn_ltree, t.dyn_dtree)), j(t), r && L(t);
-            }, e._tr_tally = function (t, n, e) {
+            }, exports._tr_tally = function (t, n, e) {
               return t.pending_buf[t.d_buf + 2 * t.last_lit] = n >>> 8 & 255, t.pending_buf[t.d_buf + 2 * t.last_lit + 1] = 255 & n, t.pending_buf[t.l_buf + t.last_lit] = 255 & e, t.last_lit++, 0 === n ? t.dyn_ltree[2 * e]++ : (t.matches++, n--, t.dyn_ltree[2 * (x[e] + c + 1)]++, t.dyn_dtree[2 * T(n)]++), t.last_lit === t.lit_bufsize - 1;
-            }, e._tr_align = function (t) {
+            }, exports._tr_align = function (t) {
               F(t, 2, 3), O(t, v, E), function (t) {
                 16 === t.bi_valid ? (q(t, t.bi_buf), t.bi_buf = 0, t.bi_valid = 0) : 8 <= t.bi_valid && (t.pending_buf[t.pending++] = 255 & t.bi_buf, t.bi_buf >>= 8, t.bi_valid -= 8);
               }(t);
@@ -5937,13 +5937,13 @@
           }, {
             "../utils/common": 41
           }],
-          53: [function (t, n, e) {
-            n.exports = function () {
+          53: [function (require, module, exports) {
+            module.exports = function () {
               this.input = null, this.next_in = 0, this.avail_in = 0, this.total_in = 0, this.output = null, this.next_out = 0, this.avail_out = 0, this.total_out = 0, this.msg = "", this.state = null, this.data_type = 2, this.adler = 0;
             };
           }, {}],
-          54: [function (t, n, e) {
-            n.exports = "function" == typeof setImmediate ? setImmediate : function () {
+          54: [function (require, module, exports) {
+            module.exports = "function" == typeof setImmediate ? setImmediate : function () {
               var t = [].slice.apply(arguments);
               t.splice(1, 0, 0), setTimeout.apply(null, t);
             };
