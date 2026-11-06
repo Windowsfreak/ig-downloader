@@ -4,7 +4,7 @@
         instaUtils = require(3);
       module.exports = function () {
         return {
-          t: function (e) {
+          captureGraphQLQueryHash: function (e) {
             const t = this;
             let n = e.url,
               i = instaUtils.o(n),
@@ -14,12 +14,12 @@
               try {
                 i = JSON.parse(i);
               } catch (e) {}
-              i.shortcode && i.child_comment_count ? t.u("post", s) : i.id && i.first && i.after && tabManager._(e.tabId, function (e) {
-                /\/channel\/|\/tagged\/|\/guides\//.test(e) ? e.includes("/channel/") && t.u("channel", s) : t.u("owner", s);
+              i.shortcode && i.child_comment_count ? t.updateQueryHash("post", s) : i.id && i.first && i.after && tabManager.getTabUrl(e.tabId, function (e) {
+                /\/channel\/|\/tagged\/|\/guides\//.test(e) ? e.includes("/channel/") && t.updateQueryHash("channel", s) : t.updateQueryHash("owner", s);
               });
             }
           },
-          l: function () {
+          initQueryHashesListener: function () {
             const e = this;
             chrome.storage.local.get("query_hashes", function (e) {
               e.query_hashes || chrome.storage.local.set({
@@ -29,19 +29,19 @@
                   channel: "bc78b344a68ed16dd5d7f264681c4c76"
                 }
               });
-            }), chrome.webRequest.onBeforeSendHeaders.addListener(e.t.bind(e), {
+            }), chrome.webRequest.onBeforeSendHeaders.addListener(e.captureGraphQLQueryHash.bind(e), {
               urls: ["*://*.instagram.com/graphql/query/?*"],
               types: ["xmlhttprequest"]
             }, ["requestHeaders"]);
           },
-          u: function (e, t) {
+          updateQueryHash: function (e, t) {
             chrome.storage.local.get("query_hashes", function (n) {
               n.query_hashes[e] = t, chrome.storage.local.set({
                 query_hashes: n.query_hashes
               });
             });
           },
-          h: function () {
+          getQueryHashes: function () {
             return chrome.storage.local.get("query_hashes").then(function (e) {
               if (e.query_hashes) return e.query_hashes;
               throw "No query_hashes";
@@ -53,23 +53,23 @@
       module.exports = function () {
         return {
           m: "*://*.instagram.com/*",
-          _: function (e, t) {
+          getTabUrl: function (e, t) {
             e < 0 || chrome.tabs.get(e, function (e) {
               t(e.url);
             });
           },
-          p: function (e) {
+          isBulkDownloadActiveInAnyTab: function (e) {
             const t = this;
             chrome.tabs.query({
               url: [t.m]
             }, function (n) {
               let r = [];
               n.forEach(function (n) {
-                r.push(n.id), t.$(r, e);
+                r.push(n.id), t.checkTabBulkDownloadRecursive(r, e);
               });
             });
           },
-          $: function (e, t) {
+          checkTabBulkDownloadRecursive: function (e, t) {
             const n = this;
             if (0 === e.length) return t(!1);
             let r = e.pop();
@@ -498,17 +498,17 @@
             }), chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
               if (message) if ("string" == typeof message) switch (message) {
                 case "getCookies":
-                  return cookieManager.et().then(sendResponse).catch(() => sendResponse), !0;
+                  return cookieManager.getAllCookies().then(sendResponse).catch(() => sendResponse), !0;
                 case "getAllHeaders":
-                  return headerManager.tt().then(sendResponse).catch(() => sendResponse), !0;
+                  return headerManager.getHeaders().then(sendResponse).catch(() => sendResponse), !0;
                 case "getQueryHashes":
-                  return queryHashManager.h().then(sendResponse).catch(() => sendResponse), !0;
+                  return queryHashManager.getQueryHashes().then(sendResponse).catch(() => sendResponse), !0;
                 case "checkBulkDownloadNow":
-                  return tabManager.p(sendResponse), !0;
+                  return tabManager.isBulkDownloadActiveInAnyTab(sendResponse), !0;
                 case "check_policy_accept":
                   return instaUtils.ke().then(sendResponse), !0;
                 case "getCsrftoken":
-                  return cookieManager.nt().then(sendResponse).catch(() => sendResponse), !0;
+                  return cookieManager.getCsrfToken().then(sendResponse).catch(() => sendResponse), !0;
                 case "is_bulk_advanced":
                   return chrome.storage.local.get("bulk_advanced", function (e) {
                     sendResponse(e.bulk_advanced);
@@ -524,29 +524,29 @@
                   });
                   break;
                 case "requestHighlights":
-                  return apiClient.ot(message.reel_ids, sendResponse), !0;
+                  return apiClient.requestHighlights(message.reel_ids, sendResponse), !0;
                 case "requestHtmlByShortcode":
-                  return apiClient.it(message.shortcode, sendResponse), !0;
+                  return apiClient.requestHtmlByShortcode(message.shortcode, sendResponse), !0;
                 case "requestStories":
-                  return apiClient.st(message.userId || message.reel_ids, sendResponse), !0;
+                  return apiClient.requestStories(message.userId || message.reel_ids, sendResponse), !0;
                 case "requestUserId":
-                  return apiClient.ut(message.userName, sendResponse), !0;
+                  return apiClient.requestUserIdByUsername(message.userName, sendResponse), !0;
                 case "requestUserPostCount":
-                  return apiClient.ct(message.userName, sendResponse), !0;
+                  return apiClient.requestUserPostCount(message.userName, sendResponse), !0;
                 case "baseGraphqlQueryRequest":
-                  return apiClient._t(message.opts, sendResponse), !0;
+                  return apiClient.baseGraphqlQueryRequest(message.opts, sendResponse), !0;
                 case "baseMediaInfoRequest":
-                  return apiClient.lt(message.opts, sendResponse), !0;
+                  return apiClient.baseMediaInfoRequest(message.opts, sendResponse), !0;
                 case "uploadPhotoRequest":
-                  return uploadClient.ft(message.opts, sendResponse), !0;
+                  return uploadClient.uploadPhotoRequest(message.opts, sendResponse), !0;
                 case "uploadVideoRequest":
-                  return uploadClient.dt(message.opts, sendResponse), !0;
+                  return uploadClient.uploadVideoRequest(message.opts, sendResponse), !0;
                 case "uploadPostConfigureRequest":
-                  return uploadClient.ht(message.opts, sendResponse), !0;
+                  return uploadClient.uploadPostConfigureRequest(message.opts, sendResponse), !0;
                 case "getUserIdByUserName":
-                  return apiClient.gt(message.userName, sendResponse), !0;
+                  return apiClient.getUserIdByUserName(message.userName, sendResponse), !0;
                 case "getUserStoriesCount":
-                  return apiClient.$t(sendResponse), !0;
+                  return apiClient.getUserStoriesCount(sendResponse), !0;
                 case "updateStorage":
                   return instaUtils.be(message.data).then(sendResponse), !0;
                 case "upd_promotional_status":
@@ -562,15 +562,15 @@
       const constants = require(4);
       module.exports = function () {
         return {
-          wt: {
+          DEFAULT_HEADERS: {
             "x-instagram-ajax": "017fef72480c",
             "x-asbd-id": "437806",
             "x-requested-with": "XMLHttpRequest",
             "x-ig-app-id": "936619743392459",
             "x-ig-app-id_upload": "1217981644879628"
           },
-          yt: function (e) {
-            this.tt().then(function (t) {
+          saveHeaders: function (e) {
+            this.getHeaders().then(function (t) {
               chrome.storage.local.set({
                 headers: {
                   ...t,
@@ -583,14 +583,14 @@
               });
             });
           },
-          tt: function () {
+          getHeaders: function () {
             return chrome.storage.local.get("headers").then(function (e) {
               if (e.headers) return e.headers;
               throw "No headers";
             });
           },
-          vt: function (e) {
-            return this.tt().then(function (t) {
+          getSpecificHeaders: function (e) {
+            return this.getHeaders().then(function (t) {
               let n = [];
               for (let r = 0; e[r]; r++) {
                 if (!t.hasOwnProperty(e[r])) throw `Not found requested header [${e[r]}]`;
@@ -599,7 +599,7 @@
               return n;
             });
           },
-          Pt(e) {
+          captureFbDtsgFromBody(e) {
             let t = e.requestBody || null;
             if (!t) return;
             let n = t.formData && t.formData.fb_dtsg || null;
@@ -607,15 +607,15 @@
               fb_dtsg: n
             });
           },
-          bt: function (e) {
+          captureHeadersFromRequest: function (e) {
             const t = ["x-ig-www-claim", "x-instagram-ajax", "x-asbd-id", "x-requested-with", "x-ig-app-id"],
               n = {};
             for (let r = 0; e.requestHeaders[r]; r++) {
               let o = e.requestHeaders[r];
-              t.includes(o.name.toLowerCase()) && o.value.length && (n[o.name.toLowerCase()] = o.value), this.yt(n);
+              t.includes(o.name.toLowerCase()) && o.value.length && (n[o.name.toLowerCase()] = o.value), this.saveHeaders(n);
             }
           },
-          It: function (e) {
+          captureUploadHeadersFromRequest: function (e) {
             const t = "x-ig-app-id",
               n = {};
             for (let r = 0; e.requestHeaders[r]; r++) {
@@ -624,20 +624,20 @@
                 n[t] = o.value;
                 break;
               }
-              this.yt(n);
+              this.saveHeaders(n);
             }
           },
-          l: function () {
+          initHeaderCaptureListeners: function () {
             const e = this;
-            e.tt().catch(function () {
-              e.yt(e.wt);
-            }), chrome.webRequest.onBeforeSendHeaders.addListener(e.bt.bind(e), {
+            e.getHeaders().catch(function () {
+              e.saveHeaders(e.DEFAULT_HEADERS);
+            }), chrome.webRequest.onBeforeSendHeaders.addListener(e.captureHeadersFromRequest.bind(e), {
               urls: ["*://*.instagram.com/*"],
               types: ["xmlhttprequest"]
-            }, ["requestHeaders"]), chrome.webRequest.onBeforeRequest.addListener(e.Pt.bind(e), {
+            }, ["requestHeaders"]), chrome.webRequest.onBeforeRequest.addListener(e.captureFbDtsgFromBody.bind(e), {
               urls: ["*://*.instagram.com/*"],
               types: ["xmlhttprequest"]
-            }, ["requestBody"]), chrome.webRequest.onBeforeSendHeaders.addListener(e.It.bind(e), {
+            }, ["requestBody"]), chrome.webRequest.onBeforeSendHeaders.addListener(e.captureUploadHeadersFromRequest.bind(e), {
               urls: ["*://*.instagram.com/rupload_igphoto/*", "*://*.instagram.com/rupload_igvideo/*", "*://*.instagram.com/api/v1/web/create/*"],
               types: ["xmlhttprequest"]
             }, ["requestHeaders"]);
@@ -647,7 +647,7 @@
     }, module => {
       module.exports = function () {
         return {
-          et: function () {
+          getAllCookies: function () {
             return chrome.cookies ? chrome.cookies.getAll({
               url: "https://www.instagram.com"
             }).then(function (e) {
@@ -658,8 +658,8 @@
               throw "Not authorized";
             }) : Promise.resolve();
           },
-          nt: function () {
-            return this.et().then(function (e) {
+          getCsrfToken: function () {
+            return this.getAllCookies().then(function (e) {
               return e && e.csrftoken || null;
             });
           }
@@ -675,13 +675,13 @@
         httpClient = require(11);
       module.exports = function () {
         return {
-          it: function (e, t) {
+          requestHtmlByShortcode: function (e, t) {
             if (!e) return t(null);
             const n = `https://www.instagram.com/p/${e}/`,
               s = ["x-instagram-ajax", "x-asbd-id", "x-ig-app-id", "x-requested-with"];
             let u;
-            return cookieManager.nt().then(function (e) {
-              return u = e, headerManager.vt(s);
+            return cookieManager.getCsrfToken().then(function (e) {
+              return u = e, headerManager.getSpecificHeaders(s);
             }).then(function (e) {
               return httpClient.qt(n, {
                 headers: {
@@ -694,7 +694,7 @@
               t(e);
             });
           },
-          ut: function (e, t) {
+          requestUserIdByUsername: function (e, t) {
             let r = "https://www.instagram.com/api/v1/users/web_profile_info/?username=" + encodeURIComponent(e);
             fetch(r, {
               headers: {
@@ -737,7 +737,7 @@
               });
             });
           },
-          ct: function (e, t) {
+          requestUserPostCount: function (e, t) {
             let r = "https://www.instagram.com/api/v1/users/web_profile_info/?username=" + encodeURIComponent(e);
             fetch(r, {
               headers: {
@@ -792,11 +792,11 @@
               });
             });
           },
-          st: function (e, t) {
+          requestStories: function (e, t) {
             let isHighlight = typeof e === "string" && e.startsWith("highlight:");
             this.fetchStories(e, isHighlight, t);
           },
-          ot: function (e, t) {
+          requestHighlights: function (e, t) {
             this.fetchStories(e, true, t);
           },
           fetchStories: function (e, isHighlight, cb) {
@@ -862,20 +862,20 @@
                 });
               });
             };
-            Promise.all([getDtsg(), passedCsrf ? Promise.resolve(passedCsrf) : cookieManager.nt().catch(function () {
+            Promise.all([getDtsg(), passedCsrf ? Promise.resolve(passedCsrf) : cookieManager.getCsrfToken().catch(function () {
               return null;
-            }), headerManager.tt().catch(function () {
-              return headerManager.wt;
+            }), headerManager.getHeaders().catch(function () {
+              return headerManager.DEFAULT_HEADERS;
             })]).then(function (resArr) {
               let dtsg = resArr[0];
               let csrf = resArr[1];
-              let storedHeaders = resArr[2] || headerManager.wt || {};
+              let storedHeaders = resArr[2] || headerManager.DEFAULT_HEADERS || {};
               let headers = {
                 ...storedHeaders,
                 "content-type": "application/x-www-form-urlencoded",
                 "accept": "*/*",
                 "x-fb-friendly-name": friendlyName,
-                "x-ig-app-id": storedHeaders["x-ig-app-id"] || headerManager.wt && headerManager.wt["x-ig-app-id"] || "936619743392459"
+                "x-ig-app-id": storedHeaders["x-ig-app-id"] || headerManager.DEFAULT_HEADERS && headerManager.DEFAULT_HEADERS["x-ig-app-id"] || "936619743392459"
               };
               if (csrf) {
                 headers["x-csrftoken"] = csrf;
@@ -961,8 +961,8 @@
               });
             });
           },
-          _t: function (e, t) {
-            queryHashManager.h().then(function (t) {
+          baseGraphqlQueryRequest: function (e, t) {
+            queryHashManager.getQueryHashes().then(function (t) {
               const n = void 0,
                 r = "https://www.instagram.com/graphql/query/?query_hash=" + t[e.request_type] + "&variables=" + encodeURIComponent(JSON.stringify(e.data));
               return httpClient.kt(r);
@@ -1020,7 +1020,7 @@
               });
             });
           },
-          lt: function (e, t) {
+          baseMediaInfoRequest: function (e, t) {
             const n = `https://www.instagram.com/api/v1/media/${e.data.pk}/info/`;
             return httpClient.kt(n).then(function (e) {
               t(e);
@@ -1030,7 +1030,7 @@
               });
             });
           },
-          gt: function (e, t) {
+          getUserIdByUserName: function (e, t) {
             let n = "https://www.instagram.com/" + e + "/";
             httpClient.Ct(n).then(function (e) {
               return e.text();
@@ -1042,11 +1042,11 @@
               return t();
             });
           },
-          $t: function (e) {
-            return cookieManager.et().then(async function (t) {
-              if (t || (t = await messageClient.Dt()), !t) return Promise.reject();
+          getUserStoriesCount: function (e) {
+            return cookieManager.getAllCookies().then(async function (t) {
+              if (t || (t = await messageClient.getCookies()), !t) return Promise.reject();
               const n = "https://i.instagram.com/api/v1/feed/user/" + t.ds_user_id + "/story/";
-              return headerManager.vt(["x-ig-www-claim", "x-ig-app-id"]).then(function (r) {
+              return headerManager.getSpecificHeaders(["x-ig-www-claim", "x-ig-app-id"]).then(function (r) {
                 return httpClient.xt(n, {
                   method: "GET",
                   headers: {
@@ -1179,12 +1179,12 @@
     }, module => {
       module.exports = function () {
         return {
-          Ot: () => new Promise(function (e, t) {
+          getCsrfToken: () => new Promise(function (e, t) {
             chrome.runtime.sendMessage("getCsrftoken", function (n) {
               n ? e(n) : t();
             });
           }),
-          Dt: () => new Promise(function (e, t) {
+          getCookies: () => new Promise(function (e, t) {
             chrome.runtime.sendMessage("getCookies", function (n) {
               n ? e(n) : t();
             });
@@ -1217,8 +1217,8 @@
             const t = this,
               n = ["x-instagram-ajax", "x-asbd-id", "x-ig-app-id", "x-requested-with"];
             let s;
-            return cookieManager.nt().then(function (e) {
-              return s = e, headerManager.vt(n);
+            return cookieManager.getCsrfToken().then(function (e) {
+              return s = e, headerManager.getSpecificHeaders(n);
             }).then(function (n) {
               return t.xt(e, {
                 headers: {
@@ -1232,8 +1232,8 @@
             const n = this,
               a = ["x-asbd-id", "x-ig-app-id"];
             let c;
-            return instaUtils.W(), cookieManager.nt().then(async function (e) {
-              return e || (e = await messageClient.Ot()), c = e, headerManager.vt(a);
+            return instaUtils.W(), cookieManager.getCsrfToken().then(async function (e) {
+              return e || (e = await messageClient.getCsrfToken()), c = e, headerManager.getSpecificHeaders(a);
             }).then(function (r) {
               return n.xt(e, {
                 headers: {
@@ -1260,11 +1260,11 @@
         apiClient = require(8);
       module.exports = function () {
         return {
-          Ft(e, t, n) {
+          sendAuthenticatedUploadRequest(e, t, n) {
             const a = ["x-instagram-ajax", "x-ig-app-id_upload", "x-asbd-id", "x-requested-with"];
             let c;
-            return n = n || {}, cookieManager.nt().then(async function (e) {
-              return e || (e = await messageClient.Ot()), c = e, headerManager.vt(a);
+            return n = n || {}, cookieManager.getCsrfToken().then(async function (e) {
+              return e || (e = await messageClient.getCsrfToken()), c = e, headerManager.getSpecificHeaders(a);
             }).then(function (o) {
               return o["x-ig-app-id"] = o["x-ig-app-id_upload"], delete o["x-ig-app-id_upload"], httpClient.Ct(e, {
                 method: "POST",
@@ -1277,7 +1277,7 @@
               });
             });
           },
-          ft: function (e, t) {
+          uploadPhotoRequest: function (e, t) {
             let n;
             const r = `https://www.instagram.com/rupload_igphoto/${"reels" === e.destination ? "fb_uploader" : e.destination}_${e.upload_id}`,
               o = new Uint8Array(e.data).buffer,
@@ -1293,13 +1293,13 @@
                   upload_media_width: e.media_width
                 })
               };
-            this.Ft(r, o, i).then(function () {
+            this.sendAuthenticatedUploadRequest(r, o, i).then(function () {
               t(!0);
             }).catch(function (e) {
               t();
             });
           },
-          dt: function (e, t) {
+          uploadVideoRequest: function (e, t) {
             let n;
             const r = `https://www.instagram.com/rupload_igvideo/${"reels" === e.destination ? "fb_uploader" : e.destination}_${e.upload_id}`,
               o = new Uint8Array(e.data).buffer,
@@ -1323,13 +1323,13 @@
               offset: "0",
               "x-instagram-rupload-params": JSON.stringify(i)
             };
-            this.Ft(r, o, s).then(function () {
+            this.sendAuthenticatedUploadRequest(r, o, s).then(function () {
               t(!0);
             }).catch(function () {
               t();
             });
           },
-          ht: function (e, t) {
+          uploadPostConfigureRequest: function (e, t) {
             let n = "story" === e.destination,
               r,
               o = {
@@ -1340,7 +1340,7 @@
             const i = this,
               s = "https://www.instagram.com/" + r,
               u = new URLSearchParams(o);
-            return n && void 0 === e.previous_count ? apiClient.$t(function (t) {
+            return n && void 0 === e.previous_count ? apiClient.getUserStoriesCount(function (t) {
               return e.previous_count = t, c();
             }) : c();
             function c() {
@@ -1353,7 +1353,7 @@
           },
           Et: function (e, t) {
             const n = this;
-            return e.attempt = e.attempt || 0, apiClient.$t(function (r) {
+            return e.attempt = e.attempt || 0, apiClient.getUserStoriesCount(function (r) {
               if (!(r > e.previous_count)) {
                 if (e.attempt > 3) throw "FAIL";
                 return e.attempt++, n.ht(e, t).then(function () {
