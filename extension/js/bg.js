@@ -52,7 +52,7 @@
     }, module => {
       module.exports = function () {
         return {
-          m: "*://*.instagram.com/*",
+          INSTAGRAM_URL_PATTERN: "*://*.instagram.com/*",
           getTabUrl: function (e, t) {
             e < 0 || chrome.tabs.get(e, function (e) {
               t(e.url);
@@ -138,16 +138,16 @@
               let e = t.match(/\/(tv|p|reel)\/([^/]+)/);
               return e && e[2];
             }
-            return Insta_Utils.C() || Insta_Utils.isPostOrReelDetailPage() ? Insta_Utils.extractShortcodeFromPath() : void 0;
+            return Insta_Utils.isSingleReelPage() || Insta_Utils.isPostOrReelDetailPage() ? Insta_Utils.extractShortcodeFromPath() : void 0;
           },
           isHomePage: function () {
             return "/" === location.pathname && "instagram.com" === location.host.replace(/^w{3}\./, "") && null == document.querySelector('input[name="username"]');
           },
-          N() {
+          isReelsAudioPage() {
             let e = location.pathname.match("^/reels/audio/[0-9]+/?$");
             return e && e[0];
           },
-          C() {
+          isSingleReelPage() {
             let e = location.pathname.match("^/reel/[^/]+/?$");
             return e && e[0];
           },
@@ -403,7 +403,7 @@
               if (t > 0 && t < 6) return e.parentElement;
             });
           },
-          ve: function () {
+          generateRandomId: function () {
             const e = this.findStoriesContainer();
             if (!e) return 0;
             let t = e.querySelectorAll("div[style]"),
@@ -421,14 +421,14 @@
             }
             return r.toString();
           },
-          be(e) {
+          isAspectRatioReel(e) {
             try {
               return chrome.storage.local.set(e).finally(() => chrome.storage.sync.set(e)).catch(() => {});
             } catch (e) {
               return Promise.resolve();
             }
           },
-          Ie(e) {
+          checkPolicyAccepted(e) {
             return this.be({
               ["promotional_allowed"]: e,
               ["policy_accepted"]: !0
@@ -440,32 +440,32 @@
     }, module => {
       module.exports = function () {
         return {
-          Se: "scrollUserFeedInfo",
-          Ue: "baseUserFeedInfo",
-          Re: "s_key",
-          Ce: "mp4",
-          De: "walk",
+          QUERY_SCROLL_USER_FEED: "scrollUserFeedInfo",
+          QUERY_BASE_USER_FEED: "baseUserFeedInfo",
+          PARAM_S_KEY: "s_key",
+          EXT_MP4: "mp4",
+          ACTION_WALK: "walk",
           Te: 2,
-          Ne: "jpg",
-          Ae: "hist",
-          He: "tim",
-          Me: "x-csrftoken",
-          Oe: "doc_id",
-          Fe: "x-instagram-ajax",
-          Ee: "https://sites.google.com/view/downloader-promaster",
-          Le: "x-asbd-id",
-          Be: "data_skip",
-          je: "x-ig-app-id",
-          Ve: "x-requested-with",
-          Je: "userFeed",
-          qe: "promotional_allowed",
-          Qe: "x-ig-app-id_upload",
-          Ge: "user_id",
-          Xe: "x-ig-www-claim",
-          xe: "policy_accepted",
-          Ze: "data_ad",
+          EXT_JPG: "jpg",
+          ACTION_HIST: "hist",
+          ACTION_TIM: "tim",
+          HEADER_CSRFTOKEN: "x-csrftoken",
+          KEY_DOC_ID: "doc_id",
+          HEADER_INSTAGRAM_AJAX: "x-instagram-ajax",
+          POLICY_URL: "https://sites.google.com/view/downloader-promaster",
+          HEADER_ASBD_ID: "x-asbd-id",
+          KEY_DATA_SKIP: "data_skip",
+          HEADER_IG_APP_ID: "x-ig-app-id",
+          HEADER_REQUESTED_WITH: "x-requested-with",
+          KEY_USER_FEED: "userFeed",
+          KEY_PROMOTIONAL_ALLOWED: "promotional_allowed",
+          HEADER_IG_APP_ID_UPLOAD: "x-ig-app-id_upload",
+          KEY_USER_ID: "user_id",
+          HEADER_IG_WWW_CLAIM: "x-ig-www-claim",
+          KEY_POLICY_ACCEPTED: "policy_accepted",
+          KEY_DATA_AD: "data_ad",
           ze: 1,
-          Ye: "fb_dtsg"
+          KEY_FB_DTSG: "fb_dtsg"
         };
       }();
     }, (module, exports, require) => {
@@ -548,9 +548,9 @@
                 case "getUserStoriesCount":
                   return apiClient.getUserStoriesCount(sendResponse), !0;
                 case "updateStorage":
-                  return instaUtils.be(message.data).then(sendResponse), !0;
+                  return instaUtils.isAspectRatioReel(message.data).then(sendResponse), !0;
                 case "upd_promotional_status":
-                  return instaUtils.Ie(message.status).then(sendResponse), !0;
+                  return instaUtils.checkPolicyAccepted(message.status).then(sendResponse), !0;
                 default:
                   return;
               }
@@ -683,7 +683,7 @@
             return cookieManager.getCsrfToken().then(function (e) {
               return u = e, headerManager.getSpecificHeaders(s);
             }).then(function (e) {
-              return httpClient.qt(n, {
+              return httpClient.fetchJson(n, {
                 headers: {
                   ...e,
                   "x-csrftoken": u,
@@ -965,7 +965,7 @@
             queryHashManager.getQueryHashes().then(function (t) {
               const n = void 0,
                 r = "https://www.instagram.com/graphql/query/?query_hash=" + t[e.request_type] + "&variables=" + encodeURIComponent(JSON.stringify(e.data));
-              return httpClient.kt(r);
+              return httpClient.postForm(r);
             }).then(function (e) {
               t(e);
             }).catch(function (e) {
@@ -978,7 +978,7 @@
             const n = this;
             let o = e.after || null,
               i = o ? "scrollUserFeedInfo" : "baseUserFeedInfo";
-            graphqlDefinitions.Ut(i).then(function (n) {
+            graphqlDefinitions.saveDocId(i).then(function (n) {
               if (!n) return t(null);
               chrome.storage.local.get("fb_dtsg", function (r) {
                 let i = r && r.fb_dtsg || null,
@@ -1010,7 +1010,7 @@
                   server_timestamps: !0
                 };
                 const a = "https://www.instagram.com/graphql/query";
-                httpClient.Rt(a, u).then(function (e) {
+                httpClient.postJson(a, u).then(function (e) {
                   t(e);
                 }).catch(function (e) {
                   t({
@@ -1022,7 +1022,7 @@
           },
           baseMediaInfoRequest: function (e, t) {
             const n = `https://www.instagram.com/api/v1/media/${e.data.pk}/info/`;
-            return httpClient.kt(n).then(function (e) {
+            return httpClient.postForm(n).then(function (e) {
               t(e);
             }).catch(function (e) {
               t({
@@ -1032,7 +1032,7 @@
           },
           getUserIdByUserName: function (e, t) {
             let n = "https://www.instagram.com/" + e + "/";
-            httpClient.Ct(n).then(function (e) {
+            httpClient.fetchWithTimeout(n).then(function (e) {
               return e.text();
             }).then(function (e) {
               let r = e.match(/\"profile_id\":\s?\"(\d+)/) || e.match(/"props":\s*\{\s*"id":\s*"(\d+)"/) || e.match(/"user_id":\s*"(\d+)"/);
@@ -1047,7 +1047,7 @@
               if (t || (t = await messageClient.getCookies()), !t) return Promise.reject();
               const n = "https://i.instagram.com/api/v1/feed/user/" + t.ds_user_id + "/story/";
               return headerManager.getSpecificHeaders(["x-ig-www-claim", "x-ig-app-id"]).then(function (r) {
-                return httpClient.xt(n, {
+                return httpClient.fetchText(n, {
                   method: "GET",
                   headers: {
                     ...r,
@@ -1066,7 +1066,7 @@
       const constants = require(4);
       module.exports = function () {
         return {
-          Tt: {
+          GRAPHQL_QUERIES: {
             userFeed: {
               title: "PolarisProfilePostsQuery_instagramRelayOperation",
               doc_id: {
@@ -1081,11 +1081,11 @@
               }
             }
           },
-          Nt() {
+          initDocIds() {
             let e;
-            return this.At(["userFeed"]);
+            return this.extractDocIdsFromScripts(["userFeed"]);
           },
-          At(e) {
+          extractDocIdsFromScripts(e) {
             let t = this;
             return new Promise(async function (n, r) {
               if (!e || !e.length) return r({
@@ -1113,24 +1113,24 @@
                 if (o) {
                   for (let n of e) {
                     if (u.includes(n)) continue;
-                    let e = o.indexOf(t.Tt[n].title);
+                    let e = o.indexOf(t.GRAPHQL_QUERIES[n].title);
                     if (e > 0) {
                       o = o.substring(e);
-                      for (let e in t.Tt[n].doc_id) {
-                        if (t.Tt[n].doc_id[e].regexPattern) {
-                          let r = o.match(t.Tt[n].doc_id[e].regexPattern),
+                      for (let e in t.GRAPHQL_QUERIES[n].doc_id) {
+                        if (t.GRAPHQL_QUERIES[n].doc_id[e].regexPattern) {
+                          let r = o.match(t.GRAPHQL_QUERIES[n].doc_id[e].regexPattern),
                             i = r && r[1] || null;
                           if (i) {
-                            u.push(e), await t.Ht(e, i);
+                            u.push(e), await t.getDocId(e, i);
                             continue;
                           }
                         }
                         let r;
-                        if ((t.Tt[n].doc_id[e].token && o.indexOf(t.Tt[n].doc_id[e].token) || -1) < 0) continue;
+                        if ((t.GRAPHQL_QUERIES[n].doc_id[e].token && o.indexOf(t.GRAPHQL_QUERIES[n].doc_id[e].token) || -1) < 0) continue;
                         const i = void 0,
                           s = /params:\s*{\s*id:\s*"(\d+)"\s*,/.exec(o);
                         let a = null;
-                        s && (a = s[1]), a && (u.push(e), await t.Ht(e, a));
+                        s && (a = s[1]), a && (u.push(e), await t.getDocId(e, a));
                       }
                     }
                   }
@@ -1144,7 +1144,7 @@
               }) : n();
             });
           },
-          Ht: (e, t) => chrome.storage.local.get("doc_id").then(function (n) {
+          getDocId: (e, t) => chrome.storage.local.get("doc_id").then(function (n) {
             let r = n.doc_id || {};
             return r[e] = {
               value: t,
@@ -1153,22 +1153,22 @@
               doc_id: r
             });
           }),
-          Ut(e) {
+          saveDocId(e) {
             let t = this;
             return new Promise(function (n) {
-              return t.Mt(e).then(function (e) {
+              return t.getDocIdPromise(e).then(function (e) {
                 return n(e);
               }).catch(function (n) {
-                return t.At(["userFeed"]).then(function () {
-                  return t.Mt(e);
+                return t.extractDocIdsFromScripts(["userFeed"]).then(function () {
+                  return t.getDocIdPromise(e);
                 });
               }).catch(function (o) {
-                let i = t.Tt["userFeed"].doc_id[e] || null;
+                let i = t.GRAPHQL_QUERIES["userFeed"].doc_id[e] || null;
                 n(i.defaultValue || null);
               });
             });
           },
-          Mt: e => new Promise(function (t, n) {
+          getDocIdPromise: e => new Promise(function (t, n) {
             return chrome.storage.local.get("doc_id").then(function (r) {
               let o = r.doc_id && r.doc_id[e] || null;
               return o = o && o.value, o && t(o) || n();
@@ -1199,28 +1199,28 @@
         messageClient = require(10);
       module.exports = function () {
         return {
-          Ct: (e, t) => (t = t || {}, fetch(e, t).then(function (t) {
+          fetchWithTimeout: (e, t) => (t = t || {}, fetch(e, t).then(function (t) {
             if (200 !== t.status && 202 !== t.status) throw `request error [${e}]`;
             return t;
           })),
-          xt(e, t) {
-            return this.Ct(e, t).then(function (e) {
+          fetchText(e, t) {
+            return this.fetchWithTimeout(e, t).then(function (e) {
               return e.json();
             });
           },
-          qt: function (e, t) {
-            return this.Ct(e, t).then(function (e) {
+          fetchJson: function (e, t) {
+            return this.fetchWithTimeout(e, t).then(function (e) {
               return e.text();
             });
           },
-          kt(e) {
+          postForm(e) {
             const t = this,
               n = ["x-instagram-ajax", "x-asbd-id", "x-ig-app-id", "x-requested-with"];
             let s;
             return cookieManager.getCsrfToken().then(function (e) {
               return s = e, headerManager.getSpecificHeaders(n);
             }).then(function (n) {
-              return t.xt(e, {
+              return t.fetchText(e, {
                 headers: {
                   ...n,
                   "x-csrftoken": s
@@ -1228,14 +1228,14 @@
               });
             });
           },
-          Rt(e, t) {
+          postJson(e, t) {
             const n = this,
               a = ["x-asbd-id", "x-ig-app-id"];
             let c;
             return instaUtils.sendMessage(), cookieManager.getCsrfToken().then(async function (e) {
               return e || (e = await messageClient.getCsrfToken()), c = e, headerManager.getSpecificHeaders(a);
             }).then(function (r) {
-              return n.xt(e, {
+              return n.fetchText(e, {
                 headers: {
                   ...r,
                   "x-csrftoken": c,
@@ -1266,7 +1266,7 @@
             return n = n || {}, cookieManager.getCsrfToken().then(async function (e) {
               return e || (e = await messageClient.getCsrfToken()), c = e, headerManager.getSpecificHeaders(a);
             }).then(function (o) {
-              return o["x-ig-app-id"] = o["x-ig-app-id_upload"], delete o["x-ig-app-id_upload"], httpClient.Ct(e, {
+              return o["x-ig-app-id"] = o["x-ig-app-id_upload"], delete o["x-ig-app-id_upload"], httpClient.fetchWithTimeout(e, {
                 method: "POST",
                 body: t,
                 headers: {
@@ -1345,13 +1345,13 @@
             }) : c();
             function c() {
               return i.Ft(s, u).then(function (r) {
-                return e.responseCode = r && r.status || null, n ? i.Et(e, t) : i.Lt(e, t);
+                return e.responseCode = r && r.status || null, n ? i.retryUploadWithCsrf(e, t) : i.handleUploadResponse(e, t);
               }).catch(function () {
                 t();
               });
             }
           },
-          Et: function (e, t) {
+          retryUploadWithCsrf: function (e, t) {
             const n = this;
             return e.attempt = e.attempt || 0, apiClient.getUserStoriesCount(function (r) {
               if (!(r > e.previous_count)) {
@@ -1359,7 +1359,7 @@
                 return e.attempt++, n.ht(e, t).then(function () {
                   return new Promise(function (r) {
                     setTimeout(function () {
-                      r(n.Et(e, t));
+                      r(n.retryUploadWithCsrf(e, t));
                     }, 300);
                   });
                 });
@@ -1367,14 +1367,14 @@
               t(!0);
             });
           },
-          Lt: function (e, t) {
+          handleUploadResponse: function (e, t) {
             const n = this;
             if (e.attempt = e.attempt || 0, 200 !== e.responseCode) {
               if (e.attempt > 4 && 202 === e.responseCode) throw "Error";
               return e.attempt++, n.ht(e, t).then(function () {
                 return new Promise(function (r) {
                   setTimeout(function () {
-                    r(n.Lt(e, t));
+                    r(n.handleUploadResponse(e, t));
                   }, 300);
                 });
               });
