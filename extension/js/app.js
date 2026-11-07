@@ -2391,27 +2391,38 @@
           Oe;
           ze;
           constructor() {
-            return this.modalElement = document.querySelector(".promaster_modal"), this.modalElement || (this.modalElement = document.createElement("div"), this.modalElement.className = "promaster_modal", this.modalElement.innerHTML = '<div class="promaster_modal_content"></div>', document.querySelector("body").appendChild(this.modalElement)), this;
+            this.handleBackdropClick = this.handleBackdropClick.bind(this);
+            this.modalElement = document.querySelector(".promaster_modal");
+            this.modalElement || (this.modalElement = document.createElement("div"), this.modalElement.className = "promaster_modal", this.modalElement.innerHTML = '<div class="promaster_modal_content"></div>', document.querySelector("body").appendChild(this.modalElement));
+            this.ze = this.modalElement;
+            return this;
           }
           hideAndCleanup(t) {
-            this.modalElement.remove(), document.body.classList.remove("promaster-scroll-hidden"), "function" == typeof t && t();
+            document.removeEventListener("click", this.handleBackdropClick);
+            this.modalElement.remove();
+            document.body.classList.remove("promaster-scroll-hidden");
+            "function" == typeof t && t();
+          }
+          handleBackdropClick(t) {
+            t.stopPropagation();
+            t.target === this.modalElement && this.hideAndCleanup();
           }
           je(t) {
-            t.stopPropagation();
-            let n = this;
-            t.target === this.modalElement && n.hideAndCleanup();
+            return this.handleBackdropClick(t);
           }
           showModal() {
-            this.modalElement.style.display = "block", document.body.classList.add("promaster-scroll-hidden"), setTimeout(function () {
-              document.querySelector(".promaster_modal_content").style.opacity = "1";
+            this.modalElement.style.display = "block";
+            document.body.classList.add("promaster-scroll-hidden");
+            setTimeout(function () {
+              const content = document.querySelector(".promaster_modal_content");
+              if (content) content.style.opacity = "1";
             }, 100);
           }
           closeModal() {
             this.hideAndCleanup();
           }
           showPreparingLinksModal(t, n) {
-            let e = this,
-              r;
+            let e = this;
             this.modalElement.querySelector("#bulk_preparing") || (document.removeEventListener("click", e.handleBackdropClick), this.modalElement.innerHTML = `\n\t\t\t\t<div id="bulk_preparing" class="promaster_modal_content">\n\t\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("preparing_links")}...</div>\n\t\t\t\t\t<div class="promaster_modal_progress"><div class="promaster_modal_progressbar"></div>\n\t\t\t\t</div>\n\t\t\t\t<div class="promaster_modal_btn_wrap promaster_one_btn_inside">\n\t\t\t\t\t<button class="promaster_btn_cancel">${chrome.i18n.getMessage("btn_cancel")}</button>\n\t\t\t\t</div>`, this.progressBarElement = this.modalElement.querySelector(".promaster_modal_progressbar"), this.modalElement.querySelector(".promaster_btn_cancel").addEventListener("click", function () {
               e.hideAndCleanup(n && n.cancelCallback);
             }), e.showModal());
@@ -2422,8 +2433,7 @@
             }
           }
           showDownloadingModal(t, n) {
-            let e = this,
-              r;
+            let e = this;
             this.modalElement.querySelector("#bulk_downloading") || (document.removeEventListener("click", e.handleBackdropClick), this.modalElement.innerHTML = `\n\t\t\t\t<div id="bulk_downloading" class="promaster_modal_content">\n\t\t\t\t\t<div class="promaster_modal_header">\n\t\t\t\t\t\t${chrome.i18n.getMessage("downloading")}...\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_count_header promaster_margin0">\n\t\t\t\t\t\t<span class="promaster_big_font_part"></span>\n\t\t\t\t\t\t<span class="promaster_small_font_part">&nbsp;/&nbsp;${t.total}</span>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_progress">\n\t\t\t\t\t\t<div class="promaster_modal_progressbar"></div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_btn_wrap promaster_align_right">\n\t\t\t\t\t\t<button class="promaster_btn_enough">${chrome.i18n.getMessage("btn_enough")}</button>\n\t\t\t\t\t\t<button class="promaster_btn_cancel cancel_download small_btn_cancel">${chrome.i18n.getMessage("btn_cancel")}</button>\n\t\t\t\t\t</div>\n\t\t\t\t</div>`, this.counterElement = this.modalElement.querySelector(".promaster_big_font_part"), this.progressBarElement = this.modalElement.querySelector(".promaster_modal_progressbar"), this.modalElement.querySelector(".promaster_btn_cancel").addEventListener("click", function () {
               e.hideAndCleanup(n && n.cancelCallback);
             }), this.modalElement.querySelector(".promaster_btn_enough").addEventListener("click", function () {
@@ -2434,23 +2444,44 @@
             this.counterElement.innerText = t.done || 0, i > o && (i = o), this.progressBarElement.style.width = i + "%";
           }
           showZippingModal(t) {
-            let n = this,
-              e;
+            let n = this;
             if (n.modalElement.querySelector("#bulk_zipping") || (document.removeEventListener("click", n.handleBackdropClick), n.modalElement.innerHTML = `\n\t\t\t<div id="bulk_zipping" class="promaster_modal_content">\n\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("zipping_files")}...</div>\n\t\t\t\t<div class="promaster_count_header"></div>\n\t\t\t\t<div class="promaster_modal_progress">\n\t\t\t\t\t<div class="promaster_modal_progressbar"></div>\n\t\t\t\t</div>\n\t\t\t</div>`, n.progressBarElement = n.modalElement.querySelector(".promaster_modal_progressbar"), n.counterElement = n.modalElement.querySelector(".promaster_big_font_part"), n.showModal()), !n.counterElement || !n.progressBarElement) return;
             let r = t.progress || 0;
             n.counterElement.innerText = r + "%", n.progressBarElement.style.width = r + "%";
           }
-          showMessageModal(t, n) {
+          showCustomModal(t, n) {
             let e = this;
-            this.modalElement.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<span class="promaster_modal_close"></span>\n\t\t\t<div>${t}</div>\n\t\t</div>`, document.addEventListener("click", e.handleBackdropClick), this.modalElement.querySelector(".promaster_modal_close").addEventListener("click", function () {
-              e.hideAndCleanup(n && n.cancelCallback);
-            }), e.showModal();
+            this.modalElement.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<span class="promaster_modal_close"></span>\n\t\t\t<div>${t}</div>\n\t\t</div>`;
+            document.addEventListener("click", e.handleBackdropClick);
+            let closeBtn = this.modalElement.querySelector(".promaster_modal_close");
+            if (closeBtn) {
+              closeBtn.addEventListener("click", function () {
+                e.hideAndCleanup(n && n.cancelCallback);
+              });
+            }
+            e.showModal();
+          }
+          showMessageModal(t, n) {
+            return this.showCustomModal(t, n);
           }
           showErrorModal(t) {
-            this.showMessageModal(`<div class="promaster_modal_message_container">${t}</div>`);
+            this.showCustomModal(`<div class="promaster_modal_message_container">${t}</div>`);
           }
           showLoaderModal(t) {
-            this.modalElement.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<div class="promaster_modal_loader" style="width:${t && t.width || 300}px;height:${t && t.height || 300}px;">\n\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t</div>\n\t\t</div>`, this.showModal();
+            this.modalElement.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<div class="promaster_modal_loader" style="width:${t && t.width || 300}px;height:${t && t.height || 300}px;">\n\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t</div>\n\t\t</div>`;
+            this.showModal();
+          }
+          Pe(t, n) {
+            return this.showCustomModal(t, n);
+          }
+          Me(t) {
+            return this.hideAndCleanup(t);
+          }
+          Le() {
+            return this.showModal();
+          }
+          Se(t) {
+            return this.showErrorModal(t);
           }
           $e(t) {
             return this.showLoaderModal(t);
@@ -3455,48 +3486,87 @@
       } : null;
     },
     injectDownloadButton: function (t, n) {
+      if (!n || typeof n.append !== "function") return;
       let e = document.createElement("div");
       e.innerHTML = `\n\t\t\t<div class="${this.DOWNLOAD_BTN_CLASS}" data-shortcode="${t.shortcode}">\n\t\t\t\t<span class="promaster_dl_pregress_loader"></span>\n\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t\t<span class="promaster_text">${chrome.i18n.getMessage("download")}</span>\n\t\t\t</div>`, t.isCarousel && e.firstElementChild.setAttribute("data-carousel", "1"), n.append(e.firstElementChild);
     },
     injectPostOverlayButtons: function (t, n, e) {
+      if (!n || typeof n.closest !== "function" || typeof n.append !== "function") return;
       if (n.closest("article") && n.closest("article").querySelector('header [href*=""]')) return;
       let r = 5 === e || 7 === e ? "reels" : "feed",
         i = document.createElement("div");
       i.innerHTML = `\n\t\t\t\t<div class="${this.REPOST_BTN_CLASS}" data-shortcode="${t.shortcode}" data-dest="${r}" >\n\t\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t\t\t<span class="promaster_text">${chrome.i18n.getMessage("repost")}</span>\n\t\t\t\t</div>`, t.isCarousel && i.firstElementChild.setAttribute("data-carousel", "1"), n.append(i.firstElementChild);
     },
     injectButtonsIfNotPresent: function (t, n, e = null) {
+      if (!t || typeof t.getElementsByClassName !== "function") return;
       if (t.getElementsByClassName(uiController.DOWNLOAD_BTN_CLASS).length) return;
       let i,
-        o,
         s = e,
         a = !1;
       if (1 === n) {
-        i = t, t = Array.from(t.querySelectorAll("img, video")).filter(function (t) {
-          return "img" !== t.nodeName.toLowerCase() || t.width > 200 && t.height > 200;
+        i = t;
+        const mediaList = Array.from(t.querySelectorAll("img, video")).filter(function (el) {
+          return "img" !== el.nodeName.toLowerCase() || el.width > 200 && el.height > 200;
         });
-        const n = i.querySelector("video");
-        n ? ((t = this.findMatchingAncestor(n, "a")) || (t = this.findMatchingAncestor(n, "div", '[role*="button"]')), t = t.parentNode) : t = t[0].parentElement.parentElement.parentElement.parentElement;
-      } else 2 === n || 5 === n || 6 === n ? i = t : 3 === n ? i = t.querySelector(".EmbeddedMedia") : 4 === n ? (i = t, t = t.querySelector('div[role*="presentation"]').parentElement || t, a = !0) : 7 === n && (s = "reels", t = this.findMatchingAncestor(t, "img").parentNode);
+        const videoEl = i.querySelector("video");
+        if (videoEl) {
+          let matched = this.findMatchingAncestor(videoEl, "a") || this.findMatchingAncestor(videoEl, "div", '[role*="button"]');
+          t = matched && matched.parentNode ? matched.parentNode : (videoEl.closest("article") || videoEl.parentElement || i);
+        } else if (mediaList.length && mediaList[0].parentElement) {
+          let target = mediaList[0].parentElement;
+          for (let lvl = 0; lvl < 3 && target && target.parentElement; lvl++) {
+            target = target.parentElement;
+          }
+          t = target || mediaList[0].parentElement || i;
+        } else {
+          t = i;
+        }
+      } else if (2 === n || 5 === n || 6 === n) {
+        i = t;
+      } else if (3 === n) {
+        i = t.querySelector(".EmbeddedMedia") || t;
+      } else if (4 === n) {
+        i = t;
+        let pres = t.querySelector('div[role*="presentation"]');
+        t = pres && pres.parentElement ? pres.parentElement : t;
+        a = !0;
+      } else if (7 === n) {
+        s = "reels";
+        let matched = this.findMatchingAncestor(t, "img") || this.findMatchingAncestor(t, "video");
+        t = matched && matched.parentNode ? matched.parentNode : t;
+      }
+      if (!t || typeof t.append !== "function") return;
       if (!i && 7 !== n) return;
       if (!s) try {
         s = instaUtils.extractShortcodeFromElement(i);
-      } catch (t) {}
+      } catch (err) {}
       if (!s) return;
       let u = {
         shortcode: s,
         page_type: n,
         isCarousel: a
       };
-      6 === n && (t.style.position = "relative"), this.injectDownloadButton(u, t), this.injectPostOverlayButtons(u, t, n), t.dataset.ig_toolkit_marked = "1";
+      6 === n && (t.style.position = "relative");
+      this.injectDownloadButton(u, t);
+      this.injectPostOverlayButtons(u, t, n);
+      if (t.dataset) t.dataset.ig_toolkit_marked = "1";
     },
     findMatchingAncestor: function (t, n, e = "") {
       if (!t || !n) return null;
       let r = t;
       const i = `${n}${e}`;
-      for (; r;) {
-        if (Array.from(r.children).some(child => child.matches(i))) return r;
-        r = r.parentElement;
-      }
+      try {
+        for (; r;) {
+          if (r.children && Array.from(r.children).some(child => {
+            try {
+              return child && typeof child.matches === "function" && child.matches(i);
+            } catch (_) {
+              return false;
+            }
+          })) return r;
+          r = r.parentElement;
+        }
+      } catch (_) {}
       return null;
     },
     formatFilename: function (t, n, e = "") {
