@@ -41,6 +41,9 @@
               });
             });
           },
+          u: function (e, t) {
+            return this.updateQueryHash(e, t);
+          },
           getQueryHashes: function () {
             return chrome.storage.local.get("query_hashes").then(function (e) {
               if (e.query_hashes) return e.query_hashes;
@@ -53,6 +56,7 @@
       module.exports = function () {
         return {
           INSTAGRAM_URL_PATTERN: "*://*.instagram.com/*",
+          m: "*://*.instagram.com/*",
           getTabUrl: function (e, t) {
             e < 0 || chrome.tabs.get(e, function (e) {
               t(e.url);
@@ -61,21 +65,25 @@
           isBulkDownloadActiveInAnyTab: function (e) {
             const t = this;
             chrome.tabs.query({
-              url: [t.m]
+              url: [t.INSTAGRAM_URL_PATTERN]
             }, function (n) {
               let r = [];
               n.forEach(function (n) {
-                r.push(n.id), t.checkTabBulkDownloadRecursive(r, e);
+                r.push(n.id);
               });
+              t.checkTabBulkDownloadRecursive(r, e);
             });
           },
           checkTabBulkDownloadRecursive: function (e, t) {
             const n = this;
             if (0 === e.length) return t(!1);
             let r = e.pop();
-            chrome.tabs.sendMessage(r, "isBulkDownloadNowInTab", function (r) {
-              r && t(!0), n.$(e, t);
+            chrome.tabs.sendMessage(r, "isBulkDownloadNowInTab", function (res) {
+              res && t(!0), n.checkTabBulkDownloadRecursive(e, t);
             });
+          },
+          v: function (e, t) {
+            return this.checkTabBulkDownloadRecursive(e, t);
           }
         };
       }();
@@ -427,12 +435,6 @@
             } catch (e) {
               return Promise.resolve();
             }
-          },
-          checkPolicyAccepted(e) {
-            return this.be({
-              ["promotional_allowed"]: e,
-              ["policy_accepted"]: !0
-            });
           },
           checkPolicyAccepted: () => Promise.resolve(!0)
         };
@@ -1335,19 +1337,22 @@
               return e.previous_count = t, c();
             }) : c();
             function c() {
-              return i.Ft(s, u).then(function (r) {
+              return i.sendAuthenticatedUploadRequest(s, u).then(function (r) {
                 return e.responseCode = r && r.status || null, n ? i.retryUploadWithCsrf(e, t) : i.handleUploadResponse(e, t);
               }).catch(function () {
                 t();
               });
             }
           },
+          Ft: function (e, t, n) {
+            return this.sendAuthenticatedUploadRequest(e, t, n);
+          },
           retryUploadWithCsrf: function (e, t) {
             const n = this;
             return e.attempt = e.attempt || 0, apiClient.getUserStoriesCount(function (r) {
               if (!(r > e.previous_count)) {
                 if (e.attempt > 3) throw "FAIL";
-                return e.attempt++, n.ht(e, t).then(function () {
+                return e.attempt++, n.uploadPostConfigureRequest(e, t).then(function () {
                   return new Promise(function (r) {
                     setTimeout(function () {
                       r(n.retryUploadWithCsrf(e, t));
@@ -1362,7 +1367,7 @@
             const n = this;
             if (e.attempt = e.attempt || 0, 200 !== e.responseCode) {
               if (e.attempt > 4 && 202 === e.responseCode) throw "Error";
-              return e.attempt++, n.ht(e, t).then(function () {
+              return e.attempt++, n.uploadPostConfigureRequest(e, t).then(function () {
                 return new Promise(function (r) {
                   setTimeout(function () {
                     r(n.handleUploadResponse(e, t));
@@ -1371,6 +1376,9 @@
               });
             }
             t(!0);
+          },
+          ht: function (e, t) {
+            return this.uploadPostConfigureRequest(e, t);
           }
         };
       }();

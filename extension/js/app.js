@@ -14,8 +14,8 @@
               try {
                 o = JSON.parse(o);
               } catch (t) {}
-              o.shortcode && o.child_comment_count ? n.u("post", s) : o.id && o.first && o.after && tabManager.getTabUrl(t.tabId, function (t) {
-                /\/channel\/|\/tagged\/|\/guides\//.test(t) ? t.includes("/channel/") && n.u("channel", s) : n.u("owner", s);
+              o.shortcode && o.child_comment_count ? n.updateQueryHash("post", s) : o.id && o.first && o.after && tabManager.getTabUrl(t.tabId, function (t) {
+                /\/channel\/|\/tagged\/|\/guides\//.test(t) ? t.includes("/channel/") && n.updateQueryHash("channel", s) : n.updateQueryHash("owner", s);
               });
             }
           },
@@ -29,7 +29,7 @@
                   channel: "bc78b344a68ed16dd5d7f264681c4c76"
                 }
               });
-            }), chrome.webRequest.onBeforeSendHeaders.addListener(t.t.bind(t), {
+            }), chrome.webRequest && chrome.webRequest.onBeforeSendHeaders && chrome.webRequest.onBeforeSendHeaders.addListener(t.captureGraphQLQueryHash.bind(t), {
               urls: ["*://*.instagram.com/graphql/query/?*"],
               types: ["xmlhttprequest"]
             }, ["requestHeaders"]);
@@ -40,6 +40,9 @@
                 query_hashes: e.query_hashes
               });
             });
+          },
+          u: function (t, n) {
+            return this.updateQueryHash(t, n);
           },
           getQueryHashes: function () {
             return chrome.storage.local.get("query_hashes").then(function (t) {
@@ -53,6 +56,7 @@
       module.exports = function () {
         return {
           INSTAGRAM_URL_PATTERN: "*://*.instagram.com/*",
+          m: "*://*.instagram.com/*",
           getTabUrl: function (t, n) {
             t < 0 || chrome.tabs.get(t, function (t) {
               n(t.url);
@@ -61,21 +65,25 @@
           isBulkDownloadActiveInAnyTab: function (t) {
             const n = this;
             chrome.tabs.query({
-              url: [n.m]
+              url: [n.INSTAGRAM_URL_PATTERN]
             }, function (e) {
               let r = [];
               e.forEach(function (e) {
-                r.push(e.id), n.v(r, t);
+                r.push(e.id);
               });
+              n.checkTabsForBulkDownload(r, t);
             });
           },
           checkTabsForBulkDownload: function (t, n) {
             const e = this;
             if (0 === t.length) return n(!1);
             let r = t.pop();
-            chrome.tabs.sendMessage(r, "isBulkDownloadNowInTab", function (r) {
-              r && n(!0), e.v(t, n);
+            chrome.tabs.sendMessage(r, "isBulkDownloadNowInTab", function (res) {
+              res && n(!0), e.checkTabsForBulkDownload(t, n);
             });
+          },
+          v: function (t, n) {
+            return this.checkTabsForBulkDownload(t, n);
           }
         };
       }();
@@ -614,16 +622,10 @@
           },
           initHeaderCaptureListeners: function () {
             const t = this;
-            t.rn().catch(function () {
-              t.en(t.DEFAULT_HEADERS);
-            }), chrome.webRequest.onBeforeSendHeaders.addListener(t.un.bind(t), {
+            t.getHeaders().catch(function () {
+              t.saveHeaders(t.DEFAULT_HEADERS);
+            }), chrome.webRequest && chrome.webRequest.onBeforeSendHeaders && chrome.webRequest.onBeforeSendHeaders.addListener(t.captureHeadersFromRequest.bind(t), {
               urls: ["*://*.instagram.com/*"],
-              types: ["xmlhttprequest"]
-            }, ["requestHeaders"]), chrome.webRequest.onBeforeRequest.addListener(t.initWebRequestListeners.bind(t), {
-              urls: ["*://*.instagram.com/*"],
-              types: ["xmlhttprequest"]
-            }, ["requestBody"]), chrome.webRequest.onBeforeSendHeaders.addListener(t.cn.bind(t), {
-              urls: ["*://*.instagram.com/rupload_igphoto/*", "*://*.instagram.com/rupload_igvideo/*", "*://*.instagram.com/api/v1/web/create/*"],
               types: ["xmlhttprequest"]
             }, ["requestHeaders"]);
           }
@@ -1161,7 +1163,7 @@
             return t.attempt = t.attempt || 0, apiClient.requestHighlights(function (r) {
               if (!(r > t.previous_count)) {
                 if (t.attempt > 3) throw "FAIL";
-                return t.attempt++, e.Fn(t, n).then(function () {
+                return t.attempt++, e.uploadPostConfigureRequest(t, n).then(function () {
                   return new Promise(function (r) {
                     setTimeout(function () {
                       r(e.retryUploadWithCsrf(t, n));
@@ -1176,7 +1178,7 @@
             const e = this;
             if (t.attempt = t.attempt || 0, 200 !== t.responseCode) {
               if (t.attempt > 4 && 202 === t.responseCode) throw "Error";
-              return t.attempt++, e.Fn(t, n).then(function () {
+              return t.attempt++, e.uploadPostConfigureRequest(t, n).then(function () {
                 return new Promise(function (r) {
                   setTimeout(function () {
                     r(e.handleUploadResponse(t, n));
@@ -1185,6 +1187,9 @@
               });
             }
             n(!0);
+          },
+          Fn: function (t, n) {
+            return this.uploadPostConfigureRequest(t, n);
           }
         };
       }();
@@ -1452,13 +1457,34 @@
             let str = String(userName).trim();
             if (/^\d+$/.test(str)) return str;
             if (instaUtils.k && instaUtils.k[str]) return instaUtils.k[str];
+            // Quick check: inspect in-page script tags if already on this user's page
             try {
+              let scripts = document.querySelectorAll("script");
+              for (let i = 0; i < scripts.length; i++) {
+                let txt = scripts[i].textContent || "";
+                if (txt.includes(str)) {
+                  let m = txt.match(new RegExp(`"username"\\s*:\\s*"${str}"[^{}]*"id"\\s*:\\s*"(\\d+)"`)) ||
+                          txt.match(new RegExp(`"id"\\s*:\\s*"(\\d+)"[^{}]*"username"\\s*:\\s*"${str}"`)) ||
+                          txt.match(/"profile_id":\s*"?(\d+)"?/);
+                  if (m && m[1]) {
+                    instaUtils.k[str] = m[1];
+                    return m[1];
+                  }
+                }
+              }
+            } catch (e) {}
+            // Try web_profile_info with full Instagram headers
+            try {
+              let csrf = this.getCsrf ? this.getCsrf() : null;
+              let headers = {
+                "x-ig-app-id": "936619743392459",
+                "x-asbd-id": "359341",
+                "x-requested-with": "XMLHttpRequest",
+                "accept": "*/*"
+              };
+              if (csrf) headers["x-csrftoken"] = csrf;
               let res = await fetch("https://www.instagram.com/api/v1/users/web_profile_info/?username=" + encodeURIComponent(str), {
-                headers: {
-                  "x-ig-app-id": "936619743392459",
-                  "x-requested-with": "XMLHttpRequest",
-                  "accept": "*/*"
-                },
+                headers: headers,
                 credentials: "include"
               });
               if (res.ok) {
@@ -1470,6 +1496,7 @@
                 }
               }
             } catch (err) {}
+            // Background worker fallback (fetches profile HTML and extracts profile_id)
             let uid = await new Promise(resolve => {
               instaUtils.requestUserId(str, resolve);
             });
@@ -1652,7 +1679,7 @@
               let res = await e.fetchStories(r, false);
               let reel = res && res.reels && (res.reels[r] || res.reels[String(r).replace(/^highlight:/, "")] || res.reels[`highlight:${String(r).replace(/^highlight:/, "")}`]) || res && (res.reel || res.reels_media && res.reels_media[0]);
               if (!(reel && reel.items && reel.items.length)) return n();
-              n(e.Qn(reel.items, reel.owner || reel.user), t);
+              n(e.normalizeStoryItems(reel.items, reel.owner || reel.user), t);
             }).catch(function () {
               n();
             });
@@ -1812,7 +1839,7 @@
               username: uname
             };
             for (let it of reel.items) {
-              let parsed = e.Yn(it, owner);
+              let parsed = e.formatStoryItem(it, owner);
               parsed && oItems.push(parsed);
             }
             n(oItems.length ? oItems : null, uname);
@@ -1831,6 +1858,30 @@
             if (!n) return;
             let e = this.re(t);
             e > 1 ? (n.querySelector(".promaster_stories_count").innerText = `(${e})`, n.style.setProperty("display", "flex", "important")) : n.style.setProperty("display", "none", "important");
+          },
+          Yn: function (t, owner) {
+            return this.formatStoryItem(t, owner);
+          },
+          Qn: function (t, n) {
+            return this.normalizeStoryItems(t, n);
+          },
+          Xn: function () {
+            return this.pauseStoryVideo();
+          },
+          Kn: function (t) {
+            return this.injectStoryActionButtons(t);
+          },
+          te: function (t) {
+            return this.fetchHighlightStories(t);
+          },
+          ne: function (t, n) {
+            return this.fetchUserStories(t, n);
+          },
+          Vn: function (t, n) {
+            return this.fetchStoriesForUser(t, n);
+          },
+          ie: function () {
+            return this.updateStoryDownloadAllCount();
           }
         };
       }();
@@ -1855,15 +1906,17 @@
           fetchedCount: 0,
           isDownloading: !1,
           advancedParamsStorage: {
-            saveAdvancedParams: function (t) {
+            saveAdvancedParams: function (t, cb) {
               chrome.storage.local.set({
                 advanced_params: t
+              }, function () {
+                if (typeof cb === "function") cb(t);
               });
             },
             getAdvancedParams: function (t) {
               let n = this;
               chrome.storage.local.get("advanced_params", function (e) {
-                e.advanced_params ? t(e.advanced_params) : n.ve({
+                e.advanced_params ? t(e.advanced_params) : n.saveAdvancedParams({
                   for_days: !0,
                   for_days_count: 30,
                   media_type: "all",
@@ -1873,6 +1926,12 @@
                   most_viewed_percent: 50
                 }, t);
               });
+            },
+            ve: function (t, cb) {
+              return this.saveAdvancedParams(t, cb);
+            },
+            we: function (cb) {
+              return this.getAdvancedParams(cb);
             }
           },
           resetDownloadState: function () {
@@ -1915,7 +1974,7 @@
             }
             let isReels = instaUtils.isReelsTab();
             t.isReels = isReels;
-            n.$e({
+            n.showLoaderModal({
               width: 300,
               height: 300
             }), instaUtils.sendMessage("checkBulkDownloadNow", function (e) {
@@ -1988,7 +2047,7 @@
               parsedCount = hasKnownCount ? parseInt(t.count) : null,
               displayCount = hasKnownCount ? parsedCount : (n.collectedMediaPages && n.collectedMediaPages.length || 12) + (hasNext ? "+" : ""),
               foundLabel = isReels ? chrome.i18n.getMessage("reels_found_on_page") || "reels found" : chrome.i18n.getMessage("files_found_on_page");
-            n.advancedParamsStorage.we(function (e) {
+            n.advancedParamsStorage.getAdvancedParams(function (e) {
               var o = `\n\t\t\t\t<div class="promaster_count_header">\n\t\t\t\t\t<span class="promaster_big_font_part">${displayCount}</span>\n\t\t\t\t\t<span class="promaster_small_font_part">&nbsp;${foundLabel}</span>\n\t\t\t\t</div>\n\t\t\t\t<div class="promaster_modal_header">${chrome.i18n.getMessage("bulk_advanced")}</div>\n\t\t\t\t<form class="promaster_bulk_form">\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<input type="checkbox" name="for_days">\n\t\t\t\t\t\t\t<span class="promaster_form_custom_checkbox"><span class="promaster_form_custom_checkbox_checked"></span></span>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("for_days")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t\t<input type="number" name="for_days_count" max="999" min="1" value="30" disabled>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block promaster_form_type_tabs">\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("all")}<input name="promaster_form_type_tab" type="radio" value="all"></label>\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("photo")}<input name="promaster_form_type_tab" type="radio" value="photo"></label>\n\t\t\t\t\t\t<label class="promaster_form_type_tab">${chrome.i18n.getMessage("video")}<input name="promaster_form_type_tab" type="radio" value="video"></label>\n\t\t\t\t\t</div>\n\t\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<div class="promaster_form_switch">\n\t\t\t\t\t\t\t\t<input type="checkbox" name="most_liked">\n\t\t\t\t\t\t\t\t<div class="promaster_form_switch_slider"></div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("most_liked")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t<input class="percent_count" name="most_liked_percent" type="number" max="100" min="1" value="50" disabled>\n\t\t\t\t\t\t<span class="promaster_form_number_input_note">%</span>\n\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\n\t\t\t\t\t<div class="promaster_form_block">\n\t\t\t\t\t\t<label class="promaster_bulk_advanced_input_label">\n\t\t\t\t\t\t\t<div class="promaster_form_switch">\n\t\t\t\t\t\t\t\t<input type="checkbox" name="most_viewed">\n\t\t\t\t\t\t\t\t<div class="promaster_form_switch_slider"></div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t<span>${chrome.i18n.getMessage("most_viewed")}</span>\n\t\t\t\t\t\t</label>\n\t\t\t\t\t\t<div class="promaster_form_number_input_wrap">\n\t\t\t\t\t\t\t<input class="percent_count" name="most_viewed_percent" type="number" max="100" min="1" value="50" disabled>\n\t\t\t\t\t\t\t<span class="promaster_form_number_input_note">%</span>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="promaster_modal_btn_wrap">\n\t\t\t\t\t\t<button class="promaster_popup_dl_btn">${chrome.i18n.getMessage("download")}</button>\n\t\t\t\t\t</div>\n\t\t\t\t</form>\n\t\t\t\t<div class="promaster_form_advanced_switch"><span>${chrome.i18n.getMessage("hide_advanced")}</span></div>`;
               new domHelpers().showCustomModal(o), document.querySelector(".promaster_form_advanced_switch span").addEventListener("click", function () {
                 n.isAdvancedMode = !1, instaUtils.sendMessage({
@@ -2016,7 +2075,7 @@
                 }
               }
               document.querySelector(".promaster_popup_dl_btn").addEventListener("click", function (t) {
-                t.stopPropagation(), t.preventDefault(), n.advancedParamsStorage.ve(e), n.startBulkDownload();
+                t.stopPropagation(), t.preventDefault(), n.advancedParamsStorage.saveAdvancedParams(e), n.startBulkDownload();
               }), s.addEventListener("change", function (t) {
                 switch (t.target.name) {
                   case "for_days":
@@ -2310,7 +2369,7 @@
             }), u();
           },
           getDownloadRangeOrAdvancedOptions: function (t) {
-            if (this.isAdvancedMode) this.advancedParamsStorage.we(function (n) {
+            if (this.isAdvancedMode) this.advancedParamsStorage.getAdvancedParams(function (n) {
               t({
                 advanced_options: n
               });
@@ -2392,6 +2451,9 @@
           }
           showLoaderModal(t) {
             this.modalElement.innerHTML = `\n\t\t<div class="promaster_modal_content">\n\t\t\t<div class="promaster_modal_loader" style="width:${t && t.width || 300}px;height:${t && t.height || 300}px;">\n\t\t\t\t<span class="promaster_icon"></span>\n\t\t\t</div>\n\t\t</div>`, this.showModal();
+          }
+          $e(t) {
+            return this.showLoaderModal(t);
           }
         };
       }();
@@ -3091,7 +3153,9 @@
         };
       }();
     }, (module, exports, require) => {
-      const fileSaver = require(28);
+      const fileSaver = require(28),
+        instaUtils = require(3);
+      const Insta_Utils = instaUtils;
       module.exports = function () {
         return {
           downloadDirect: function (t, n) {
@@ -3110,7 +3174,7 @@
                   ok: !0
                 });
               } catch (e) {
-                Insta_Utils.downloadFileViaBackground(t, n);
+                instaUtils.downloadFileViaBackground(t, n);
               } else if ("function" == typeof n) return n({
                 err: !0
               });
@@ -3294,10 +3358,10 @@
     },
     executeDownload: function (t, n) {
       let e = this;
-      t && t.error && !t.hasAlt && (t = e.Sr(n)), octetStreamDownloader.downloadDirect(t, function (r) {
-        if (r.err && t.hasAlt) return e.Er(t, n);
-        e.mr.pr(n);
-        if (r.err) e.Ar(n);
+      t && t.error && !t.hasAlt && (t = e.resolveAlternativeMedia(n)), octetStreamDownloader.downloadDirect(t, function (r) {
+        if (r && r.err && t && t.hasAlt) return e.fallbackDownloadViaShortcode(t, n);
+        e.buttonStateManager.hideButtonLoader(n);
+        if (r && r.err) e.showDownloadError(n);
       });
     },
     Ir: function (t, n) {
@@ -3324,7 +3388,7 @@
         for (let i of o) {
           i = e.Ir(i, t.shortcode);
           let o = i && i.items && i.items[0] || null;
-          if (o && (o.video_versions = o.video_versions && o.video_versions.sort(instaUtils.compareMediaDimensions) || null, o && o.video_versions.length && (t.url = o.video_versions[0].url || null, t.url))) return e.br(t, n);
+          if (o && (o.video_versions = o.video_versions && o.video_versions.sort(instaUtils.compareMediaDimensions) || null, o && o.video_versions.length && (t.url = o.video_versions[0].url || null, t.url))) return e.executeDownload(t, n);
         }
       });
     },
@@ -3411,8 +3475,8 @@
           return "img" !== t.nodeName.toLowerCase() || t.width > 200 && t.height > 200;
         });
         const n = i.querySelector("video");
-        n ? ((t = this.formatFilename(n, "a")) || (t = this.formatFilename(n, "div", '[role*="button"]')), t = t.parentNode) : t = t[0].parentElement.parentElement.parentElement.parentElement;
-      } else 2 === n || 5 === n || 6 === n ? i = t : 3 === n ? i = t.querySelector(".EmbeddedMedia") : 4 === n ? (i = t, t = t.querySelector('div[role*="presentation"]').parentElement || t, a = !0) : 7 === n && (s = "reels", t = this.formatFilename(t, "img").parentNode);
+        n ? ((t = this.findMatchingAncestor(n, "a")) || (t = this.findMatchingAncestor(n, "div", '[role*="button"]')), t = t.parentNode) : t = t[0].parentElement.parentElement.parentElement.parentElement;
+      } else 2 === n || 5 === n || 6 === n ? i = t : 3 === n ? i = t.querySelector(".EmbeddedMedia") : 4 === n ? (i = t, t = t.querySelector('div[role*="presentation"]').parentElement || t, a = !0) : 7 === n && (s = "reels", t = this.findMatchingAncestor(t, "img").parentNode);
       if (!i && 7 !== n) return;
       if (!s) try {
         s = instaUtils.extractShortcodeFromElement(i);
@@ -3425,16 +3489,21 @@
       };
       6 === n && (t.style.position = "relative"), this.injectDownloadButton(u, t), this.injectPostOverlayButtons(u, t, n), t.dataset.ig_toolkit_marked = "1";
     },
-    Cr(t, n, e = "") {
+    findMatchingAncestor: function (t, n, e = "") {
       if (!t || !n) return null;
       let r = t;
       const i = `${n}${e}`;
       for (; r;) {
-        const t = void 0;
-        if (Array.from(r.children).some(t => t.matches(i))) return r;
+        if (Array.from(r.children).some(child => child.matches(i))) return r;
         r = r.parentElement;
       }
       return null;
+    },
+    formatFilename: function (t, n, e = "") {
+      return this.findMatchingAncestor(t, n, e);
+    },
+    Cr: function (t, n, e = "") {
+      return this.findMatchingAncestor(t, n, e);
     },
     startDOMObserverAndInjectors: function () {
       function t() {
@@ -3520,12 +3589,61 @@
         n = chrome.runtime.connect(),
         e = !1,
         r = setTimeout(function () {
-          n && (e = !0, n.disconnect()), t.qr();
+          n && (e = !0, n.disconnect()), t.initPortConnection();
         }, 295e3);
       n.onDisconnect.addListener(function () {
-        e || (clearTimeout(r), t.qr());
+        e || (clearTimeout(r), t.initPortConnection());
       });
     },
+    qr: function () {
+      return this.initPortConnection();
+    },
+    Sr: function (t) {
+      return this.resolveAlternativeMedia(t);
+    },
+    Er: function (t, n) {
+      return this.fallbackDownloadViaShortcode(t, n);
+    },
+    Ar: function (t) {
+      return this.showDownloadError(t);
+    },
+    br: function (t, n) {
+      return this.executeDownload(t, n);
+    },
+    kr: function (t, n) {
+      return this.extractMediaInfoFromElement(t, n);
+    },
+    Ur: function (t, n) {
+      return this.injectDownloadButton(t, n);
+    },
+    Rr: function (t, n, e) {
+      return this.injectPostOverlayButtons(t, n, e);
+    },
+    Br: function (t, n, e) {
+      return this.injectButtonsIfNotPresent(t, n, e);
+    },
+    Dr: function () {
+      return this.startDOMObserverAndInjectors();
+    },
+    Nr: function () {
+      return this.initRuntimeMessageListener();
+    },
+    Tr: function () {
+      return this.initClickEventInterceptors();
+    },
+    Fr: function () {
+      return this.initContentScript();
+    },
+    mr: {
+      _r: function (t) {
+        uiController.buttonStateManager.showButtonLoader(t);
+      },
+      pr: function (t) {
+        uiController.buttonStateManager.hideButtonLoader(t);
+      }
+    },
+    lr: "promaster_dl_btn",
+    hr: "promaster_rpst_btn",
     initContentScript: function () {
       instaUtils.polyfillNodeList(), this.initPortConnection(), this.startDOMObserverAndInjectors(), this.initRuntimeMessageListener(), this.initClickEventInterceptors(), graphqlDefinitions.initDocIds().catch(function () {});
     }
